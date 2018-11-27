@@ -1,13 +1,11 @@
-// Copyright (c) 2018, Brandon Lehmann, The TurtleCoin Developers
+// Copyright (c) 2018, The TurtleCoin Developers
 //
 // Please see the included LICENSE file for more information.
 
 'use strict'
 
 const assert = require('assert')
-const Base58 = require('../').Base58
-const Mnemonics = require('../').Mnemonics
-const CryptoNoteUtils = require('../').CryptoNoteUtils
+const CryptoNoteUtils = require('../')
 
 const config = require('../config.json')
 const cnUtil = new CryptoNoteUtils(config)
@@ -19,15 +17,15 @@ console.log('')
 console.log('In Seed:          ', rawSeed)
 console.log('In Mnemonic:      ', rawMnemonic)
 
-const outputMnemonic = Mnemonics.encode(rawSeed)
-const outputSeed = Mnemonics.decode(rawMnemonic)
+const outputMnemonic = cnUtil.createAddressFromSeed(rawSeed)
+const outputSeed = cnUtil.createAddressFromMnemonic(rawMnemonic)
 
 console.log('')
-console.log('Out Seed:         ', outputSeed)
-console.log('Out Mnemonic:     ', outputMnemonic)
+console.log('Out Seed:         ', outputSeed.seed)
+console.log('Out Mnemonic:     ', outputMnemonic.mnemonic)
 
-assert(rawSeed === outputSeed)
-assert(rawMnemonic === outputMnemonic)
+assert(rawSeed === outputSeed.seed)
+assert(rawMnemonic === outputMnemonic.mnemonic)
 
 const testAddress = 'TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX'
 const testAddressRaw = '9df6ee01f71e440f9a5aab08dbdab0f4f36bba813660a0600f109b1371dc53be33f23c99f0ba225065e1b9c2e43165b3e41f10fcb768853126dfa7e612a3df2deb332492cc073a66'
@@ -36,22 +34,22 @@ console.log('')
 console.log('In  Test Address: ', testAddress)
 console.log('In  Raw Address:  ', testAddressRaw)
 
-const outputAddress = Base58.encode(testAddressRaw)
-const outputRaw = Base58.decode(testAddress)
+const outputAddress = cnUtil.encodeRawAddress(testAddressRaw)
+const outputRaw = cnUtil.decodeAddress(testAddress)
 
 console.log('')
 console.log('Out Test Address: ', outputAddress)
-console.log('Out Raw Address:  ', outputRaw)
+console.log('Out Raw Address:  ', outputRaw.rawAddress)
 
-assert(testAddressRaw === outputRaw)
+assert(testAddressRaw === outputRaw.rawAddress)
 assert(testAddress === outputAddress)
 
 const newAddress = cnUtil.createNewAddress(testAddress, 'english')
+const newAddressByKey = cnUtil.createAddressFromKeys(newAddress.spend.privateKey, newAddress.view.privateKey)
 
 console.log('')
-console.log(newAddress)
+console.log('New Address: ', newAddress.address)
+console.log('New Address Keys: ', newAddress.spend.privateKey, newAddress.view.privateKey)
+console.log('New Address By Keys: ', newAddressByKey.address)
 
-const keys = cnUtil.decode_address(newAddress.public_addr)
-
-console.log('')
-console.log(keys)
+assert(newAddress.address === newAddressByKey.address)
