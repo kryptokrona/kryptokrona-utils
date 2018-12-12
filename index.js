@@ -223,7 +223,8 @@ CryptoNote.prototype.encodeRawAddress = function (rawAddress) {
   return Base58.encode(rawAddress)
 }
 
-CryptoNote.prototype.encodeAddress = function (publicViewKey, publicSpendKey, paymentId) {
+CryptoNote.prototype.encodeAddress = function (publicViewKey, publicSpendKey, paymentId, addressPrefix) {
+  addressPrefix = addressPrefix || this.config.addressPrefix
   paymentId = paymentId || false
 
   if (!isHex64(publicViewKey)) {
@@ -244,7 +245,7 @@ CryptoNote.prototype.encodeAddress = function (publicViewKey, publicSpendKey, pa
 
   /* Encode our configured address prefix so that we can throw
      it on the front of our address */
-  const encodedPrefix = encodeVarint(this.config.addressPrefix)
+  const encodedPrefix = encodeVarint(addressPrefix)
   rawAddress.push(encodedPrefix)
 
   /* Is there a payment ID? If so, that comes next */
