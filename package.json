@@ -4,7 +4,7 @@
   "description": "A Node.js collection of utilities useful for TurtleCoin developers",
   "main": "index.js",
   "scripts": {
-    "test": "node tests/tests.js"
+    "test": "npm install && node tests/tests.js"
   },
   "keywords": [
     "TurtleCoin",
