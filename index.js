@@ -149,13 +149,15 @@ CryptoNote.prototype.createAddressFromKeys = function (privateSpendKey, privateV
   return keys
 }
 
-CryptoNote.prototype.decodeAddress = function (address) {
+CryptoNote.prototype.decodeAddress = function (address, addressPrefix) {
+  addressPrefix = addressPrefix || this.config.addressPrefix
+
   /* First, we decode the base58 string to hex */
   var decodedAddress = Base58.decode(address)
 
   /* We need to encode the address prefix from our config
      so that we can compare it later */
-  const encodedPrefix = encodeVarint(this.config.addressPrefix)
+  const encodedPrefix = encodeVarint(addressPrefix)
 
   /* Let's chop off the prefix from the address we decoded */
   var prefix = decodedAddress.slice(0, encodedPrefix.length)
@@ -211,7 +213,8 @@ CryptoNote.prototype.decodeAddress = function (address) {
     publicViewKey: publicView,
     publicSpendKey: publicSpend,
     paymentId: paymentId,
-    prefix: prefix,
+    encodedPrefix: prefix,
+    prefix: addressPrefix,
     rawAddress: Base58.decode(address)
   }
 }
