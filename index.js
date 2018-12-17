@@ -14,7 +14,7 @@ const CNCrypto = require('./lib/crypto.js')
 const Mnemonic = require('./lib/mnemonic.js')
 const NACL = require('./lib/nacl-fast-cn.js')
 const Sha3 = require('./lib/sha3.js')
-// const VarintDecoder = require('varint-decoder')
+const VarintDecoder = require('varint-decoder')
 const SecureRandomString = require('secure-random-string')
 const Numeral = require('numeral')
 
@@ -147,6 +147,54 @@ CryptoNote.prototype.createAddressFromKeys = function (privateSpendKey, privateV
   keys.address = this.encodeAddress(keys.view.publicKey, keys.spend.publicKey)
 
   return keys
+}
+
+CryptoNote.prototype.decodeAddressPrefix = function (address) {
+  /* First we decode the address from Base58 into the raw address */
+  var decodedAddress = Base58.decode(address)
+
+  /* Now we need to work in reverse, starting with chopping off
+     the checksum which is always the same */
+  decodedAddress = decodedAddress.slice(0, -(SIZES.CHECKSUM))
+
+  /* Now we find out how many extra characters there are
+     in what's left after we find all of the keys in the address.
+     Remember, this works because payment IDs are the same size as keys */
+  var prefixLength = decodedAddress.length % SIZES.KEY
+
+  var prefixDecoded = decodedAddress.slice(0, prefixLength)
+  var prefixVarint = decodeVarint(prefixDecoded)
+
+  /* This block of code is a hack to figure out what the human readable
+     address prefix is. While it has been tested with a few different
+     cryptonote addresses from different projects, it is by no means
+     guaranteed to work with every project. The reason for this is that
+     due to the block encoding used in Base58, it's nearly impossible
+     to reliably find out the Base58 version of just the prefix as it
+     is not actually long enough to be encoded on its own and get the
+     prefix we expect. */
+
+  /* First we need the need to know how long the varint representation
+     of the prefix is, we're going to need it later */
+  var prefixVarintLength = prefixVarint.toString().length
+
+  /* This is where it starts to get funny. If the length is an even
+     number of characters, we'll need to grab the one extra character
+     from the address we passed in to get the prefix that we all know
+     and love */
+  var offset = (prefixVarintLength % 2 === 0) ? 1 : 0
+
+  /* Using all of that above, we can chop off the first couple of
+     characters from the supplied address and get something that looks
+     like the Base58 prefix we expected. */
+  var prefixEncoded = address.slice(0, Math.ceil(prefixVarintLength / 2) + offset)
+
+  return {
+    prefix: prefixDecoded,
+    base58: prefixEncoded,
+    decimal: prefixVarint,
+    hexadecimal: prefixVarint.toString(16)
+  }
 }
 
 CryptoNote.prototype.decodeAddress = function (address, addressPrefix) {
@@ -557,12 +605,10 @@ function encodeVarint (i) {
   return result
 }
 
-/*
 function decodeVarint (hex) {
   const buffer = Buffer.from(hex, 'hex')
   return parseInt(VarintDecoder(buffer))
 }
-*/
 
 function scReduce (hex, size) {
   size = size || 64
