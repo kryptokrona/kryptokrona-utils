@@ -55,7 +55,9 @@ function CryptoNote (config) {
 
 /* These are our exposed functions */
 
-CryptoNote.prototype.createNewSeed = function (entropy) {
+CryptoNote.prototype.createNewSeed = function (entropy, addressPrefix) {
+  addressPrefix = addressPrefix || this.config.addressPrefix
+
   /* If you don't supply us with entropy, we'll go find our own */
   entropy = entropy || SecureRandomString({ length: 256 })
 
@@ -65,15 +67,19 @@ CryptoNote.prototype.createNewSeed = function (entropy) {
   return scReduce32(simpleKdf(entropy + rand32()))
 }
 
-CryptoNote.prototype.createNewAddress = function (entropy, lang) {
+CryptoNote.prototype.createNewAddress = function (entropy, lang, addressPrefix) {
+  addressPrefix = addressPrefix || this.config.addressPrefix
+
   /* Let's create our new seed */
   const seed = this.createNewSeed(entropy)
 
   /* Using that seed, let's create our new CryptoNote address */
-  return this.createAddressFromSeed(seed, lang)
+  return this.createAddressFromSeed(seed, lang, addressPrefix)
 }
 
-CryptoNote.prototype.createAddressFromSeed = function (seed, lang) {
+CryptoNote.prototype.createAddressFromSeed = function (seed, lang, addressPrefix) {
+  addressPrefix = addressPrefix || this.config.addressPrefix
+
   /* When we have a seed, then we can create a new key
      pair based on that seed */
   lang = lang || 'english'
@@ -103,7 +109,7 @@ CryptoNote.prototype.createAddressFromSeed = function (seed, lang) {
 
   /* Once we have our keys, then we can encode the public keys
      out of our view and spend pairs to create our public address */
-  keys.address = this.encodeAddress(keys.view.publicKey, keys.spend.publicKey)
+  keys.address = this.encodeAddress(keys.view.publicKey, keys.spend.publicKey, false, addressPrefix)
 
   /* As we know the seed, we can encode it to a mnemonic string */
   keys.mnemonic = Mnemonic.encode(seed, lang)
@@ -114,7 +120,9 @@ CryptoNote.prototype.createAddressFromSeed = function (seed, lang) {
   return keys
 }
 
-CryptoNote.prototype.createAddressFromMnemonic = function (mnemonic, lang) {
+CryptoNote.prototype.createAddressFromMnemonic = function (mnemonic, lang, addressPrefix) {
+  addressPrefix = addressPrefix || this.config.addressPrefix
+
   /* The mnemonic is just a string representation of the seed
      that was initially used to create our key set */
   lang = lang || 'english'
@@ -122,10 +130,12 @@ CryptoNote.prototype.createAddressFromMnemonic = function (mnemonic, lang) {
 
   /* As long as we have the seed we can recreate the key pairs
      pretty easily */
-  return this.createAddressFromSeed(seed, lang)
+  return this.createAddressFromSeed(seed, lang, addressPrefix)
 }
 
-CryptoNote.prototype.createAddressFromKeys = function (privateSpendKey, privateViewKey) {
+CryptoNote.prototype.createAddressFromKeys = function (privateSpendKey, privateViewKey, addressPrefix) {
+  addressPrefix = addressPrefix || this.config.addressPrefix
+
   /* We have our private keys so we can generate everything for use
      later except the mnemonic as we don't have the seed */
   const keys = {
@@ -144,7 +154,7 @@ CryptoNote.prototype.createAddressFromKeys = function (privateSpendKey, privateV
 
   /* As we now have all of our keys, we can find out what our
      public address is */
-  keys.address = this.encodeAddress(keys.view.publicKey, keys.spend.publicKey)
+  keys.address = this.encodeAddress(keys.view.publicKey, keys.spend.publicKey, false, addressPrefix)
 
   return keys
 }
@@ -328,11 +338,13 @@ CryptoNote.prototype.encodeAddress = function (publicViewKey, publicSpendKey, pa
   return Base58.encode(rawAddress)
 }
 
-CryptoNote.prototype.createIntegratedAddress = function (address, paymentId) {
+CryptoNote.prototype.createIntegratedAddress = function (address, paymentId, addressPrefix) {
+  addressPrefix = addressPrefix || this.config.addressPrefix
+
   /* Decode our address */
   var addr = this.decodeAddress(address)
   /* Encode the address but this time include the payment ID */
-  return this.encodeAddress(addr.publicViewKey, addr.publicSpendKey, paymentId)
+  return this.encodeAddress(addr.publicViewKey, addr.publicSpendKey, paymentId, addressPrefix)
 }
 
 CryptoNote.prototype.scanTransactionOutputs = function (transactionPublicKey, outputs, privateViewKey, publicSpendKey, privateSpendKey) {
