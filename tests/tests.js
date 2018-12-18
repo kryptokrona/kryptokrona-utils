@@ -53,3 +53,30 @@ console.log('New Address Keys: ', newAddress.spend.privateKey, newAddress.view.p
 console.log('New Address By Keys: ', newAddressByKey.address)
 
 assert(newAddress.address === newAddressByKey.address)
+
+console.log('')
+console.log('Validating prefix detection for alternate chain...')
+console.log('')
+
+const athenaAddress = 'athena28QHa49cTHWjRLYN1XW46Xj8D2mPiu7bovQ67V4z1C84R16VSJvbHmD2Yfq5Yvw5GKVTnfuS5pX3LXH3LNPezfLhhe5Lc27'
+const athenaPrefix = { prefix: 'ca9f97c218',
+  base58: 'athena',
+  decimal: 6581243850,
+  hexadecimal: '18845cfca' }
+
+const calculatedPrefix = cnUtil.decodeAddressPrefix(athenaAddress)
+
+console.log('Athena Address: ', athenaAddress)
+console.log('Athena Calculated Prefix: ', calculatedPrefix.base58)
+assert(athenaPrefix.base58 === calculatedPrefix.base58)
+
+console.log('Athena Calculated Raw Prefix: ', calculatedPrefix.decimal)
+assert(athenaPrefix.decimal === calculatedPrefix.decimal)
+
+const newAthenaAddress = cnUtil.encodeAddress(newAddress.view.publicKey, newAddress.spend.publicKey, false, athenaPrefix.decimal)
+const newAthenaAddressByKey = cnUtil.createAddressFromKeys(newAddress.spend.privateKey, newAddress.view.privateKey, athenaPrefix.decimal)
+
+console.log('New Athena Address: ', newAthenaAddress)
+console.log('New Athena Address By Keys: ', newAthenaAddressByKey.address)
+
+assert(newAthenaAddress === newAthenaAddressByKey.address)
