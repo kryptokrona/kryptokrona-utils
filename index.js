@@ -162,7 +162,11 @@ CryptoNote.prototype.decodeAddressPrefix = function (address) {
      Remember, this works because payment IDs are the same size as keys */
   var prefixLength = decodedAddress.length % SIZES.KEY
 
+  /* Great, now we that we know how long the prefix length is, we
+     can grab just that from the front of the address information */
   var prefixDecoded = decodedAddress.slice(0, prefixLength)
+
+  /* Then we can decode it into the integer that it represents */
   var prefixVarint = decodeVarint(prefixDecoded)
 
   /* This block of code is a hack to figure out what the human readable
@@ -183,6 +187,14 @@ CryptoNote.prototype.decodeAddressPrefix = function (address) {
      from the address we passed in to get the prefix that we all know
      and love */
   var offset = (prefixVarintLength % 2 === 0) ? 1 : 0
+
+  /* This is kind of goofy. If the address prefix varint is longer
+     than 10 characters, then we need to adjust the offset amount
+     by the count of remaining characters. This is undoubtedly a
+     hack to support obnoxiously long address prefixes */
+  if (prefixVarintLength > 10) {
+    offset += Math.floor((prefixVarintLength % 10) / 2)
+  }
 
   /* Using all of that above, we can chop off the first couple of
      characters from the supplied address and get something that looks
