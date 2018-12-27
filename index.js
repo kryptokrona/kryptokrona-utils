@@ -55,14 +55,16 @@ function CryptoNote (config) {
 
 /* These are our exposed functions */
 
-CryptoNote.prototype.createNewSeed = function (entropy) {
+CryptoNote.prototype.createNewSeed = function (entropy, iterations) {
+  iterations = iterations || this.config.keccakIterations
+
   /* If you don't supply us with entropy, we'll go find our own */
   entropy = entropy || SecureRandomString({ length: 256 })
 
   /* We're going to take that entropy, throw a random value on
      to it, feed it through a poor very simple PBKDF2 implementation
      to create a seed using the supplied entropy */
-  return scReduce32(simpleKdf(entropy + rand32(), this.config.keccakIterations))
+  return scReduce32(simpleKdf(entropy + rand32(), iterations))
 }
 
 CryptoNote.prototype.createNewAddress = function (entropy, lang, addressPrefix) {

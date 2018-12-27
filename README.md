@@ -38,7 +38,7 @@ const coinUtils = new TurtleCoinUtils({
 
 ## Public Methods
 
-#### createNewSeed([entropy])
+#### createNewSeed([entropy], [iterations])
 
 Creates a new address seed using the provided entropy or if entropy is undefined, uses a randomly selected entropy source.
 
