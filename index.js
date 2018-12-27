@@ -55,9 +55,7 @@ function CryptoNote (config) {
 
 /* These are our exposed functions */
 
-CryptoNote.prototype.createNewSeed = function (entropy, addressPrefix) {
-  addressPrefix = addressPrefix || this.config.addressPrefix
-
+CryptoNote.prototype.createNewSeed = function (entropy) {
   /* If you don't supply us with entropy, we'll go find our own */
   entropy = entropy || SecureRandomString({ length: 256 })
 
