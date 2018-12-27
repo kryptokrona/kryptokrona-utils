@@ -472,7 +472,7 @@ CryptoNote.prototype.formatMoney = function (amount) {
   return Numeral(amount / Math.pow(10, this.config.coinUnitPlaces)).format('0,0.' + places)
 }
 
-CryptoNote.prototype.privateKeyToPublicKey = privateKeyToPublicKey;
+CryptoNote.prototype.privateKeyToPublicKey = privateKeyToPublicKey
 
 /* Internal support functions */
 function isHex (str) {

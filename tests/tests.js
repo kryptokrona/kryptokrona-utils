@@ -54,17 +54,17 @@ console.log('New Address By Keys: ', newAddressByKey.address)
 
 assert(newAddress.address === newAddressByKey.address)
 
-const testPrivateKey = '4a078e76cd41a3d3b534b83dc6f2ea2de500b653ca82273b7bfad8045d85a400';
-const testPublicKey = '7849297236cd7c0d6c69a3c8c179c038d3c1c434735741bb3c8995c3c9d6f2ac';
+const testPrivateKey = '4a078e76cd41a3d3b534b83dc6f2ea2de500b653ca82273b7bfad8045d85a400'
+const testPublicKey = '7849297236cd7c0d6c69a3c8c179c038d3c1c434735741bb3c8995c3c9d6f2ac'
 
-const derivedPublicKey = cnUtil.privateKeyToPublicKey(testPrivateKey);
+const derivedPublicKey = cnUtil.privateKeyToPublicKey(testPrivateKey)
 
-console.log('');
-console.log('In Test Private Key: ', testPrivateKey);
-console.log('In Test Public Key: ', testPublicKey);
-console.log('Out Derived Public Key: ', derivedPublicKey);
+console.log('')
+console.log('In Test Private Key: ', testPrivateKey)
+console.log('In Test Public Key: ', testPublicKey)
+console.log('Out Derived Public Key: ', derivedPublicKey)
 
-assert(derivedPublicKey == testPublicKey);
+assert(derivedPublicKey === testPublicKey)
 
 console.log('')
 console.log('Validating prefix detection for alternate chain...')
