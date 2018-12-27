@@ -17,7 +17,7 @@
   "author": "Brandon Lehmann <brandonlehmann@gmail.com>",
   "license": "GPL-3.0",
   "dependencies": {
-    "crc32": "^0.2.2",
+    "crc": "^3.8.0",
     "get-random-values": "^1.2.0",
     "numeral": "^2.0.6",
     "secure-random-string": "^1.1.0",
