@@ -1,4 +1,5 @@
 {
   "coinUnitPlaces": 2,
-  "addressPrefix": 3914525
+  "addressPrefix": 3914525,
+  "keccakIterations": 1
 }
