@@ -62,7 +62,7 @@ CryptoNote.prototype.createNewSeed = function (entropy) {
   /* We're going to take that entropy, throw a random value on
      to it, feed it through a poor very simple PBKDF2 implementation
      to create a seed using the supplied entropy */
-  return scReduce32(simpleKdf(entropy + rand32()))
+  return scReduce32(simpleKdf(entropy + rand32(), this.config.keccakIterations))
 }
 
 CryptoNote.prototype.createNewAddress = function (entropy, lang, addressPrefix) {
@@ -804,11 +804,11 @@ function cnFastHash (input) {
   return Sha3.keccak_256(hex2bin(input))
 }
 
-function simpleKdf (str) {
+function simpleKdf (str, iterations) {
   /* This is a very simple implementation of a
      psuedo PBKDF2 function */
   var hex = bin2hex(str2bin(str))
-  for (var n = 0; n < 10000; ++n) {
+  for (var n = 0; n < iterations; ++n) {
     hex = Sha3.keccak_256(hex2bin(hex))
   }
   return hex
