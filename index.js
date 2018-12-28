@@ -456,6 +456,30 @@ CryptoNote.prototype.generateKeyImage = function (transactionPublicKey, privateV
   }
 }
 
+/* This method is designed to create a new transfer to be
+   used in the construct transaction method */
+CryptoNote.prototype.createTransfer = function (address, amount) {
+  amount = amount || false
+
+  /* If we didn't specify an amount we can't send anything */
+  if (!amount) {
+    throw new Error('You must specify an amount')
+  }
+
+  /* Decode the address into it's important bits */
+  var addressDecoded = this.decodeAddress(address)
+
+  /* Spit it back in a structure that construct transaction can use */
+  return {
+    amount: amount,
+    keys: {
+      publicViewKey: addressDecoded.publicViewKey,
+      publicSpendKey: addressDecoded.publicSpendKey,
+      paymentId: addressDecoded.paymentId
+    }
+  }
+}
+
 CryptoNote.prototype.createTransaction = function (ourKeys, transfers, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime) {
   return createTransaction(ourKeys, transfers, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime)
 }
