@@ -458,8 +458,9 @@ CryptoNote.prototype.generateKeyImage = function (transactionPublicKey, privateV
 
 /* This method is designed to create a new transfer to be
    used in the construct transaction method */
-CryptoNote.prototype.createTransfer = function (address, amount) {
+CryptoNote.prototype.createOutputs = function (address, amount) {
   amount = amount || false
+  var result = []
 
   /* If we didn't specify an amount we can't send anything */
   if (!amount) {
@@ -469,14 +470,25 @@ CryptoNote.prototype.createTransfer = function (address, amount) {
   /* Decode the address into it's important bits */
   var addressDecoded = this.decodeAddress(address)
 
-  /* Spit it back in a structure that construct transaction can use */
-  return {
-    amount: amount,
-    keys: {
-      publicViewKey: addressDecoded.publicViewKey,
-      publicSpendKey: addressDecoded.publicSpendKey
-    }
+  /* Now we need to decompose the amount into "pretty" amounts
+     that we can actually mix later. We're doing this by
+     converting the amount to a character array and reversing
+     it so that we have the digits in each place */
+  var amountChars = amount.toString().split('').reverse()
+
+  for (var i = 0; i < amountChars.length; i++) {
+    var amt = parseInt(amountChars[i]) * Math.pow(10, i)
+    result.push({
+      amount: amt,
+      keys: {
+        publicViewKey: addressDecoded.publicViewKey,
+        publicSpendKey: addressDecoded.publicSpendKey
+      }
+    })
   }
+
+  /* Spit it back in a structure that construct transaction can use */
+  return result
 }
 
 CryptoNote.prototype.createTransaction = function (ourKeys, transfers, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime) {
