@@ -69,7 +69,7 @@ assert(derivedPublicKey === testPublicKey)
 var amount = 1234567
 console.log('')
 console.log('Creating outputs for amount %s to %s', amount, newAddress.address)
-var transfers = cnUtil.createOutputs(newAddress.address, amount)
+var transfers = cnUtil.createTransactionOutputs(newAddress.address, amount)
 var amounts = []
 transfers.forEach((elem) => {
   amounts.push(elem.amount)
@@ -81,7 +81,7 @@ assert(transfers.length === 7)
 amount = 101010
 console.log('')
 console.log('Creating outputs for amount %s to %s', amount, newAddress.address)
-transfers = cnUtil.createOutputs(newAddress.address, amount)
+transfers = cnUtil.createTransactionOutputs(newAddress.address, amount)
 amounts = []
 transfers.forEach((elem) => {
   amounts.push(elem.amount)

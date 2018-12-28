@@ -456,42 +456,7 @@ CryptoNote.prototype.generateKeyImage = function (transactionPublicKey, privateV
   }
 }
 
-/* This method is designed to create a new transfer to be
-   used in the construct transaction method */
-CryptoNote.prototype.createOutputs = function (address, amount) {
-  amount = amount || false
-  var result = []
-
-  /* If we didn't specify an amount we can't send anything */
-  if (!amount) {
-    throw new Error('You must specify an amount')
-  }
-
-  /* Decode the address into it's important bits */
-  var addressDecoded = this.decodeAddress(address)
-
-  /* Now we need to decompose the amount into "pretty" amounts
-     that we can actually mix later. We're doing this by
-     converting the amount to a character array and reversing
-     it so that we have the digits in each place */
-  var amountChars = amount.toString().split('').reverse()
-
-  for (var i = 0; i < amountChars.length; i++) {
-    var amt = parseInt(amountChars[i]) * Math.pow(10, i)
-    if (amt !== 0) {
-      result.push({
-        amount: amt,
-        keys: {
-          publicViewKey: addressDecoded.publicViewKey,
-          publicSpendKey: addressDecoded.publicSpendKey
-        }
-      })
-    }
-  }
-
-  /* Spit it back in a structure that construct transaction can use */
-  return result
-}
+CryptoNote.prototype.createTransactionOutputs = createTransactionOutputs
 
 CryptoNote.prototype.createTransaction = function (ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime) {
   return createTransaction(ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime)
@@ -839,7 +804,7 @@ function privateKeyToPublicKey (privateKey) {
 
 function cnFastHash (input) {
   if (input.length % 2 !== 0 || !isHex(input)) {
-    throw new Error('Invalid input')
+    throw new Error('Invalid input: ' + input)
   }
 
   return Sha3.keccak_256(hex2bin(input))
@@ -895,7 +860,7 @@ function generateKeys (seed) {
 
 function randomKeypair () {
   /* Generate a random key pair */
-  return generateKeys(rand32())
+  return generateKeys(simpleKdf(rand32(), 1))
 }
 
 function randomScalar () {
@@ -1023,6 +988,7 @@ function generateRingSignature (transactionPrefixHash, keyImage, inputKeys, priv
   var pubM = CNCrypto._malloc(SIZES.KEYIMAGE)
   var secM = CNCrypto._malloc(SIZES.KEYIMAGE)
   CNCrypto.HEAPU8.set(hex2bin(privateKey), secM)
+  // this is where we segfault
   if (_GeFrombytesVartime(imageUnpM, imageM) !== 0) {
     throw new Error('failed to call ge_frombytes_vartime')
   }
@@ -1101,124 +1067,65 @@ function isValidKeys (publicViewKey, privateViewKey, publicSpendKey, privateSpen
   return ((expectedPublicSpendKey === publicSpendKey) && (expectedPublicViewKey === publicViewKey))
 }
 
-function createTransaction (ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime) {
+function createTransaction (wallet, newOutputs, ourOutputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime) {
   unlockTime = unlockTime || 0
-  randomOuts = randomOuts || []
+  randomOutputs = randomOutputs || []
 
-  /* Make sure that we're actually trying to send somewhere */
+  /* Verify that we've been passed an array of outputs */
   if (!Array.isArray(newOutputs)) {
     throw new Error('newOutputs must be an array')
   }
 
-  /* We need at least as many sets of random outputs as we have our own
-     outputs to be able to generate the requested ring size */
-  if (randomOuts.length !== ourOutputs.length && mixin !== 0) {
-    throw new Error('Not enough mixins supplied with transaction')
+  /* Verify that we've been passed an array of our outputs (our funds) */
+  if (!Array.isArray(ourOutputs)) {
+    throw new Error('ourOutputs must be an array')
   }
 
-  /* Loop through each set of random outputs and make sure that
-     we got enough back to be able to generate the requested ring
-     size for each amount */
-  for (var i = 0; i < randomOuts.length; i++) {
-    if ((randomOuts[i].outputs || []).length < mixin) {
-      throw new Error('Not enough outputs to mix with')
+  /* Make sure that if we are to use mixins that we've been given the
+     correct number of sets of random outputs */
+  if (randomOutputs.length !== ourOutputs.length && mixin !== 0) {
+    throw new Error('Not enough random outputs sets were supplied with the transaction')
+  }
+
+  /* Make sure that there are the correct number of random outputs
+     in each one of the sets that we were passed */
+  for (var i = 0; i < randomOutputs.length; i++) {
+    if ((randomOutputs[i] || []).length < mixin) {
+      throw new Error('There are not enough outputs to mix with in the random outputs sets')
     }
   }
 
-  /* Check to make sure that we have a valid set of keys */
-  if (!isValidKeys(ourKeys.view.publicKey, ourKeys.view.privateKey, ourKeys.spend.publicKey, ourKeys.spend.privateKey)) {
-    throw new Error('Invalid keys supplied')
+  /* Verify that our wallet keys are actually valid */
+  if (!isValidKeys(wallet.view.publicKey, wallet.view.privateKey, wallet.spend.publicKey, wallet.spend.privateKey)) {
+    throw new Error('The wallet keys supplied are not valid')
   }
 
-  /* Check to make sure that we're not sending more money than
-     is actually possible considering a 64-bit number */
+  /* Make sure that we're not trying to send more money than
+     is actually possible within the confines of a uint64 */
   var neededMoney = BigInteger.ZERO
   for (i = 0; i < newOutputs.length; i++) {
     neededMoney = neededMoney.add(newOutputs[i].amount)
     if (neededMoney.compare(UINT64_MAX) !== -1) {
-      throw new Error('Total output amount overflows UINT64_MAX')
+      throw new Error('Total output amount exceeds UINT64_MAX')
     }
   }
 
-  /* Check to make sure that we're not grabbing more outputs
-     than is actually possible considering a 64-bit number */
+  /* Make sure that we're not trying to spend more money than
+     is actually possible within the confines of a uint64 */
   var foundMoney = BigInteger.ZERO
-  var inputs = []
-  for (i = 0; i < ourOutputs.length; ++i) {
+  for (i = 0; i < ourOutputs.length; i++) {
     foundMoney = foundMoney.add(ourOutputs[i].amount)
     if (foundMoney.compare(UINT64_MAX) !== -1) {
-      throw new Error('Total input amount overflows UINT64_MAX')
+      throw new Error('Total input amount exceeds UINT64_MAX')
     }
-
-    /* While we're in here, let's build the inputs for later */
-    const src = {
-      outputs: [],
-      amount: BigInteger(ourOutputs[i].amount).toString()
-    }
-
-    /* We've got to handle the random outputs here */
-    if (randomOuts.length !== 0) {
-      /* First we need to sort the random outputs by
-         their global indexes */
-      randomOuts[i].outputs.sort(function (a, b) {
-        return BigInteger(a.globalIndex).compare(b.globalIndex)
-      })
-      var j = 0
-
-      /* Let's start mixing */
-      while ((src.outputs.length < mixin) && (j < randomOuts[i].outputs.length)) {
-        /* Get the mixin */
-        var out = randomOuts[i].outputs[j]
-
-        /* We can't mix ourself with ourself */
-        if (out.globalIndex === ourOutputs.globalIndex) {
-          j++
-          continue
-        }
-
-        /* Build out our new output object */
-        var oe = {
-          index: out.globalIndex.toString(),
-          key: out.key
-        }
-
-        /* Push our new output on to the outputs stack */
-        src.outputs.push(oe)
-        j++
-      }
-    }
-
-    /* Build our real output entry */
-    var realOe = {
-      index: BigInteger(ourOutputs[i].globalIndex || 0).toString(),
-      key: ourOutputs[i].key
-    }
-
-    /* The real one is at the end, so far */
-    var realIndex = src.outputs.length
-
-    /* Find where we should insert this bad boy at */
-    for (j = 0; j < src.outputs.length; j++) {
-      if (BigInteger(realOe.index).compare(src.outputs[j].index) < 0) {
-        realIndex = j
-        break
-      }
-    }
-
-    /* Let's go ahead and insert the real output (input)
-       in to the middle of the deck (so to speak) */
-    src.outputs.splice(realIndex, 0, realOe)
-
-    /* We have to know where this bad boy actually lives */
-    src.realOutputIndex = realIndex
-
-    /* Now push all that into the input stack for later */
-    inputs.push(src)
   }
 
+  /* Validate that we're spending all of the necessary funds
+     and that the transaction balances properly. We do this
+     relatively early as everything starts to get a little
+     more computationally expensive from here on out */
   var change = BigInteger.ZERO
   var cmp = neededMoney.compare(foundMoney)
-
   if (cmp < 0) {
     change = foundMoney.subtract(neededMoney)
     if (change.compare(feeAmount) !== 0) {
@@ -1228,125 +1135,235 @@ function createTransaction (ourKeys, newOutputs, ourOutputs, randomOuts, mixin, 
     throw new Error('We need more money than was currently supplied for the transaction')
   }
 
-  return constructTransaction(ourKeys, inputs, newOutputs, feeAmount, paymentId, unlockTime)
-}
+  /* Create our transaction inputs using the helper function */
+  var transactionInputs = createTransactionInputs(ourOutputs, randomOutputs, mixin)
 
-function constructTransaction (ourKeys, inputs, newOutputs, feeAmount, paymentId, unlockTime) {
-  /* Every transaction needs a one-time key pair */
-  const transactionKeys = randomKeypair()
-  var extra = ''
+  /* Prepare our transaction outputs using the helper function */
+  var transactionOutputs = prepareTransactionOutputs(wallet, newOutputs)
 
-  /* If we have to payment ID we need to add it to extra */
+  var transactionExtra = ''
+  /* If we have a payment ID we need to add it to tx_extra */
   if (isHex64(paymentId)) {
     const nonce = getPaymentIdNonce(paymentId)
-    extra = addNonceToExtra(extra, nonce)
+    transactionExtra = addNonceToExtra(transactionExtra, nonce)
   }
 
-  /* Set up our transaction structure */
+  /* Start constructing our actual transaction */
   const tx = {
     unlockTime: unlockTime,
     version: CURRENT_TX_VERSION,
-    extra: extra,
-    prvkey: transactionKeys.privateKey,
+    extra: transactionExtra,
+    prvkey: transactionOutputs.transactionKeys.privateKey,
     vin: [],
     vout: [],
     signatures: []
   }
 
-  var inContexts = []
-  var inputsMoney = BigInteger.ZERO
-
-  /* Sort our inputs by Key Image */
-  inputs.sort(function (a, b) {
+  transactionInputs.sort(function (a, b) {
     return (BigInteger.parse(a.keyImage, 16).compare(BigInteger.parse(b.keyImage, 16)) * -1)
   })
 
-  /* Copy the sorted inputs to the transaction */
-  for (var i = 0; i < inputs.length; i++) {
-    inputsMoney = inputsMoney.add(inputs[i].amount)
-    inContexts.push(inputs[i].input)
-
-    /* Set up the structure for our new input */
-    var inputToKey = {
+  transactionInputs.forEach((input) => {
+    const inputToKey = {
       type: 'input_to_key',
-      amount: inputs[i].amount,
-      keyImage: inputs[i].keyImage,
+      amount: input.amount,
+      keyImage: input.keyImage,
       keyOffsets: []
     }
 
-    /* Add our random output offsets to the new input */
-    for (var j = 0; j < inputs[i].outputs.length; ++j) {
-      inputToKey.keyOffsets.push(inputs[i].outputs[j].index)
-    }
+    input.outputs.forEach((output) => {
+      inputToKey.keyOffsets.push(output.index)
+    })
 
-    /* Convert the absolute offsets to relative offsets */
     inputToKey.keyOffsets = absoluteToRelativeOffsets(inputToKey.keyOffsets)
 
     tx.vin.push(inputToKey)
-  }
+  })
 
-  var outputsMoney = BigInteger.ZERO
-  var outIndex = 0
+  transactionOutputs.outputs.forEach((output) => {
+    tx.vout.push(output)
+  })
 
-  /* Copy the outputs into the transfaction after setting up the images */
-  for (i = 0; i < newOutputs.length; ++i) {
-    /* We can't have amounts smaller than 0 */
-    if (BigInteger(newOutputs[i].amount).compare(0) < 0) {
-      throw new Error('dst.amount < 0')
-    }
+  tx.extra = addTransactionPublicKeyToExtra(tx.extra, transactionOutputs.transactionKeys.publicKey)
 
-    var outDerivation
-    if (newOutputs[i].keys.publicViewKey === ourKeys.view.publicKey) {
-      /* If we are sending change to ourself, then we need to be able
-         to find the resulting output on the other side */
-      outDerivation = generateKeyDerivation(transactionKeys.publicKey, ourKeys.view.privateKey)
-    } else {
-      /* Sending anywhere else and this works like normal */
-      outDerivation = generateKeyDerivation(newOutputs[i].keys.publicViewKey, transactionKeys.privateKey)
-    }
+  for (i = 0; i < transactionInputs.length; i++) {
+    var txInput = transactionInputs[i]
 
-    /* Generate the one-time output */
-    const outEphemeralPub = derivePublicKey(outDerivation, outIndex, newOutputs[i].keys.publicSpendKey)
+    var srcKeys = []
+    txInput.outputs.forEach((out) => {
+      srcKeys.push(out.key)
+    })
 
-    /* Construct the output */
-    const out = {
-      amount: newOutputs[i].amount.toString(),
-      target: {
-        type: 'txout_to_key',
-        key: outEphemeralPub
-      }
-    }
-
-    /* Push the output into the transaction */
-    tx.vout.push(out)
-    ++outIndex
-    outputsMoney = outputsMoney.add(newOutputs[i].amount)
-  }
-
-  /* Add the transaction key to extra */
-  tx.extra = addTransactionPublicKeyToExtra(tx.extra, transactionKeys.publicKey)
-
-  /* Make sure we aren't spending more than we have inputs for */
-  if (outputsMoney.add(feeAmount).compare(inputsMoney) > 0) {
-    throw new Error('Trying to spend ' + outputsMoney.toString() + ' but only supplied ' + inputsMoney.toString())
-  }
-
-  /* Now to generate the ring signatures */
-  for (i = 0; i < inputs.length; ++i) {
-    const srcKeys = []
-
-    for (j = 0; j < inputs[i].outputs.length; ++j) {
-      srcKeys.push(inputs[i].outputs[j].key)
-    }
-
-    /* Generate the ring signature */
-    const sigs = generateRingSignature(getTransactionPrefixHash(tx), tx.vin[i].keyImage, srcKeys, inContexts[i].privateKey, inputs[i].realOutputIndex)
-
-    /* Push the signatures into the transaction */
+    const sigs = generateRingSignature(getTransactionPrefixHash(tx), txInput.keyImage, srcKeys, txInput.input.privateEphemeral, txInput.realOutputIndex)
     tx.signatures.push(sigs)
   }
 
   return tx
+}
+
+/* This method is designed to create mixed inputs for use
+   during transaction construction */
+function createTransactionInputs (ourOutputs, randomOutputs, mixin) {
+  /* Make sure that if we are to use mixins that we've been given the
+     correct number of sets of random outputs */
+  if (ourOutputs.length !== randomOutputs.length && mixin !== 0) {
+    throw new Error('There are not enough random output sets to mix with the real outputs')
+  }
+
+  /* Make sure that there are the correct number of random outputs
+     in each one of the sets that we were passed */
+  for (var i = 0; i < randomOutputs.length; i++) {
+    if ((randomOutputs[i] || []).length < mixin) {
+      throw new Error('There are not enough outputs to mix with in the random outputs sets')
+    }
+  }
+
+  var mixedInputs = []
+
+  /* Loop through our outputs that we're using to send funds */
+  for (i = 0; i < ourOutputs.length; i++) {
+    const mixedOutputs = []
+    const realOutput = ourOutputs[i]
+
+    /* If we're using mixins, then we need to use the random outputs */
+    if (mixin !== 0) {
+      /* Select our set of random outputs */
+      const fakeOutputs = randomOutputs[i]
+
+      /* Sort the random outputs by their global indexes */
+      fakeOutputs.sort((a, b) => {
+        return BigInteger(a.globalIndex).compare(b.globalIndex)
+      })
+
+      /* Insert the fake outputs into our array of mixed outputs */
+      fakeOutputs.forEach((output) => {
+        if (output.globalIndex === realOutput.globalIndex) {
+          throw new Error('It is impossible to mix with yourself. Find some more random outputs and try again.')
+        }
+        mixedOutputs.push({
+          key: output.key,
+          index: output.globalIndex
+        })
+      })
+    }
+
+    /* Insert our real output into the stack of mixed outputs */
+    mixedOutputs.push({
+      key: realOutput.key,
+      index: realOutput.globalIndex
+    })
+
+    /* Sort the outputs again by `globalIndex` */
+    mixedOutputs.sort((a, b) => { return BigInteger(a.index).compare(b.index) })
+
+    /* Set up our actual input, some extra information is added here
+       to save time later */
+    const input = {
+      amount: realOutput.amount,
+      realOutputIndex: 0,
+      keyImage: realOutput.keyImage || false,
+      input: realOutput.input,
+      outputs: mixedOutputs
+    }
+
+    /* Loop through the mixed outputs and look for our real input
+       as we'll need to know which one it is in the array later */
+    for (var j = 0; j < mixedOutputs.length; j++) {
+      if (mixedOutputs[j].index === realOutput.globalIndex) {
+        input.realOutputIndex = j
+      }
+    }
+
+    /* Push the input on to our stack */
+    mixedInputs.push(input)
+  }
+
+  /* Return the array of mixed inputs */
+  return mixedInputs
+}
+
+/* This method is designed to create new outputs for use
+   during transaction creation */
+function createTransactionOutputs (address, amount) {
+  amount = amount || false
+
+  /* If we didn't specify an amount we can't send anything */
+  if (!amount || amount < 0) {
+    throw new Error('You must specify a valid amount')
+  }
+
+  const result = []
+
+  /* Decode the address into it's important bits */
+  var addressDecoded = this.decodeAddress(address)
+
+  /* Now we need to decompose the amount into "pretty" amounts
+     that we can actually mix later. We're doing this by
+     converting the amount to a character array and reversing
+     it so that we have the digits in each place */
+  var amountChars = amount.toString().split('').reverse()
+
+  /* Loop through the amount characters */
+  for (var i = 0; i < amountChars.length; i++) {
+    /* Create pretty amounts */
+    var amt = parseInt(amountChars[i]) * Math.pow(10, i)
+
+    if (amt !== 0) {
+      result.push({
+        amount: amt,
+        keys: addressDecoded
+      })
+    }
+  }
+
+  return result
+}
+
+function prepareTransactionOutputs (wallet, outputs) {
+  /* Verify that our wallet keys are actually valid */
+  if (!isValidKeys(wallet.view.publicKey, wallet.view.privateKey, wallet.spend.publicKey, wallet.spend.privateKey)) {
+    throw new Error('The wallet keys supplied are not valid')
+  }
+
+  if (!Array.isArray(outputs)) {
+    throw new Error('Must supply an array of outputs')
+  }
+
+  /* Generate a transaction key pair */
+  const transactionKeys = randomKeypair()
+
+  /* Sort our outputs by amount */
+  outputs.sort((a, b) => (a.amount > b.amount) ? 1 : ((b.amount > a.amount) ? -1 : 0))
+
+  const preparedOutputs = []
+  for (var i = 0; i < outputs.length; i++) {
+    var output = outputs[i]
+    if (output.amount <= 0) {
+      throw new Error('Cannot have an amount <= 0')
+    }
+
+    var outDerivation
+    /* If the amount is being sent to us, we need to handle that correctly */
+    if (output.keys.publicViewKey === wallet.view.publicKey) {
+      outDerivation = generateKeyDerivation(transactionKeys.publicKey, wallet.view.privateKey)
+    } else {
+      outDerivation = generateKeyDerivation(output.keys.publicViewKey, transactionKeys.privateKey)
+    }
+
+    /* Generate the one time output key */
+    const outEphemeralPub = derivePublicKey(outDerivation, i, output.keys.publicSpendKey)
+
+    /* Push it on to our stack */
+    preparedOutputs.push({
+      amount: output.amount,
+      target: {
+        data: outEphemeralPub
+      },
+      type: 'txout_to_key'
+    })
+  }
+
+  return { transactionKeys, outputs: preparedOutputs }
 }
 
 function getTransactionPrefixHash (tx) {
@@ -1401,13 +1418,13 @@ function serializeTransaction (tx, headerOnly) {
   for (i = 0; i < tx.vout.length; i++) {
     var vout = tx.vout[i]
     buf += encodeVarint(vout.amount)
-    switch (vout.target.type.toLowerCase()) {
+    switch (vout.type.toLowerCase()) {
       case 'txout_to_key':
         buf += '02'
-        buf += vout.target.key
+        buf += vout.target.data
         break
       default:
-        throw new Error('Unhandled transacount output type: ' + vout.target.type)
+        throw new Error('Unhandled transacount output type: ' + vout.type)
     }
   }
 
