@@ -66,17 +66,29 @@ console.log('Out Derived Public Key: ', derivedPublicKey)
 
 assert(derivedPublicKey === testPublicKey)
 
-const amount = 1234567
+var amount = 1234567
 console.log('')
 console.log('Creating outputs for amount %s to %s', amount, newAddress.address)
-const transfers = cnUtil.createOutputs(newAddress.address, amount)
-const amounts = []
+var transfers = cnUtil.createOutputs(newAddress.address, amount)
+var amounts = []
 transfers.forEach((elem) => {
   amounts.push(elem.amount)
 })
 console.log('Created %s outputs [%s]', transfers.length, amounts.join(','))
 
-assert(transfers.length === amount.toString().length)
+assert(transfers.length === 7)
+
+amount = 101010
+console.log('')
+console.log('Creating outputs for amount %s to %s', amount, newAddress.address)
+transfers = cnUtil.createOutputs(newAddress.address, amount)
+amounts = []
+transfers.forEach((elem) => {
+  amounts.push(elem.amount)
+})
+console.log('Created %s outputs [%s]', transfers.length, amounts.join(','))
+
+assert(transfers.length === 3)
 
 console.log('')
 console.log('Validating prefix detection for alternate chain...')

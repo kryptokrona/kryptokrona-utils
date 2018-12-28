@@ -478,13 +478,15 @@ CryptoNote.prototype.createOutputs = function (address, amount) {
 
   for (var i = 0; i < amountChars.length; i++) {
     var amt = parseInt(amountChars[i]) * Math.pow(10, i)
-    result.push({
-      amount: amt,
-      keys: {
-        publicViewKey: addressDecoded.publicViewKey,
-        publicSpendKey: addressDecoded.publicSpendKey
-      }
-    })
+    if (amt !== 0) {
+      result.push({
+        amount: amt,
+        keys: {
+          publicViewKey: addressDecoded.publicViewKey,
+          publicSpendKey: addressDecoded.publicSpendKey
+        }
+      })
+    }
   }
 
   /* Spit it back in a structure that construct transaction can use */
