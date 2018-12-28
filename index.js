@@ -474,8 +474,7 @@ CryptoNote.prototype.createTransfer = function (address, amount) {
     amount: amount,
     keys: {
       publicViewKey: addressDecoded.publicViewKey,
-      publicSpendKey: addressDecoded.publicSpendKey,
-      paymentId: addressDecoded.paymentId
+      publicSpendKey: addressDecoded.publicSpendKey
     }
   }
 }
