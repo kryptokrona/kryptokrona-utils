@@ -493,8 +493,8 @@ CryptoNote.prototype.createOutputs = function (address, amount) {
   return result
 }
 
-CryptoNote.prototype.createTransaction = function (ourKeys, transfers, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime) {
-  return createTransaction(ourKeys, transfers, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime)
+CryptoNote.prototype.createTransaction = function (ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime) {
+  return createTransaction(ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime)
 }
 
 CryptoNote.prototype.serializeTransaction = function (transaction) {
@@ -1101,13 +1101,13 @@ function isValidKeys (publicViewKey, privateViewKey, publicSpendKey, privateSpen
   return ((expectedPublicSpendKey === publicSpendKey) && (expectedPublicViewKey === publicViewKey))
 }
 
-function createTransaction (ourKeys, transfers, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime) {
+function createTransaction (ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime) {
   unlockTime = unlockTime || 0
   randomOuts = randomOuts || []
 
   /* Make sure that we're actually trying to send somewhere */
-  if (transfers.length === 0) {
-    throw new Error('No transfers specified')
+  if (!Array.isArray(newOutputs)) {
+    throw new Error('newOutputs must be an array')
   }
 
   /* We need at least as many sets of random outputs as we have our own
@@ -1133,8 +1133,8 @@ function createTransaction (ourKeys, transfers, ourOutputs, randomOuts, mixin, f
   /* Check to make sure that we're not sending more money than
      is actually possible considering a 64-bit number */
   var neededMoney = BigInteger.ZERO
-  for (i = 0; i < transfers.length; i++) {
-    neededMoney = neededMoney.add(transfers[i].amount)
+  for (i = 0; i < newOutputs.length; i++) {
+    neededMoney = neededMoney.add(newOutputs[i].amount)
     if (neededMoney.compare(UINT64_MAX) !== -1) {
       throw new Error('Total output amount overflows UINT64_MAX')
     }
@@ -1228,10 +1228,10 @@ function createTransaction (ourKeys, transfers, ourOutputs, randomOuts, mixin, f
     throw new Error('We need more money than was currently supplied for the transaction')
   }
 
-  return constructTransaction(ourKeys, inputs, transfers, feeAmount, paymentId, unlockTime)
+  return constructTransaction(ourKeys, inputs, newOutputs, feeAmount, paymentId, unlockTime)
 }
 
-function constructTransaction (ourKeys, inputs, transfers, feeAmount, paymentId, unlockTime) {
+function constructTransaction (ourKeys, inputs, newOutputs, feeAmount, paymentId, unlockTime) {
   /* Every transaction needs a one-time key pair */
   const transactionKeys = randomKeypair()
   var extra = ''
@@ -1289,28 +1289,28 @@ function constructTransaction (ourKeys, inputs, transfers, feeAmount, paymentId,
   var outIndex = 0
 
   /* Copy the outputs into the transfaction after setting up the images */
-  for (i = 0; i < transfers.length; ++i) {
+  for (i = 0; i < newOutputs.length; ++i) {
     /* We can't have amounts smaller than 0 */
-    if (BigInteger(transfers[i].amount).compare(0) < 0) {
+    if (BigInteger(newOutputs[i].amount).compare(0) < 0) {
       throw new Error('dst.amount < 0')
     }
 
     var outDerivation
-    if (transfers[i].keys.publicViewKey === ourKeys.view.publicKey) {
+    if (newOutputs[i].keys.publicViewKey === ourKeys.view.publicKey) {
       /* If we are sending change to ourself, then we need to be able
          to find the resulting output on the other side */
       outDerivation = generateKeyDerivation(transactionKeys.publicKey, ourKeys.view.privateKey)
     } else {
       /* Sending anywhere else and this works like normal */
-      outDerivation = generateKeyDerivation(transfers[i].keys.publicViewKey, transactionKeys.privateKey)
+      outDerivation = generateKeyDerivation(newOutputs[i].keys.publicViewKey, transactionKeys.privateKey)
     }
 
     /* Generate the one-time output */
-    const outEphemeralPub = derivePublicKey(outDerivation, outIndex, transfers[i].keys.publicSpendKey)
+    const outEphemeralPub = derivePublicKey(outDerivation, outIndex, newOutputs[i].keys.publicSpendKey)
 
     /* Construct the output */
     const out = {
-      amount: transfers[i].amount.toString(),
+      amount: newOutputs[i].amount.toString(),
       target: {
         type: 'txout_to_key',
         key: outEphemeralPub
@@ -1320,7 +1320,7 @@ function constructTransaction (ourKeys, inputs, transfers, feeAmount, paymentId,
     /* Push the output into the transaction */
     tx.vout.push(out)
     ++outIndex
-    outputsMoney = outputsMoney.add(transfers[i].amount)
+    outputsMoney = outputsMoney.add(newOutputs[i].amount)
   }
 
   /* Add the transaction key to extra */
