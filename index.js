@@ -13,7 +13,6 @@ const Base58 = require('./lib/base58.js')
 const CNCrypto = require('./lib/crypto.js')
 const Mnemonic = require('./lib/mnemonic.js')
 const NACL = require('./lib/nacl-fast-cn.js')
-const Sha3 = require('./lib/sha3.js')
 const VarintDecoder = require('varint-decoder')
 const SecureRandomString = require('secure-random-string')
 const Numeral = require('numeral')
@@ -461,6 +460,7 @@ CryptoNote.prototype.generateKeyImage = function (transactionPublicKey, privateV
   }
 }
 
+CryptoNote.prototype.generateKeyImagePrimitive = generateKeyImage
 CryptoNote.prototype.createTransactionOutputs = createTransactionOutputs
 
 CryptoNote.prototype.createTransaction = function (ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime) {
@@ -748,32 +748,7 @@ function generateKeyImage (publicKey, privateKey) {
     throw new Error('Invalid secret key format')
   }
 
-  var pubM = CNCrypto._malloc(SIZES.KEYIMAGE)
-  var secM = CNCrypto._malloc(SIZES.KEYIMAGE)
-  CNCrypto.HEAPU8.set(hex2bin(publicKey), pubM)
-  CNCrypto.HEAPU8.set(hex2bin(privateKey), secM)
-
-  if (CNCrypto.ccall('sc_check', 'number', ['number'], [secM]) !== 0) {
-    throw new Error('sc_check(privateKey) != 0')
-  }
-
-  var pointM = CNCrypto._malloc(SIZES.GEP3)
-  var point2M = CNCrypto._malloc(SIZES.GEP2)
-  var pointB = hex2bin(hashToEc(publicKey))
-  CNCrypto.HEAPU8.set(pointB, pointM)
-
-  var imageM = CNCrypto._malloc(SIZES.KEYIMAGE)
-  CNCrypto.ccall('ge_scalarmult', 'void', ['number', 'number', 'number'], [point2M, secM, pointM])
-  CNCrypto.ccall('ge_tobytes', 'void', ['number', 'number'], [imageM, point2M])
-
-  var result = CNCrypto.HEAPU8.subarray(imageM, imageM + SIZES.KEYIMAGE)
-  CNCrypto._free(pubM)
-  CNCrypto._free(secM)
-  CNCrypto._free(pointM)
-  CNCrypto._free(point2M)
-  CNCrypto._free(imageM)
-
-  return bin2hex(result)
+  return RingSigs.generate_key_image(publicKey, privateKey)
 }
 
 function hashToScalar (buf) {
@@ -812,7 +787,7 @@ function cnFastHash (input) {
     throw new Error('Invalid input: ' + input)
   }
 
-  return Sha3.keccak_256(hex2bin(input))
+  return RingSigs.cn_fast_hash(input)
 }
 
 function simpleKdf (str, iterations) {
@@ -820,33 +795,9 @@ function simpleKdf (str, iterations) {
      psuedo PBKDF2 function */
   var hex = bin2hex(str2bin(str))
   for (var n = 0; n < iterations; ++n) {
-    hex = Sha3.keccak_256(hex2bin(hex))
+    hex = cnFastHash(hex)
   }
   return hex
-}
-
-function hashToEc (key) {
-  if (key.length !== (SIZES.KEY)) {
-    throw new Error('Invalid key length')
-  }
-
-  var hM = CNCrypto._malloc(SIZES.KEYIMAGE)
-  var pointM = CNCrypto._malloc(SIZES.GEP2)
-  var point2M = CNCrypto._malloc(SIZES.GEP1P1)
-  var resM = CNCrypto._malloc(SIZES.GEP3)
-  var hash = hex2bin(cnFastHash(key, SIZES.KEYIMAGE))
-  CNCrypto.HEAPU8.set(hash, hM)
-  CNCrypto.ccall('ge_fromfe_frombytes_vartime', 'void', ['number', 'number'], [pointM, hM])
-  CNCrypto.ccall('ge_mul8', 'void', ['number', 'number'], [point2M, pointM])
-  CNCrypto.ccall('ge_p1p1_to_p3', 'void', ['number', 'number'], [resM, point2M])
-
-  var result = CNCrypto.HEAPU8.subarray(resM, resM + SIZES.GEP3)
-  CNCrypto._free(hM)
-  CNCrypto._free(pointM)
-  CNCrypto._free(point2M)
-  CNCrypto._free(resM)
-
-  return bin2hex(result)
 }
 
 function generateKeys (seed) {
