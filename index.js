@@ -453,6 +453,10 @@ CryptoNote.prototype.generateKeyImage = function (transactionPublicKey, privateV
 
   return {
     input: {
+      transactionKey: {
+        publicKey: transactionPublicKey,
+        privateKey: recvDerivation
+      },
       publicEphemeral: publicEphemeral,
       privateEphemeral: privateEphemeral
     },
