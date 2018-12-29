@@ -510,17 +510,6 @@ function swapEndian (hex) {
   return result
 }
 
-/*
-function swapEndianC (str) {
-  var result = ''
-
-  for (var i = 1; i <= str.length; i++) {
-    result += str.substr(0 - i, 1)
-  }
-  return result
-}
-*/
-
 function d2h (integer) {
   if (typeof integer !== 'string' && integer.toString().length > 15) {
     throw new Error('Integer should be entered as a string for precision')
@@ -538,32 +527,6 @@ function d2h (integer) {
 function d2s (integer) {
   return swapEndian(d2h(integer))
 }
-
-/*
-function d2b (integer) {
-  if (typeof integer !== 'string' && integer.toString().length > 15) {
-    throw new Error('Integer should be entered as a string for precision')
-  }
-
-  var padding = ''
-  for (var i = 0; i < 64; i++) {
-    padding += '0'
-  }
-
-  var a = BigInteger(integer)
-  if (a.toString(2).length > 64) {
-    throw new Error('Amount overflows uint64')
-  }
-
-  return swapEndianC((padding + a.toString(2)).slice(-(SIZES.KEY)))
-}
-*/
-
-/*
-function s2d (scalar) {
-  return BigInteger.parse(swapEndian(scalar), 16).toString()
-}
-*/
 
 function hex2bin (hex) {
   if (hex.length % 2 !== 0) {
@@ -597,37 +560,10 @@ function str2bin (str) {
   return result
 }
 
-/*
-function bin2str (bin) {
-  var result = []
-  for (var i = 0; i < bin.length; i++) {
-    result.push(String.fromCharCode(bin[i]))
-  }
-
-  return result.join('')
-}
-*/
-
 function rand32 () {
   /* Go get 256-bits (32 bytes) of random data */
   return Mnemonic.random(256)
 }
-
-/*
-function rand16 () {
-  /* Go get 128-bits (16 bytes) of random data */
-/*
-  return Mnemonic.random(128)
-}
-*/
-
-/*
-function rand8 () {
-  /* Go get 64-bits (8 bytes) of random data */
-/*
-  return Mnemonic.random(64)
-}
-*/
 
 function encodeVarint (i) {
   i = BigInteger(i)
@@ -667,12 +603,6 @@ function scReduce (hex, size) {
 function scReduce32 (hex) {
   return scReduce(hex, 32)
 }
-
-/*
-function scReduce64 (hex) {
-  return scReduce(hex, 64)
-}
-*/
 
 function geScalarMult (publicKey, privateKey) {
   if (!isHex64(publicKey)) {
@@ -1229,18 +1159,6 @@ function getTransactionPrefixHash (tx) {
   /* Hash it */
   return cnFastHash(prefix)
 }
-
-/*
-function getTransactionHash (tx) {
-  /* Check to see if we already serialized the transaction */
-/*
-  if (typeof tx === 'string') {
-    return cnFastHash(tx)
-  } else {
-    return cnFastHash(serializeTransaction(tx))
-  }
-}
-*/
 
 function serializeTransaction (tx, headerOnly) {
   headerOnly = headerOnly || false
