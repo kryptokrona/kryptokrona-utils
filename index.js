@@ -17,6 +17,7 @@ const Sha3 = require('./lib/sha3.js')
 const VarintDecoder = require('varint-decoder')
 const SecureRandomString = require('secure-random-string')
 const Numeral = require('numeral')
+const RingSigs = require('./lib/ringsigs.js')
 
 const SIZES = {
   HASH: 64,
@@ -399,6 +400,10 @@ CryptoNote.prototype.isOurTransactionOutput = function (transactionPublicKey, ou
   /* If the derived transfer public key matches the output key then this output belongs to us */
   if (output.key === publicEphemeral) {
     output.input = {}
+    output.input.transactionKey = {
+      publicKey: transactionPublicKey,
+      privateKey: derivedKey
+    }
     output.input.publicEphemeral = publicEphemeral
 
     if (privateSpendKey) {
@@ -863,10 +868,6 @@ function randomKeypair () {
   return generateKeys(simpleKdf(rand32(), 1))
 }
 
-function randomScalar () {
-  return scReduce32(rand32())
-}
-
 /* This method calculates our relative offset positions for
    the globalIndexes for inclusion in a new transaction */
 function absoluteToRelativeOffsets (offsets) {
@@ -922,6 +923,8 @@ function addNonceToExtra (extra, nonce) {
 }
 
 function generateRingSignature (transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex) {
+  var sigs = []
+
   if (!isHex64(keyImage)) {
     throw new Error('Invalid Key Image format')
   }
@@ -938,123 +941,18 @@ function generateRingSignature (transactionPrefixHash, keyImage, inputKeys, priv
     throw new Error('Invalid realIndex supplied')
   }
 
-  /* Set up our external methods */
-  const _GeToBytes = CNCrypto.cwrap('ge_tobytes', 'void', ['number', 'number'])
-  const _geP3ToBytes = CNCrypto.cwrap('ge_p3_tobytes', 'void', ['number', 'number'])
-  const _GeScalarmultBase = CNCrypto.cwrap('ge_scalarmult_base', 'void', ['number', 'number'])
-  const _GeScalarmult = CNCrypto.cwrap('ge_scalarmult', 'void', ['number', 'number', 'number'])
-  const _ScAdd = CNCrypto.cwrap('sc_add', 'void', ['number', 'number', 'number'])
-  const _ScSub = CNCrypto.cwrap('sc_sub', 'void', ['number', 'number', 'number'])
-  const _ScMulsub = CNCrypto.cwrap('sc_mulsub', 'void', ['number', 'number', 'number', 'number'])
-  const _Sc0 = CNCrypto.cwrap('sc_0', 'void', ['number'])
-  const _GeDoubleScalarmultBaseVartime = CNCrypto.cwrap('ge_double_scalarmult_base_vartime', 'void', ['number', 'number', 'number', 'number'])
-  const _GeDoubleScalarmultPrecompVartime = CNCrypto.cwrap('ge_double_scalarmult_precomp_vartime', 'void', ['number', 'number', 'number', 'number', 'number'])
-  const _GeFrombytesVartime = CNCrypto.cwrap('ge_frombytes_vartime', 'number', ['number', 'number'])
-  const _GeDsmPrecomp = CNCrypto.cwrap('ge_dsm_precomp', 'void', ['number', 'number'])
+  var cSigs = new RingSigs.VectorString()
+  var cInputKeys = new RingSigs.VectorString()
 
-  /* Allocate space for our keys */
-  const bufSize = SIZES.ECPOINT * 2 * inputKeys.length
-  var bufM = CNCrypto._malloc(bufSize)
+  inputKeys.forEach((key) => {
+    cInputKeys.push_back(key)
+  })
 
-  /* Allocate space for the signatures */
-  const sigSize = SIZES.SIGNATURE * inputKeys.length
-  var sigM = CNCrypto._malloc(sigSize)
+  cSigs = RingSigs.generateRingSignatures(transactionPrefixHash, keyImage, cInputKeys, privateKey, realIndex)
 
-  /* Struct pointer helper functions */
-  function bufA (i) {
-    return bufM + SIZES.ECPOINT * (2 * i)
+  for (var i = 0; i < cSigs.size(); i++) {
+    sigs.push(cSigs.get(i))
   }
-  function bufB (i) {
-    return bufM + SIZES.ECPOINT * (2 * i)
-  }
-  function sigC (i) {
-    return sigM + SIZES.ECSCALAR * (2 * i)
-  }
-  function sigR (i) {
-    return sigM + SIZES.ECSCALAR * (2 * i + 1)
-  }
-
-  /* Now we start allocating a whole bunch of memory */
-  var imageM = CNCrypto._malloc(SIZES.KEY_IMAGE)
-  CNCrypto.HEAPU8.set(hex2bin(keyImage), imageM)
-  var i
-  var imageUnpM = CNCrypto._malloc(SIZES.GE_P3)
-  var imagePreM = CNCrypto._malloc(SIZES.GE_DSMP)
-  var sumM = CNCrypto._malloc(SIZES.EC_SCALAR)
-  var kM = CNCrypto._malloc(SIZES.EC_SCALAR)
-  var hM = CNCrypto._malloc(SIZES.EC_SCALAR)
-  var tmp2M = CNCrypto._malloc(SIZES.GE_P2)
-  var tmp3M = CNCrypto._malloc(SIZES.GE_P3)
-  var pubM = CNCrypto._malloc(SIZES.KEYIMAGE)
-  var secM = CNCrypto._malloc(SIZES.KEYIMAGE)
-  CNCrypto.HEAPU8.set(hex2bin(privateKey), secM)
-  // this is where we segfault
-  if (_GeFrombytesVartime(imageUnpM, imageM) !== 0) {
-    throw new Error('failed to call ge_frombytes_vartime')
-  }
-  _GeDsmPrecomp(imagePreM, imageUnpM)
-  _Sc0(sumM)
-
-  /* Loop through the input keys so that we can start
-     signing all of them */
-  for (i = 0; i < inputKeys.length; i++) {
-    if (i === realIndex) {
-      /* This is our real input */
-      var rand = randomScalar()
-      CNCrypto.HEAPU8.set(hex2bin(rand), kM)
-      _GeScalarmultBase(tmp3M, kM)
-      _geP3ToBytes(bufA(i), tmp3M)
-      var ec = hashToEc(inputKeys[i])
-      CNCrypto.HEAPU8.set(hex2bin(ec), tmp3M)
-      _GeScalarmult(tmp2M, kM, tmp3M)
-      _GeToBytes(bufB(i), tmp2M)
-    } else {
-      /* These are fake inputs */
-      CNCrypto.HEAPU8.set(hex2bin(randomScalar()), sigC(i))
-      CNCrypto.HEAPU8.set(hex2bin(randomScalar()), sigR(i))
-      CNCrypto.HEAPU8.set(hex2bin(inputKeys[i]), pubM)
-
-      if (CNCrypto.ccall('ge_frombytes_vartime', 'void', ['number', 'number'], [tmp3M, pubM]) !== 0) {
-        throw new Error('Failed to call ge_frombytes_vartime')
-      }
-
-      _GeDoubleScalarmultBaseVartime(tmp2M, sigC(i), tmp3M, sigR(i))
-      _GeToBytes(bufA(i), tmp2M)
-      ec = hashToEc(inputKeys[i])
-      CNCrypto.HEAPU8.set(hex2bin(ec), tmp3M)
-      _GeDoubleScalarmultPrecompVartime(tmp2M, sigR(i), tmp3M, sigC(i), imagePreM)
-      _GeToBytes(bufB(i), tmp2M)
-      _ScAdd(sumM, sumM, sigC(i))
-    }
-  }
-
-  /* Now that they are all signed let's get this organized */
-  var bufBin = CNCrypto.HEAPU8.subarray(bufM, bufM + bufSize)
-  var scalar = hashToScalar(transactionPrefixHash + bin2hex(bufBin))
-  CNCrypto.HEAPU8.set(hex2bin(scalar), hM)
-  _ScSub(sigC(realIndex), hM, sumM)
-  _ScMulsub(sigR(realIndex), sigC(realIndex), secM, kM)
-  var sigData = bin2hex(CNCrypto.HEAPU8.subarray(sigM, sigM + sigSize))
-  var sigs = []
-
-  /* Push our signatures in place for each one of the inputs */
-  for (var k = 0; k < inputKeys.length; k++) {
-    sigs.push(sigData.slice(SIZES.SIGNATURE * 2 * k, SIZES.SIGNATURE * 2 * (k + 1)))
-  }
-
-  /* Free the memory we allocated */
-  CNCrypto._free(imageM)
-  CNCrypto._free(imageUnpM)
-  CNCrypto._free(imagePreM)
-  CNCrypto._free(sumM)
-  CNCrypto._free(kM)
-  CNCrypto._free(hM)
-  CNCrypto._free(tmp2M)
-  CNCrypto._free(tmp3M)
-  CNCrypto._free(bufM)
-  CNCrypto._free(sigM)
-  CNCrypto._free(pubM)
-  CNCrypto._free(secM)
 
   return sigs
 }
@@ -1186,6 +1084,8 @@ function createTransaction (wallet, newOutputs, ourOutputs, randomOutputs, mixin
 
   tx.extra = addTransactionPublicKeyToExtra(tx.extra, transactionOutputs.transactionKeys.publicKey)
 
+  const txPrefixHash = getTransactionPrefixHash(tx)
+
   for (i = 0; i < transactionInputs.length; i++) {
     var txInput = transactionInputs[i]
 
@@ -1194,7 +1094,7 @@ function createTransaction (wallet, newOutputs, ourOutputs, randomOutputs, mixin
       srcKeys.push(out.key)
     })
 
-    const sigs = generateRingSignature(getTransactionPrefixHash(tx), txInput.keyImage, srcKeys, txInput.input.privateEphemeral, txInput.realOutputIndex)
+    const sigs = generateRingSignature(txPrefixHash, txInput.keyImage, srcKeys, tx.prvkey, txInput.realOutputIndex)
     tx.signatures.push(sigs)
   }
 
