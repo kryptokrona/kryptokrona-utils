@@ -31,8 +31,16 @@ If initializing for a different CryptoNote project you can specify the configura
 ```javascript
 const TurtleCoinUtils = require('turtlecoin-utils')
 const coinUtils = new TurtleCoinUtils({
+  /* The amount of decimals your coin has */
   coinUnitPlaces: 8,
-  addressPrefix: 6581243850
+
+  /* Your address prefix - this can be found in CryptoNoteConfig */
+  addressPrefix: 6581243850,
+
+  /* The amount of keccak iterations to be performed when creating seeds and
+     addresses. Should be a large number if your are supplying poor entropy
+     to the createNewSeed / createNewAddress functions. */
+  keccakIterations: 100,
 })
 ```
 
@@ -77,6 +85,10 @@ Encodes the publicViewKey, publicSpendKey, and payment ID into a standard Crypto
 #### createIntegratedAddress(address, paymentId, [addressPrefix])
 
 Creates an Integrated Address using the supplied address and payment ID.
+
+#### privateKeyToPublicKey(privateKey)
+
+Gets the corresponding private key from the given public key.
 
 #### scanTransactionOutputs(transactionPublicKey, outputs, privateViewKey, publicSpendKey, [privateSpendKey])
 
