@@ -979,7 +979,7 @@ function createTransaction (wallet, newOutputs, ourOutputs, randomOutputs, mixin
       srcKeys.push(out.key)
     })
 
-    const sigs = generateRingSignature(txPrefixHash, txInput.keyImage, srcKeys, tx.prvkey, txInput.realOutputIndex)
+    const sigs = generateRingSignature(txPrefixHash, txInput.keyImage, srcKeys, txInput.input.privateEphemeral, txInput.realOutputIndex)
     tx.signatures.push(sigs)
   }
 
