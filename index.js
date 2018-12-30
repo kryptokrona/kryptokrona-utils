@@ -47,455 +47,511 @@ const TX_EXTRA_NONCE_TAGS = {
 const UINT64_MAX = BigInteger(2).pow(64)
 const CURRENT_TX_VERSION = 1
 
-function CryptoNote (config) {
-  config = config || require('./config.json')
-  if (!(this instanceof CryptoNote)) return new CryptoNote(config)
-  this.config = config
-}
+class CryptoNote {
+  constructor (config) {
+    this.config = require('./config.json')
 
-/* These are our exposed functions */
+    if (config) {
+      if (config.coinUnitPlaces) {
+        this.config.coinUnitPlaces = config.coinUnitPlaces
+      }
 
-CryptoNote.prototype.createNewSeed = function (entropy, iterations) {
-  iterations = iterations || this.config.keccakIterations
+      if (config.addressPrefix) {
+        this.config.addressPrefix = config.addressPrefix
+      }
 
-  /* If you don't supply us with entropy, we'll go find our own */
-  entropy = entropy || SecureRandomString({ length: 256 })
+      if (config.keccakIterations) {
+        this.config.keccakIterations = config.keccakIterations
+      }
 
-  /* We're going to take that entropy, throw a random value on
-     to it, feed it through a poor very simple PBKDF2 implementation
-     to create a seed using the supplied entropy */
-  return scReduce32(simpleKdf(entropy + rand32(), iterations))
-}
-
-CryptoNote.prototype.createNewAddress = function (entropy, lang, addressPrefix) {
-  addressPrefix = addressPrefix || this.config.addressPrefix
-
-  /* Let's create our new seed */
-  const seed = this.createNewSeed(entropy)
-
-  /* Using that seed, let's create our new CryptoNote address */
-  return this.createAddressFromSeed(seed, lang, addressPrefix)
-}
-
-CryptoNote.prototype.createAddressFromSeed = function (seed, lang, addressPrefix) {
-  addressPrefix = addressPrefix || this.config.addressPrefix
-
-  /* When we have a seed, then we can create a new key
-     pair based on that seed */
-  lang = lang || 'english'
-  var keys = {}
-
-  /* First we create the spend key pair; however,
-     if the seed we were supplied isn't 64 characters
-     long, we'll pass it through the CN Fast Hash function
-     to turn it into 64 characters */
-  var first = seed
-  if (first.length !== 64) {
-    first = cnFastHash(seed)
-  }
-  keys.spend = generateKeys(first)
-
-  /* If our seed was less than 64 characters, then we
-     hash our seed again to get us the necessary data
-     to compute our view key pair; otherwise, we use
-     the privateSpendKey we just created */
-  var second
-  if (seed.length !== 64) {
-    second = cnFastHash(first)
-  } else {
-    second = cnFastHash(keys.spend.privateKey)
-  }
-  keys.view = generateKeys(second)
-
-  /* Once we have our keys, then we can encode the public keys
-     out of our view and spend pairs to create our public address */
-  keys.address = this.encodeAddress(keys.view.publicKey, keys.spend.publicKey, false, addressPrefix)
-
-  /* As we know the seed, we can encode it to a mnemonic string */
-  keys.mnemonic = Mnemonic.encode(seed, lang)
-
-  /* Put the seed in there for good measure */
-  keys.seed = seed
-
-  return keys
-}
-
-CryptoNote.prototype.createAddressFromMnemonic = function (mnemonic, lang, addressPrefix) {
-  addressPrefix = addressPrefix || this.config.addressPrefix
-
-  /* The mnemonic is just a string representation of the seed
-     that was initially used to create our key set */
-  lang = lang || 'english'
-  const seed = Mnemonic.decode(mnemonic, lang)
-
-  /* As long as we have the seed we can recreate the key pairs
-     pretty easily */
-  return this.createAddressFromSeed(seed, lang, addressPrefix)
-}
-
-CryptoNote.prototype.createAddressFromKeys = function (privateSpendKey, privateViewKey, addressPrefix) {
-  addressPrefix = addressPrefix || this.config.addressPrefix
-
-  /* We have our private keys so we can generate everything for use
-     later except the mnemonic as we don't have the seed */
-  const keys = {
-    spend: {
-      privateKey: privateSpendKey,
-      publicKey: privateKeyToPublicKey(privateSpendKey)
-    },
-    view: {
-      privateKey: privateViewKey,
-      publicKey: privateKeyToPublicKey(privateViewKey)
-    },
-    address: '',
-    mnemonic: null,
-    seed: null
-  }
-
-  /* As we now have all of our keys, we can find out what our
-     public address is */
-  keys.address = this.encodeAddress(keys.view.publicKey, keys.spend.publicKey, false, addressPrefix)
-
-  return keys
-}
-
-CryptoNote.prototype.decodeAddressPrefix = function (address) {
-  /* First we decode the address from Base58 into the raw address */
-  var decodedAddress = Base58.decode(address)
-
-  /* Now we need to work in reverse, starting with chopping off
-     the checksum which is always the same */
-  decodedAddress = decodedAddress.slice(0, -(SIZES.CHECKSUM))
-
-  /* Now we find out how many extra characters there are
-     in what's left after we find all of the keys in the address.
-     Remember, this works because payment IDs are the same size as keys */
-  var prefixLength = decodedAddress.length % SIZES.KEY
-
-  /* Great, now we that we know how long the prefix length is, we
-     can grab just that from the front of the address information */
-  var prefixDecoded = decodedAddress.slice(0, prefixLength)
-
-  /* Then we can decode it into the integer that it represents */
-  var prefixVarint = decodeVarint(prefixDecoded)
-
-  /* This block of code is a hack to figure out what the human readable
-     address prefix is. While it has been tested with a few different
-     cryptonote addresses from different projects, it is by no means
-     guaranteed to work with every project. The reason for this is that
-     due to the block encoding used in Base58, it's nearly impossible
-     to reliably find out the Base58 version of just the prefix as it
-     is not actually long enough to be encoded on its own and get the
-     prefix we expect. */
-
-  /* First we need the need to know how long the varint representation
-     of the prefix is, we're going to need it later */
-  var prefixVarintLength = prefixVarint.toString().length
-
-  /* This is where it starts to get funny. If the length is an even
-     number of characters, we'll need to grab the one extra character
-     from the address we passed in to get the prefix that we all know
-     and love */
-  var offset = (prefixVarintLength % 2 === 0) ? 1 : 0
-
-  /* This is kind of goofy. If the address prefix varint is longer
-     than 10 characters, then we need to adjust the offset amount
-     by the count of remaining characters. This is undoubtedly a
-     hack to support obnoxiously long address prefixes */
-  if (prefixVarintLength > 10) {
-    offset += Math.floor((prefixVarintLength % 10) / 2)
-  }
-
-  /* Using all of that above, we can chop off the first couple of
-     characters from the supplied address and get something that looks
-     like the Base58 prefix we expected. */
-  var prefixEncoded = address.slice(0, Math.ceil(prefixVarintLength / 2) + offset)
-
-  return {
-    prefix: prefixDecoded,
-    base58: prefixEncoded,
-    decimal: prefixVarint,
-    hexadecimal: prefixVarint.toString(16)
-  }
-}
-
-CryptoNote.prototype.decodeAddress = function (address, addressPrefix) {
-  addressPrefix = addressPrefix || this.config.addressPrefix
-
-  /* First, we decode the base58 string to hex */
-  var decodedAddress = Base58.decode(address)
-
-  /* We need to encode the address prefix from our config
-     so that we can compare it later */
-  const encodedPrefix = encodeVarint(addressPrefix)
-
-  /* Let's chop off the prefix from the address we decoded */
-  var prefix = decodedAddress.slice(0, encodedPrefix.length)
-
-  /* Do they match? They better... */
-  if (prefix !== encodedPrefix) {
-    throw new Error('Invalid address prefix')
-  }
-
-  /* We don't need the prefix in our working space any more */
-  decodedAddress = decodedAddress.slice(encodedPrefix.length)
-
-  var paymentId = ''
-
-  /* If the decoded address is longer than a
-    public spend key + public view key + checksum
-    then it's very likely an integrated address and as
-    such, we need to get the payment ID out of there for
-    use later otherwise the resulting data does not make
-    any sense whatsoever */
-  if (decodedAddress.length > ((SIZES.KEY * 2) + SIZES.CHECKSUM)) {
-    paymentId = decodedAddress.slice(0, (SIZES.KEY * 2))
-    decodedAddress = decodedAddress.slice((SIZES.KEY * 2))
-  }
-
-  /* Finish decomposing the decoded address */
-  const publicSpend = decodedAddress.slice(0, SIZES.KEY)
-  const publicView = decodedAddress.slice(SIZES.KEY, (SIZES.KEY * 2))
-  const expectedCheckum = decodedAddress.slice(-(SIZES.CHECKSUM))
-
-  var checksum
-  /* Calculate our address checksum */
-  if (paymentId.length === 0) {
-    /* If there is no payment ID it's pretty simple */
-    checksum = cnFastHash(prefix + publicSpend + publicView).slice(0, SIZES.CHECKSUM)
-  } else {
-    /* If there is a payment ID it's pretty simple as well */
-    checksum = cnFastHash(prefix + paymentId + publicSpend + publicView).slice(0, SIZES.CHECKSUM)
-
-    /* As goofy as this sounds, we need to convert the payment
-       ID from hex into a string representation so that it returns
-       to a human readable form */
-    paymentId = Base58.hextostr(paymentId)
-  }
-
-  /* If the checksum we found in the address doesn't match the
-     checksum that we just computed, then the address is bad */
-  if (expectedCheckum !== checksum) {
-    throw new Error('Could not parse address: checksum mismatch')
-  }
-
-  return {
-    publicViewKey: publicView,
-    publicSpendKey: publicSpend,
-    paymentId: paymentId,
-    encodedPrefix: prefix,
-    prefix: addressPrefix,
-    rawAddress: Base58.decode(address)
-  }
-}
-
-CryptoNote.prototype.encodeRawAddress = function (rawAddress) {
-  return Base58.encode(rawAddress)
-}
-
-CryptoNote.prototype.encodeAddress = function (publicViewKey, publicSpendKey, paymentId, addressPrefix) {
-  addressPrefix = addressPrefix || this.config.addressPrefix
-  paymentId = paymentId || false
-
-  if (!isHex64(publicViewKey)) {
-    throw new Error('Invalid public view key format')
-  }
-
-  if (!isHex64(publicSpendKey)) {
-    throw new Error('Invalid public spend key format')
-  }
-
-  /* If we included a payment ID it needs to be
-     64 hexadecimal characters */
-  if (paymentId && !isHex64(paymentId)) {
-    throw new Error('Invalid payment ID format')
-  }
-
-  var rawAddress = []
-
-  /* Encode our configured address prefix so that we can throw
-     it on the front of our address */
-  const encodedPrefix = encodeVarint(addressPrefix)
-  rawAddress.push(encodedPrefix)
-
-  /* Is there a payment ID? If so, that comes next */
-  if (paymentId) {
-    paymentId = Base58.strtohex(paymentId)
-    rawAddress.push(paymentId)
-  }
-
-  /* Then toss on our publicSpendKey followed by our public
-     view key */
-  rawAddress.push(publicSpendKey.toString())
-  rawAddress.push(publicViewKey.toString())
-  rawAddress = rawAddress.join('')
-
-  /* Generate the checksum and toss that on the end */
-  const checksum = cnFastHash(rawAddress).slice(0, 8)
-  rawAddress += checksum
-
-  /* Finally, encode all that to Base58 */
-  return Base58.encode(rawAddress)
-}
-
-CryptoNote.prototype.createIntegratedAddress = function (address, paymentId, addressPrefix) {
-  addressPrefix = addressPrefix || this.config.addressPrefix
-
-  /* Decode our address */
-  var addr = this.decodeAddress(address)
-  /* Encode the address but this time include the payment ID */
-  return this.encodeAddress(addr.publicViewKey, addr.publicSpendKey, paymentId, addressPrefix)
-}
-
-CryptoNote.prototype.scanTransactionOutputs = function (transactionPublicKey, outputs, privateViewKey, publicSpendKey, privateSpendKey) {
-  /* Given the transaction public key and the array of outputs, let's see if
-     any of the outputs belong to us */
-
-  var ourOutputs = []
-
-  for (var i = 0; i < outputs.length; i++) {
-    var output = outputs[i]
-
-    /* Check to see if this output belongs to us */
-    var ourOutput = this.isOurTransactionOutput(transactionPublicKey, output, privateViewKey, publicSpendKey, privateSpendKey)
-    if (ourOutput) {
-      ourOutputs.push(ourOutput)
+      if (config.defaultNetworkFee) {
+        this.config.defaultNetworkFee = config.defaultNetworkFee
+      }
     }
   }
 
-  return ourOutputs
-}
+  createNewSeed (entropy, iterations) {
+    iterations = iterations || this.config.keccakIterations
 
-CryptoNote.prototype.isOurTransactionOutput = function (transactionPublicKey, output, privateViewKey, publicSpendKey, privateSpendKey) {
-  privateSpendKey = privateSpendKey || false
-  output = output || {}
+    /* If you don't supply us with entropy, we'll go find our own */
+    entropy = entropy || SecureRandomString({ length: 256 })
 
-  if (!isHex64(transactionPublicKey)) {
-    throw new Error('Invalid transaction public key format')
+    /* We're going to take that entropy, throw a random value on
+       to it, feed it through a poor very simple PBKDF2 implementation
+       to create a seed using the supplied entropy */
+    return scReduce32(simpleKdf(entropy + rand32(), iterations))
   }
 
-  if (!isHex64(privateViewKey)) {
-    throw new Error('Invalid private view key format')
+  createNewAddress (entropy, lang, addressPrefix) {
+    addressPrefix = addressPrefix || this.config.addressPrefix
+
+    /* Let's create our new seed */
+    const seed = this.createNewSeed(entropy)
+
+    /* Using that seed, let's create our new CryptoNote address */
+    return this.createAddressFromSeed(seed, lang, addressPrefix)
   }
 
-  if (!isHex64(publicSpendKey)) {
-    throw new Error('Invalid public spend key format')
-  }
+  createAddressFromSeed (seed, lang, addressPrefix) {
+    addressPrefix = addressPrefix || this.config.addressPrefix
 
-  if (privateSpendKey && !isHex64(privateSpendKey)) {
-    throw new Error('Invalid private spend key format')
-  }
+    /* When we have a seed, then we can create a new key
+       pair based on that seed */
+    lang = lang || 'english'
+    var keys = {}
 
-  if (typeof output.index === 'undefined' || typeof output.key === 'undefined') {
-    throw new Error('Output object not of correct type')
-  }
-
-  /* Generate the key deriviation from the random transaction public key and our private view key */
-  const derivedKey = generateKeyDerivation(transactionPublicKey, privateViewKey)
-
-  /* Derive the transfer public key from the derived key, the output index, and our public spend key */
-  const publicEphemeral = derivePublicKey(derivedKey, output.index, publicSpendKey)
-
-  /* If the derived transfer public key matches the output key then this output belongs to us */
-  if (output.key === publicEphemeral) {
-    output.input = {}
-    output.input.transactionKey = {
-      publicKey: transactionPublicKey,
-      privateKey: derivedKey
+    /* First we create the spend key pair; however,
+       if the seed we were supplied isn't 64 characters
+       long, we'll pass it through the CN Fast Hash function
+       to turn it into 64 characters */
+    var first = seed
+    if (first.length !== 64) {
+      first = cnFastHash(seed)
     }
-    output.input.publicEphemeral = publicEphemeral
+    keys.spend = generateKeys(first)
 
-    if (privateSpendKey) {
-      /* Derive the key image private key from the derived key, the output index, and our spend secret key */
-      const privateEphemeral = deriveSecretKey(derivedKey, output.index, privateSpendKey)
-
-      /* Generate the key image */
-      const keyImage = generateKeyImage(publicEphemeral, privateEphemeral)
-
-      output.input.privateEphemeral = privateEphemeral
-      output.keyImage = keyImage
+    /* If our seed was less than 64 characters, then we
+       hash our seed again to get us the necessary data
+       to compute our view key pair; otherwise, we use
+       the privateSpendKey we just created */
+    var second
+    if (seed.length !== 64) {
+      second = cnFastHash(first)
+    } else {
+      second = cnFastHash(keys.spend.privateKey)
     }
+    keys.view = generateKeys(second)
 
-    return output
+    /* Once we have our keys, then we can encode the public keys
+       out of our view and spend pairs to create our public address */
+    keys.address = this.encodeAddress(keys.view.publicKey, keys.spend.publicKey, false, addressPrefix)
+
+    /* As we know the seed, we can encode it to a mnemonic string */
+    keys.mnemonic = Mnemonic.encode(seed, lang)
+
+    /* Put the seed in there for good measure */
+    keys.seed = seed
+
+    return keys
   }
 
-  return false
-}
+  createAddressFromMnemonic (mnemonic, lang, addressPrefix) {
+    addressPrefix = addressPrefix || this.config.addressPrefix
 
-CryptoNote.prototype.generateKeyImage = function (transactionPublicKey, privateViewKey, publicSpendKey, privateSpendKey, outputIndex) {
-  if (!isHex64(transactionPublicKey)) {
-    throw new Error('Invalid transaction public key format')
+    /* The mnemonic is just a string representation of the seed
+       that was initially used to create our key set */
+    lang = lang || 'english'
+    const seed = Mnemonic.decode(mnemonic, lang)
+
+    /* As long as we have the seed we can recreate the key pairs
+       pretty easily */
+    return this.createAddressFromSeed(seed, lang, addressPrefix)
   }
 
-  if (!isHex64(privateViewKey)) {
-    throw new Error('Invalid private view key format')
-  }
+  createAddressFromKeys (privateSpendKey, privateViewKey, addressPrefix) {
+    addressPrefix = addressPrefix || this.config.addressPrefix
 
-  if (!isHex64(publicSpendKey)) {
-    throw new Error('Invalid public spend key format')
-  }
-
-  if (!isHex64(privateSpendKey)) {
-    throw new Error('Invalid private spend key format')
-  }
-
-  /* Generate the key deriviation from the random transaction public key and our private view key */
-  const recvDerivation = generateKeyDerivation(transactionPublicKey, privateViewKey)
-
-  /* Derive the transfer public key from the derived key, the output index, and our public spend key */
-  const publicEphemeral = derivePublicKey(recvDerivation, outputIndex, publicSpendKey)
-
-  /* Derive the key image private key from the derived key, the output index, and our spend secret key */
-  const privateEphemeral = deriveSecretKey(recvDerivation, outputIndex, privateSpendKey)
-
-  /* Generate the key image */
-  const keyImage = generateKeyImage(publicEphemeral, privateEphemeral)
-
-  return {
-    input: {
-      transactionKey: {
-        publicKey: transactionPublicKey,
-        privateKey: recvDerivation
+    /* We have our private keys so we can generate everything for use
+       later except the mnemonic as we don't have the seed */
+    const keys = {
+      spend: {
+        privateKey: privateSpendKey,
+        publicKey: privateKeyToPublicKey(privateSpendKey)
       },
-      publicEphemeral: publicEphemeral,
-      privateEphemeral: privateEphemeral
-    },
-    keyImage: keyImage
+      view: {
+        privateKey: privateViewKey,
+        publicKey: privateKeyToPublicKey(privateViewKey)
+      },
+      address: '',
+      mnemonic: null,
+      seed: null
+    }
+
+    /* As we now have all of our keys, we can find out what our
+       public address is */
+    keys.address = this.encodeAddress(keys.view.publicKey, keys.spend.publicKey, false, addressPrefix)
+
+    return keys
+  }
+
+  decodeAddressPrefix (address) {
+    /* First we decode the address from Base58 into the raw address */
+    var decodedAddress = Base58.decode(address)
+
+    /* Now we need to work in reverse, starting with chopping off
+       the checksum which is always the same */
+    decodedAddress = decodedAddress.slice(0, -(SIZES.CHECKSUM))
+
+    /* Now we find out how many extra characters there are
+       in what's left after we find all of the keys in the address.
+       Remember, this works because payment IDs are the same size as keys */
+    var prefixLength = decodedAddress.length % SIZES.KEY
+
+    /* Great, now we that we know how long the prefix length is, we
+       can grab just that from the front of the address information */
+    var prefixDecoded = decodedAddress.slice(0, prefixLength)
+
+    /* Then we can decode it into the integer that it represents */
+    var prefixVarint = decodeVarint(prefixDecoded)
+
+    /* This block of code is a hack to figure out what the human readable
+       address prefix is. While it has been tested with a few different
+       cryptonote addresses from different projects, it is by no means
+       guaranteed to work with every project. The reason for this is that
+       due to the block encoding used in Base58, it's nearly impossible
+       to reliably find out the Base58 version of just the prefix as it
+       is not actually long enough to be encoded on its own and get the
+       prefix we expect. */
+
+    /* First we need the need to know how long the varint representation
+       of the prefix is, we're going to need it later */
+    var prefixVarintLength = prefixVarint.toString().length
+
+    /* This is where it starts to get funny. If the length is an even
+       number of characters, we'll need to grab the one extra character
+       from the address we passed in to get the prefix that we all know
+       and love */
+    var offset = (prefixVarintLength % 2 === 0) ? 1 : 0
+
+    /* This is kind of goofy. If the address prefix varint is longer
+       than 10 characters, then we need to adjust the offset amount
+       by the count of remaining characters. This is undoubtedly a
+       hack to support obnoxiously long address prefixes */
+    if (prefixVarintLength > 10) {
+      offset += Math.floor((prefixVarintLength % 10) / 2)
+    }
+
+    /* Using all of that above, we can chop off the first couple of
+       characters from the supplied address and get something that looks
+       like the Base58 prefix we expected. */
+    var prefixEncoded = address.slice(0, Math.ceil(prefixVarintLength / 2) + offset)
+
+    return {
+      prefix: prefixDecoded,
+      base58: prefixEncoded,
+      decimal: prefixVarint,
+      hexadecimal: prefixVarint.toString(16)
+    }
+  }
+
+  decodeAddress (address, addressPrefix) {
+    addressPrefix = addressPrefix || this.config.addressPrefix
+
+    /* First, we decode the base58 string to hex */
+    var decodedAddress = Base58.decode(address)
+
+    /* We need to encode the address prefix from our config
+       so that we can compare it later */
+    const encodedPrefix = encodeVarint(addressPrefix)
+
+    /* Let's chop off the prefix from the address we decoded */
+    var prefix = decodedAddress.slice(0, encodedPrefix.length)
+
+    /* Do they match? They better... */
+    if (prefix !== encodedPrefix) {
+      throw new Error('Invalid address prefix')
+    }
+
+    /* We don't need the prefix in our working space any more */
+    decodedAddress = decodedAddress.slice(encodedPrefix.length)
+
+    var paymentId = ''
+
+    /* If the decoded address is longer than a
+      public spend key + public view key + checksum
+      then it's very likely an integrated address and as
+      such, we need to get the payment ID out of there for
+      use later otherwise the resulting data does not make
+      any sense whatsoever */
+    if (decodedAddress.length > ((SIZES.KEY * 2) + SIZES.CHECKSUM)) {
+      paymentId = decodedAddress.slice(0, (SIZES.KEY * 2))
+      decodedAddress = decodedAddress.slice((SIZES.KEY * 2))
+    }
+
+    /* Finish decomposing the decoded address */
+    const publicSpend = decodedAddress.slice(0, SIZES.KEY)
+    const publicView = decodedAddress.slice(SIZES.KEY, (SIZES.KEY * 2))
+    const expectedCheckum = decodedAddress.slice(-(SIZES.CHECKSUM))
+
+    var checksum
+    /* Calculate our address checksum */
+    if (paymentId.length === 0) {
+      /* If there is no payment ID it's pretty simple */
+      checksum = cnFastHash(prefix + publicSpend + publicView).slice(0, SIZES.CHECKSUM)
+    } else {
+      /* If there is a payment ID it's pretty simple as well */
+      checksum = cnFastHash(prefix + paymentId + publicSpend + publicView).slice(0, SIZES.CHECKSUM)
+
+      /* As goofy as this sounds, we need to convert the payment
+         ID from hex into a string representation so that it returns
+         to a human readable form */
+      paymentId = Base58.hextostr(paymentId)
+    }
+
+    /* If the checksum we found in the address doesn't match the
+       checksum that we just computed, then the address is bad */
+    if (expectedCheckum !== checksum) {
+      throw new Error('Could not parse address: checksum mismatch')
+    }
+
+    return {
+      publicViewKey: publicView,
+      publicSpendKey: publicSpend,
+      paymentId: paymentId,
+      encodedPrefix: prefix,
+      prefix: addressPrefix,
+      rawAddress: Base58.decode(address)
+    }
+  }
+
+  encodeRawAddress (rawAddress) {
+    return Base58.encode(rawAddress)
+  }
+
+  encodeAddress (publicViewKey, publicSpendKey, paymentId, addressPrefix) {
+    addressPrefix = addressPrefix || this.config.addressPrefix
+    paymentId = paymentId || false
+
+    if (!isHex64(publicViewKey)) {
+      throw new Error('Invalid public view key format')
+    }
+
+    if (!isHex64(publicSpendKey)) {
+      throw new Error('Invalid public spend key format')
+    }
+
+    /* If we included a payment ID it needs to be
+       64 hexadecimal characters */
+    if (paymentId && !isHex64(paymentId)) {
+      throw new Error('Invalid payment ID format')
+    }
+
+    var rawAddress = []
+
+    /* Encode our configured address prefix so that we can throw
+       it on the front of our address */
+    const encodedPrefix = encodeVarint(addressPrefix)
+    rawAddress.push(encodedPrefix)
+
+    /* Is there a payment ID? If so, that comes next */
+    if (paymentId) {
+      paymentId = Base58.strtohex(paymentId)
+      rawAddress.push(paymentId)
+    }
+
+    /* Then toss on our publicSpendKey followed by our public
+       view key */
+    rawAddress.push(publicSpendKey.toString())
+    rawAddress.push(publicViewKey.toString())
+    rawAddress = rawAddress.join('')
+
+    /* Generate the checksum and toss that on the end */
+    const checksum = cnFastHash(rawAddress).slice(0, 8)
+    rawAddress += checksum
+
+    /* Finally, encode all that to Base58 */
+    return Base58.encode(rawAddress)
+  }
+
+  createIntegratedAddress (address, paymentId, addressPrefix) {
+    addressPrefix = addressPrefix || this.config.addressPrefix
+
+    /* Decode our address */
+    var addr = this.decodeAddress(address)
+    /* Encode the address but this time include the payment ID */
+    return this.encodeAddress(addr.publicViewKey, addr.publicSpendKey, paymentId, addressPrefix)
+  }
+
+  privateKeyToPublicKey (privateKey) {
+    return privateKeyToPublicKey(privateKey)
+  }
+
+  scanTransactionOutputs (transactionPublicKey, outputs, privateViewKey, publicSpendKey, privateSpendKey) {
+    /* Given the transaction public key and the array of outputs, let's see if
+       any of the outputs belong to us */
+
+    var ourOutputs = []
+
+    for (var i = 0; i < outputs.length; i++) {
+      var output = outputs[i]
+
+      /* Check to see if this output belongs to us */
+      var ourOutput = this.isOurTransactionOutput(transactionPublicKey, output, privateViewKey, publicSpendKey, privateSpendKey)
+      if (ourOutput) {
+        ourOutputs.push(ourOutput)
+      }
+    }
+
+    return ourOutputs
+  }
+
+  isOurTransactionOutput (transactionPublicKey, output, privateViewKey, publicSpendKey, privateSpendKey) {
+    privateSpendKey = privateSpendKey || false
+    output = output || {}
+
+    if (!isHex64(transactionPublicKey)) {
+      throw new Error('Invalid transaction public key format')
+    }
+
+    if (!isHex64(privateViewKey)) {
+      throw new Error('Invalid private view key format')
+    }
+
+    if (!isHex64(publicSpendKey)) {
+      throw new Error('Invalid public spend key format')
+    }
+
+    if (privateSpendKey && !isHex64(privateSpendKey)) {
+      throw new Error('Invalid private spend key format')
+    }
+
+    if (typeof output.index === 'undefined' || typeof output.key === 'undefined') {
+      throw new Error('Output object not of correct type')
+    }
+
+    /* Generate the key deriviation from the random transaction public key and our private view key */
+    const derivedKey = generateKeyDerivation(transactionPublicKey, privateViewKey)
+
+    /* Derive the transfer public key from the derived key, the output index, and our public spend key */
+    const publicEphemeral = derivePublicKey(derivedKey, output.index, publicSpendKey)
+
+    /* If the derived transfer public key matches the output key then this output belongs to us */
+    if (output.key === publicEphemeral) {
+      output.input = {}
+      output.input.transactionKey = {
+        publicKey: transactionPublicKey,
+        privateKey: derivedKey
+      }
+      output.input.publicEphemeral = publicEphemeral
+
+      if (privateSpendKey) {
+        /* Derive the key image private key from the derived key, the output index, and our spend secret key */
+        const privateEphemeral = deriveSecretKey(derivedKey, output.index, privateSpendKey)
+
+        /* Generate the key image */
+        const keyImage = generateKeyImage(publicEphemeral, privateEphemeral)
+
+        output.input.privateEphemeral = privateEphemeral
+        output.keyImage = keyImage
+      }
+
+      return output
+    }
+
+    return false
+  }
+
+  generateKeyImage (transactionPublicKey, privateViewKey, publicSpendKey, privateSpendKey, outputIndex) {
+    if (!isHex64(transactionPublicKey)) {
+      throw new Error('Invalid transaction public key format')
+    }
+
+    if (!isHex64(privateViewKey)) {
+      throw new Error('Invalid private view key format')
+    }
+
+    if (!isHex64(publicSpendKey)) {
+      throw new Error('Invalid public spend key format')
+    }
+
+    if (!isHex64(privateSpendKey)) {
+      throw new Error('Invalid private spend key format')
+    }
+
+    /* Generate the key deriviation from the random transaction public key and our private view key */
+    const recvDerivation = generateKeyDerivation(transactionPublicKey, privateViewKey)
+
+    /* Derive the transfer public key from the derived key, the output index, and our public spend key */
+    const publicEphemeral = derivePublicKey(recvDerivation, outputIndex, publicSpendKey)
+
+    /* Derive the key image private key from the derived key, the output index, and our spend secret key */
+    const privateEphemeral = deriveSecretKey(recvDerivation, outputIndex, privateSpendKey)
+
+    /* Generate the key image */
+    const keyImage = generateKeyImage(publicEphemeral, privateEphemeral)
+
+    return {
+      input: {
+        transactionKey: {
+          publicKey: transactionPublicKey,
+          privateKey: recvDerivation
+        },
+        publicEphemeral: publicEphemeral,
+        privateEphemeral: privateEphemeral
+      },
+      keyImage: keyImage
+    }
+  }
+
+  generateKeyImagePrimitive (publicKey, privateKey) {
+    return generateKeyImage(publicKey, privateKey)
+  }
+
+  /* This method is designed to create new outputs for use
+     during transaction creation */
+  createTransactionOutputs (address, amount) {
+    amount = amount || false
+
+    /* If we didn't specify an amount we can't send anything */
+    if (!amount || amount < 0) {
+      throw new Error('You must specify a valid amount')
+    }
+
+    const result = []
+
+    /* Decode the address into it's important bits */
+    var addressDecoded = this.decodeAddress(address)
+
+    /* Now we need to decompose the amount into "pretty" amounts
+       that we can actually mix later. We're doing this by
+       converting the amount to a character array and reversing
+       it so that we have the digits in each place */
+    var amountChars = amount.toString().split('').reverse()
+
+    /* Loop through the amount characters */
+    for (var i = 0; i < amountChars.length; i++) {
+      /* Create pretty amounts */
+      var amt = parseInt(amountChars[i]) * Math.pow(10, i)
+
+      if (amt !== 0) {
+        result.push({
+          amount: amt,
+          keys: addressDecoded
+        })
+      }
+    }
+
+    return result
+  }
+
+  createTransactionStructure (ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime) {
+    return createTransaction(ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime)
+  }
+
+  createTransaction (ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime) {
+    var tx = this.createTransactionStructure(ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime)
+    var serializedTransaction = serializeTransaction(tx)
+    var txnHash = cnFastHash(serializedTransaction)
+
+    return {
+      transaction: tx,
+      rawTransaction: serializedTransaction,
+      hash: txnHash
+    }
+  }
+
+  serializeTransaction (transaction) {
+    return serializeTransaction(transaction, false)
+  }
+
+  formatMoney (amount) {
+    var places = ''
+    for (var i = 0; i < this.config.coinUnitPlaces; i++) {
+      places += '0'
+    }
+    return Numeral(amount / Math.pow(10, this.config.coinUnitPlaces)).format('0,0.' + places)
   }
 }
-
-CryptoNote.prototype.generateKeyImagePrimitive = generateKeyImage
-CryptoNote.prototype.createTransactionOutputs = createTransactionOutputs
-
-CryptoNote.prototype.createTransactionStructure = function (ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime) {
-  return createTransaction(ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime)
-}
-
-CryptoNote.prototype.createTransaction = function (ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime) {
-  var tx = this.createTransactionStructure(ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime)
-  var serializedTransaction = serializeTransaction(tx)
-  var txnHash = cnFastHash(serializedTransaction)
-
-  return {
-    transaction: tx,
-    rawTransaction: serializedTransaction,
-    hash: txnHash
-  }
-}
-
-CryptoNote.prototype.serializeTransaction = function (transaction) {
-  return serializeTransaction(transaction, false)
-}
-
-CryptoNote.prototype.formatMoney = function (amount) {
-  var places = ''
-  for (var i = 0; i < this.config.coinUnitPlaces; i++) {
-    places += '0'
-  }
-  return Numeral(amount / Math.pow(10, this.config.coinUnitPlaces)).format('0,0.' + places)
-}
-
-CryptoNote.prototype.privateKeyToPublicKey = privateKeyToPublicKey
 
 /* Internal support functions */
 function isHex (str) {
@@ -1077,43 +1133,6 @@ function createTransactionInputs (ourOutputs, randomOutputs, mixin) {
 
   /* Return the array of mixed inputs */
   return mixedInputs
-}
-
-/* This method is designed to create new outputs for use
-   during transaction creation */
-function createTransactionOutputs (address, amount) {
-  amount = amount || false
-
-  /* If we didn't specify an amount we can't send anything */
-  if (!amount || amount < 0) {
-    throw new Error('You must specify a valid amount')
-  }
-
-  const result = []
-
-  /* Decode the address into it's important bits */
-  var addressDecoded = this.decodeAddress(address)
-
-  /* Now we need to decompose the amount into "pretty" amounts
-     that we can actually mix later. We're doing this by
-     converting the amount to a character array and reversing
-     it so that we have the digits in each place */
-  var amountChars = amount.toString().split('').reverse()
-
-  /* Loop through the amount characters */
-  for (var i = 0; i < amountChars.length; i++) {
-    /* Create pretty amounts */
-    var amt = parseInt(amountChars[i]) * Math.pow(10, i)
-
-    if (amt !== 0) {
-      result.push({
-        amount: amt,
-        keys: addressDecoded
-      })
-    }
-  }
-
-  return result
 }
 
 function prepareTransactionOutputs (wallet, outputs) {

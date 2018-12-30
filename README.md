@@ -21,12 +21,26 @@ npm i git+https://github.com/turtlecoin/turtlecoin-utils
 
 ## Initialization
 
+### JavaScript
+
 ```javascript
 const TurtleCoinUtils = require('turtlecoin-utils')
 const coinUtils = new TurtleCoinUtils()
 ```
 
-If initializing for a different CryptoNote project you can specify the configuration
+### TypeScript
+
+```typescript
+import TurtleCoinUtils = require('turtlecoin-utils');
+const coinUtils = new TurtleCoinUtils()
+```
+
+You can find type definitions [here](index.d.ts)
+
+### Forking
+
+If initializing for a different CryptoNote project you can specify the configuration.
+All parameters are optional.
 
 ```javascript
 const TurtleCoinUtils = require('turtlecoin-utils')
@@ -41,6 +55,9 @@ const coinUtils = new TurtleCoinUtils({
      addresses. Should be a large number if your are supplying poor entropy
      to the createNewSeed / createNewAddress functions. */
   keccakIterations: 100,
+
+  /* The default network fee to use in atomic units */
+  defaultNetworkFee: 10
 })
 ```
 
