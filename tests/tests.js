@@ -66,6 +66,18 @@ console.log('Out Derived Public Key: ', derivedPublicKey)
 
 assert(derivedPublicKey === testPublicKey)
 
+const keyImagePublicKey = 'de80940143b344f95bd09046a3c4afa77a1875e588cfa7905cda9d607c7ff0f5'
+const keyImagePrivateKey = 'd2598f31daf1b3c515180d103cd9508139824d001f4260e42a297666305a7308'
+const expectedKeyImage = '79668204508e0ca29820d1bc1bad4e988b71a3c7b007fe52735e1526e4f30217'
+const keyImage = cnUtil.generateKeyImagePrimitive(keyImagePublicKey, keyImagePrivateKey)
+
+console.log('')
+console.log('Public Key: ', keyImagePublicKey)
+console.log('Private Key: ', keyImagePrivateKey)
+console.log('Key Image: ', keyImage)
+
+assert(keyImage === expectedKeyImage)
+
 var amount = 1234567
 console.log('')
 console.log('Creating outputs for amount %s to %s', amount, newAddress.address)

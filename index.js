@@ -13,10 +13,10 @@ const Base58 = require('./lib/base58.js')
 const CNCrypto = require('./lib/crypto.js')
 const Mnemonic = require('./lib/mnemonic.js')
 const NACL = require('./lib/nacl-fast-cn.js')
-const Sha3 = require('./lib/sha3.js')
 const VarintDecoder = require('varint-decoder')
 const SecureRandomString = require('secure-random-string')
 const Numeral = require('numeral')
+const RingSigs = require('./lib/ringsigs.js')
 
 const SIZES = {
   HASH: 64,
@@ -399,6 +399,10 @@ CryptoNote.prototype.isOurTransactionOutput = function (transactionPublicKey, ou
   /* If the derived transfer public key matches the output key then this output belongs to us */
   if (output.key === publicEphemeral) {
     output.input = {}
+    output.input.transactionKey = {
+      publicKey: transactionPublicKey,
+      privateKey: derivedKey
+    }
     output.input.publicEphemeral = publicEphemeral
 
     if (privateSpendKey) {
@@ -449,6 +453,10 @@ CryptoNote.prototype.generateKeyImage = function (transactionPublicKey, privateV
 
   return {
     input: {
+      transactionKey: {
+        publicKey: transactionPublicKey,
+        privateKey: recvDerivation
+      },
       publicEphemeral: publicEphemeral,
       privateEphemeral: privateEphemeral
     },
@@ -456,10 +464,23 @@ CryptoNote.prototype.generateKeyImage = function (transactionPublicKey, privateV
   }
 }
 
+CryptoNote.prototype.generateKeyImagePrimitive = generateKeyImage
 CryptoNote.prototype.createTransactionOutputs = createTransactionOutputs
 
-CryptoNote.prototype.createTransaction = function (ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime) {
+CryptoNote.prototype.createTransactionStructure = function (ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime) {
   return createTransaction(ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime)
+}
+
+CryptoNote.prototype.createTransaction = function (ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime) {
+  var tx = this.createTransactionStructure(ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime)
+  var serializedTransaction = serializeTransaction(tx)
+  var txnHash = cnFastHash(serializedTransaction)
+
+  return {
+    transaction: tx,
+    rawTransaction: serializedTransaction,
+    hash: txnHash
+  }
 }
 
 CryptoNote.prototype.serializeTransaction = function (transaction) {
@@ -501,17 +522,6 @@ function swapEndian (hex) {
   return result
 }
 
-/*
-function swapEndianC (str) {
-  var result = ''
-
-  for (var i = 1; i <= str.length; i++) {
-    result += str.substr(0 - i, 1)
-  }
-  return result
-}
-*/
-
 function d2h (integer) {
   if (typeof integer !== 'string' && integer.toString().length > 15) {
     throw new Error('Integer should be entered as a string for precision')
@@ -529,32 +539,6 @@ function d2h (integer) {
 function d2s (integer) {
   return swapEndian(d2h(integer))
 }
-
-/*
-function d2b (integer) {
-  if (typeof integer !== 'string' && integer.toString().length > 15) {
-    throw new Error('Integer should be entered as a string for precision')
-  }
-
-  var padding = ''
-  for (var i = 0; i < 64; i++) {
-    padding += '0'
-  }
-
-  var a = BigInteger(integer)
-  if (a.toString(2).length > 64) {
-    throw new Error('Amount overflows uint64')
-  }
-
-  return swapEndianC((padding + a.toString(2)).slice(-(SIZES.KEY)))
-}
-*/
-
-/*
-function s2d (scalar) {
-  return BigInteger.parse(swapEndian(scalar), 16).toString()
-}
-*/
 
 function hex2bin (hex) {
   if (hex.length % 2 !== 0) {
@@ -588,37 +572,10 @@ function str2bin (str) {
   return result
 }
 
-/*
-function bin2str (bin) {
-  var result = []
-  for (var i = 0; i < bin.length; i++) {
-    result.push(String.fromCharCode(bin[i]))
-  }
-
-  return result.join('')
-}
-*/
-
 function rand32 () {
   /* Go get 256-bits (32 bytes) of random data */
   return Mnemonic.random(256)
 }
-
-/*
-function rand16 () {
-  /* Go get 128-bits (16 bytes) of random data */
-/*
-  return Mnemonic.random(128)
-}
-*/
-
-/*
-function rand8 () {
-  /* Go get 64-bits (8 bytes) of random data */
-/*
-  return Mnemonic.random(64)
-}
-*/
 
 function encodeVarint (i) {
   i = BigInteger(i)
@@ -658,12 +615,6 @@ function scReduce (hex, size) {
 function scReduce32 (hex) {
   return scReduce(hex, 32)
 }
-
-/*
-function scReduce64 (hex) {
-  return scReduce(hex, 64)
-}
-*/
 
 function geScalarMult (publicKey, privateKey) {
   if (!isHex64(publicKey)) {
@@ -743,32 +694,7 @@ function generateKeyImage (publicKey, privateKey) {
     throw new Error('Invalid secret key format')
   }
 
-  var pubM = CNCrypto._malloc(SIZES.KEYIMAGE)
-  var secM = CNCrypto._malloc(SIZES.KEYIMAGE)
-  CNCrypto.HEAPU8.set(hex2bin(publicKey), pubM)
-  CNCrypto.HEAPU8.set(hex2bin(privateKey), secM)
-
-  if (CNCrypto.ccall('sc_check', 'number', ['number'], [secM]) !== 0) {
-    throw new Error('sc_check(privateKey) != 0')
-  }
-
-  var pointM = CNCrypto._malloc(SIZES.GEP3)
-  var point2M = CNCrypto._malloc(SIZES.GEP2)
-  var pointB = hex2bin(hashToEc(publicKey))
-  CNCrypto.HEAPU8.set(pointB, pointM)
-
-  var imageM = CNCrypto._malloc(SIZES.KEYIMAGE)
-  CNCrypto.ccall('ge_scalarmult', 'void', ['number', 'number', 'number'], [point2M, secM, pointM])
-  CNCrypto.ccall('ge_tobytes', 'void', ['number', 'number'], [imageM, point2M])
-
-  var result = CNCrypto.HEAPU8.subarray(imageM, imageM + SIZES.KEYIMAGE)
-  CNCrypto._free(pubM)
-  CNCrypto._free(secM)
-  CNCrypto._free(pointM)
-  CNCrypto._free(point2M)
-  CNCrypto._free(imageM)
-
-  return bin2hex(result)
+  return RingSigs.generate_key_image(publicKey, privateKey)
 }
 
 function hashToScalar (buf) {
@@ -807,7 +733,7 @@ function cnFastHash (input) {
     throw new Error('Invalid input: ' + input)
   }
 
-  return Sha3.keccak_256(hex2bin(input))
+  return RingSigs.cn_fast_hash(input)
 }
 
 function simpleKdf (str, iterations) {
@@ -815,33 +741,9 @@ function simpleKdf (str, iterations) {
      psuedo PBKDF2 function */
   var hex = bin2hex(str2bin(str))
   for (var n = 0; n < iterations; ++n) {
-    hex = Sha3.keccak_256(hex2bin(hex))
+    hex = cnFastHash(hex)
   }
   return hex
-}
-
-function hashToEc (key) {
-  if (key.length !== (SIZES.KEY)) {
-    throw new Error('Invalid key length')
-  }
-
-  var hM = CNCrypto._malloc(SIZES.KEYIMAGE)
-  var pointM = CNCrypto._malloc(SIZES.GEP2)
-  var point2M = CNCrypto._malloc(SIZES.GEP1P1)
-  var resM = CNCrypto._malloc(SIZES.GEP3)
-  var hash = hex2bin(cnFastHash(key, SIZES.KEYIMAGE))
-  CNCrypto.HEAPU8.set(hash, hM)
-  CNCrypto.ccall('ge_fromfe_frombytes_vartime', 'void', ['number', 'number'], [pointM, hM])
-  CNCrypto.ccall('ge_mul8', 'void', ['number', 'number'], [point2M, pointM])
-  CNCrypto.ccall('ge_p1p1_to_p3', 'void', ['number', 'number'], [resM, point2M])
-
-  var result = CNCrypto.HEAPU8.subarray(resM, resM + SIZES.GEP3)
-  CNCrypto._free(hM)
-  CNCrypto._free(pointM)
-  CNCrypto._free(point2M)
-  CNCrypto._free(resM)
-
-  return bin2hex(result)
 }
 
 function generateKeys (seed) {
@@ -861,10 +763,6 @@ function generateKeys (seed) {
 function randomKeypair () {
   /* Generate a random key pair */
   return generateKeys(simpleKdf(rand32(), 1))
-}
-
-function randomScalar () {
-  return scReduce32(rand32())
 }
 
 /* This method calculates our relative offset positions for
@@ -922,6 +820,8 @@ function addNonceToExtra (extra, nonce) {
 }
 
 function generateRingSignature (transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex) {
+  var sigs = []
+
   if (!isHex64(keyImage)) {
     throw new Error('Invalid Key Image format')
   }
@@ -938,123 +838,18 @@ function generateRingSignature (transactionPrefixHash, keyImage, inputKeys, priv
     throw new Error('Invalid realIndex supplied')
   }
 
-  /* Set up our external methods */
-  const _GeToBytes = CNCrypto.cwrap('ge_tobytes', 'void', ['number', 'number'])
-  const _geP3ToBytes = CNCrypto.cwrap('ge_p3_tobytes', 'void', ['number', 'number'])
-  const _GeScalarmultBase = CNCrypto.cwrap('ge_scalarmult_base', 'void', ['number', 'number'])
-  const _GeScalarmult = CNCrypto.cwrap('ge_scalarmult', 'void', ['number', 'number', 'number'])
-  const _ScAdd = CNCrypto.cwrap('sc_add', 'void', ['number', 'number', 'number'])
-  const _ScSub = CNCrypto.cwrap('sc_sub', 'void', ['number', 'number', 'number'])
-  const _ScMulsub = CNCrypto.cwrap('sc_mulsub', 'void', ['number', 'number', 'number', 'number'])
-  const _Sc0 = CNCrypto.cwrap('sc_0', 'void', ['number'])
-  const _GeDoubleScalarmultBaseVartime = CNCrypto.cwrap('ge_double_scalarmult_base_vartime', 'void', ['number', 'number', 'number', 'number'])
-  const _GeDoubleScalarmultPrecompVartime = CNCrypto.cwrap('ge_double_scalarmult_precomp_vartime', 'void', ['number', 'number', 'number', 'number', 'number'])
-  const _GeFrombytesVartime = CNCrypto.cwrap('ge_frombytes_vartime', 'number', ['number', 'number'])
-  const _GeDsmPrecomp = CNCrypto.cwrap('ge_dsm_precomp', 'void', ['number', 'number'])
+  var cSigs = new RingSigs.VectorString()
+  var cInputKeys = new RingSigs.VectorString()
 
-  /* Allocate space for our keys */
-  const bufSize = SIZES.ECPOINT * 2 * inputKeys.length
-  var bufM = CNCrypto._malloc(bufSize)
+  inputKeys.forEach((key) => {
+    cInputKeys.push_back(key)
+  })
 
-  /* Allocate space for the signatures */
-  const sigSize = SIZES.SIGNATURE * inputKeys.length
-  var sigM = CNCrypto._malloc(sigSize)
+  cSigs = RingSigs.generateRingSignatures(transactionPrefixHash, keyImage, cInputKeys, privateKey, realIndex)
 
-  /* Struct pointer helper functions */
-  function bufA (i) {
-    return bufM + SIZES.ECPOINT * (2 * i)
+  for (var i = 0; i < cSigs.size(); i++) {
+    sigs.push(cSigs.get(i))
   }
-  function bufB (i) {
-    return bufM + SIZES.ECPOINT * (2 * i)
-  }
-  function sigC (i) {
-    return sigM + SIZES.ECSCALAR * (2 * i)
-  }
-  function sigR (i) {
-    return sigM + SIZES.ECSCALAR * (2 * i + 1)
-  }
-
-  /* Now we start allocating a whole bunch of memory */
-  var imageM = CNCrypto._malloc(SIZES.KEY_IMAGE)
-  CNCrypto.HEAPU8.set(hex2bin(keyImage), imageM)
-  var i
-  var imageUnpM = CNCrypto._malloc(SIZES.GE_P3)
-  var imagePreM = CNCrypto._malloc(SIZES.GE_DSMP)
-  var sumM = CNCrypto._malloc(SIZES.EC_SCALAR)
-  var kM = CNCrypto._malloc(SIZES.EC_SCALAR)
-  var hM = CNCrypto._malloc(SIZES.EC_SCALAR)
-  var tmp2M = CNCrypto._malloc(SIZES.GE_P2)
-  var tmp3M = CNCrypto._malloc(SIZES.GE_P3)
-  var pubM = CNCrypto._malloc(SIZES.KEYIMAGE)
-  var secM = CNCrypto._malloc(SIZES.KEYIMAGE)
-  CNCrypto.HEAPU8.set(hex2bin(privateKey), secM)
-  // this is where we segfault
-  if (_GeFrombytesVartime(imageUnpM, imageM) !== 0) {
-    throw new Error('failed to call ge_frombytes_vartime')
-  }
-  _GeDsmPrecomp(imagePreM, imageUnpM)
-  _Sc0(sumM)
-
-  /* Loop through the input keys so that we can start
-     signing all of them */
-  for (i = 0; i < inputKeys.length; i++) {
-    if (i === realIndex) {
-      /* This is our real input */
-      var rand = randomScalar()
-      CNCrypto.HEAPU8.set(hex2bin(rand), kM)
-      _GeScalarmultBase(tmp3M, kM)
-      _geP3ToBytes(bufA(i), tmp3M)
-      var ec = hashToEc(inputKeys[i])
-      CNCrypto.HEAPU8.set(hex2bin(ec), tmp3M)
-      _GeScalarmult(tmp2M, kM, tmp3M)
-      _GeToBytes(bufB(i), tmp2M)
-    } else {
-      /* These are fake inputs */
-      CNCrypto.HEAPU8.set(hex2bin(randomScalar()), sigC(i))
-      CNCrypto.HEAPU8.set(hex2bin(randomScalar()), sigR(i))
-      CNCrypto.HEAPU8.set(hex2bin(inputKeys[i]), pubM)
-
-      if (CNCrypto.ccall('ge_frombytes_vartime', 'void', ['number', 'number'], [tmp3M, pubM]) !== 0) {
-        throw new Error('Failed to call ge_frombytes_vartime')
-      }
-
-      _GeDoubleScalarmultBaseVartime(tmp2M, sigC(i), tmp3M, sigR(i))
-      _GeToBytes(bufA(i), tmp2M)
-      ec = hashToEc(inputKeys[i])
-      CNCrypto.HEAPU8.set(hex2bin(ec), tmp3M)
-      _GeDoubleScalarmultPrecompVartime(tmp2M, sigR(i), tmp3M, sigC(i), imagePreM)
-      _GeToBytes(bufB(i), tmp2M)
-      _ScAdd(sumM, sumM, sigC(i))
-    }
-  }
-
-  /* Now that they are all signed let's get this organized */
-  var bufBin = CNCrypto.HEAPU8.subarray(bufM, bufM + bufSize)
-  var scalar = hashToScalar(transactionPrefixHash + bin2hex(bufBin))
-  CNCrypto.HEAPU8.set(hex2bin(scalar), hM)
-  _ScSub(sigC(realIndex), hM, sumM)
-  _ScMulsub(sigR(realIndex), sigC(realIndex), secM, kM)
-  var sigData = bin2hex(CNCrypto.HEAPU8.subarray(sigM, sigM + sigSize))
-  var sigs = []
-
-  /* Push our signatures in place for each one of the inputs */
-  for (var k = 0; k < inputKeys.length; k++) {
-    sigs.push(sigData.slice(SIZES.SIGNATURE * 2 * k, SIZES.SIGNATURE * 2 * (k + 1)))
-  }
-
-  /* Free the memory we allocated */
-  CNCrypto._free(imageM)
-  CNCrypto._free(imageUnpM)
-  CNCrypto._free(imagePreM)
-  CNCrypto._free(sumM)
-  CNCrypto._free(kM)
-  CNCrypto._free(hM)
-  CNCrypto._free(tmp2M)
-  CNCrypto._free(tmp3M)
-  CNCrypto._free(bufM)
-  CNCrypto._free(sigM)
-  CNCrypto._free(pubM)
-  CNCrypto._free(secM)
 
   return sigs
 }
@@ -1186,6 +981,8 @@ function createTransaction (wallet, newOutputs, ourOutputs, randomOutputs, mixin
 
   tx.extra = addTransactionPublicKeyToExtra(tx.extra, transactionOutputs.transactionKeys.publicKey)
 
+  const txPrefixHash = getTransactionPrefixHash(tx)
+
   for (i = 0; i < transactionInputs.length; i++) {
     var txInput = transactionInputs[i]
 
@@ -1194,7 +991,7 @@ function createTransaction (wallet, newOutputs, ourOutputs, randomOutputs, mixin
       srcKeys.push(out.key)
     })
 
-    const sigs = generateRingSignature(getTransactionPrefixHash(tx), txInput.keyImage, srcKeys, txInput.input.privateEphemeral, txInput.realOutputIndex)
+    const sigs = generateRingSignature(txPrefixHash, txInput.keyImage, srcKeys, txInput.input.privateEphemeral, txInput.realOutputIndex)
     tx.signatures.push(sigs)
   }
 
@@ -1374,18 +1171,6 @@ function getTransactionPrefixHash (tx) {
   /* Hash it */
   return cnFastHash(prefix)
 }
-
-/*
-function getTransactionHash (tx) {
-  /* Check to see if we already serialized the transaction */
-/*
-  if (typeof tx === 'string') {
-    return cnFastHash(tx)
-  } else {
-    return cnFastHash(serializeTransaction(tx))
-  }
-}
-*/
 
 function serializeTransaction (tx, headerOnly) {
   headerOnly = headerOnly || false

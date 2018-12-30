@@ -26,7 +26,8 @@
   "standard": {
     "ignore": [
       "lib/crypto.js",
-      "lib/nacl-fast-cn.js"
+      "lib/nacl-fast-cn.js",
+      "lib/ringsigs.js"
     ]
   },
   "devDependencies": {
