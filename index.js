@@ -467,8 +467,20 @@ CryptoNote.prototype.generateKeyImage = function (transactionPublicKey, privateV
 CryptoNote.prototype.generateKeyImagePrimitive = generateKeyImage
 CryptoNote.prototype.createTransactionOutputs = createTransactionOutputs
 
-CryptoNote.prototype.createTransaction = function (ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime) {
+CryptoNote.prototype.createTransactionStructure = function (ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime) {
   return createTransaction(ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime)
+}
+
+CryptoNote.prototype.createTransaction = function (ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime) {
+  var tx = this.createTransactionStructure(ourKeys, newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime)
+  var serializedTransaction = serializeTransaction(tx)
+  var txnHash = cnFastHash(serializedTransaction)
+
+  return {
+    transaction: tx,
+    rawTransaction: serializedTransaction,
+    hash: txnHash
+  }
 }
 
 CryptoNote.prototype.serializeTransaction = function (transaction) {
