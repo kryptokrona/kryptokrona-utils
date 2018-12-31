@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "A Node.js collection of utilities useful for TurtleCoin developers",
   "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
     "test": "npm install && standard && node tests/tests.js"
   },
