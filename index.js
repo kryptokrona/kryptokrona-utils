@@ -151,6 +151,8 @@ class CryptoNote {
   createAddressFromKeys (privateSpendKey, privateViewKey, addressPrefix) {
     addressPrefix = addressPrefix || this.config.addressPrefix
 
+    let derivedViewKey = scReduce32(cnFastHash(privateSpendKey))
+
     /* We have our private keys so we can generate everything for use
        later except the mnemonic as we don't have the seed */
     const keys = {
@@ -163,7 +165,8 @@ class CryptoNote {
         publicKey: privateKeyToPublicKey(privateViewKey)
       },
       address: '',
-      mnemonic: null,
+      /* If the view key is derived from the spend key, we can generate a seed */
+      mnemonic: derivedViewKey === privateViewKey ? Mnemonic.encode(privateSpendKey) : null,
       seed: null
     }
 

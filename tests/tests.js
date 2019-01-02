@@ -66,6 +66,26 @@ console.log('Out Derived Public Key: ', derivedPublicKey)
 
 assert(derivedPublicKey === testPublicKey)
 
+const mnemonicAddressByKey = cnUtil.createAddressFromKeys(outputSeed.spend.privateKey, outputSeed.view.privateKey)
+
+console.log('')
+console.log('In Mnemonic Private Spend Key: ', outputSeed.spend.privateKey)
+console.log('In Mnemonic Private View Key: ', outputSeed.view.privateKey)
+console.log('In Mnemonic Seed: ', mnemonicAddressByKey.mnemonic)
+
+assert(mnemonicAddressByKey.mnemonic === outputSeed.mnemonic)
+
+const nonMnemonicPrivateSpendKey = '7a4a9a5b174e5713433fb5735a35b8fe8ce5bf411d5f6a587002e455a2b33703'
+const nonMnemonicPrivateViewKey = '3c986487d9b85e979e4f30eca56558874d2792ec73326d7aa0b2cf24c099ad0f'
+const nonMnemonicAddressByKey = cnUtil.createAddressFromKeys(nonMnemonicPrivateSpendKey, nonMnemonicPrivateViewKey)
+
+console.log('')
+console.log('In Non Mnemonic Private Spend Key: ', nonMnemonicPrivateSpendKey)
+console.log('In Non Mnemonic Private View Key: ', nonMnemonicPrivateViewKey)
+console.log('In Non Mnemonic Seed: ', nonMnemonicAddressByKey.mnemonic)
+
+assert(nonMnemonicAddressByKey.mnemonic === null)
+
 const keyImagePublicKey = 'de80940143b344f95bd09046a3c4afa77a1875e588cfa7905cda9d607c7ff0f5'
 const keyImagePrivateKey = 'd2598f31daf1b3c515180d103cd9508139824d001f4260e42a297666305a7308'
 const expectedKeyImage = '79668204508e0ca29820d1bc1bad4e988b71a3c7b007fe52735e1526e4f30217'
