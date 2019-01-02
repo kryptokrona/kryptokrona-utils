@@ -66,6 +66,28 @@ console.log('Out Derived Public Key: ', derivedPublicKey)
 
 assert(derivedPublicKey === testPublicKey)
 
+const mnemonicPrivateSpendKey = 'd504a4ed95d0534567ee8f6f3a5b846f5e7b5dee7cadf660485b1bfbc4fbbb0d'
+const mnemonicPrivateViewKey = 'd84afbfbb76b2a16d6f9e869b9844a394aaf7d726b8f374f09d1d688cb81d001'
+const mnemonicAddressByKey = cnUtil.createAddressFromKeys(mnemonicPrivateSpendKey, mnemonicPrivateViewKey)
+
+console.log('')
+console.log('In Mnemonic Private Spend Key: ', mnemonicPrivateSpendKey)
+console.log('In Mnemonic Private View Key: ', mnemonicPrivateViewKey)
+console.log('In Mnemonic Seed: ', mnemonicAddressByKey.mnemonic)
+
+assert(mnemonicAddressByKey.mnemonic === 'gypsy guarded faulty jeers hazard paper equip dime oyster rotate hobby summon junk anchor wobbly baptism huge shyness july unplugs tumbling toolbox affair atom hazard')
+
+const nonMnemonicPrivateSpendKey = '7a4a9a5b174e5713433fb5735a35b8fe8ce5bf411d5f6a587002e455a2b33703'
+const nonMnemonicPrivateViewKey = '3c986487d9b85e979e4f30eca56558874d2792ec73326d7aa0b2cf24c099ad0f'
+const nonMnemonicAddressByKey = cnUtil.createAddressFromKeys(nonMnemonicPrivateSpendKey, nonMnemonicPrivateViewKey)
+
+console.log('')
+console.log('In Non Mnemonic Private Spend Key: ', nonMnemonicPrivateSpendKey)
+console.log('In Non Mnemonic Private View Key: ', nonMnemonicPrivateViewKey)
+console.log('In Non Mnemonic Seed: ', nonMnemonicAddressByKey.mnemonic)
+
+assert(nonMnemonicAddressByKey.mnemonic === null)
+
 const keyImagePublicKey = 'de80940143b344f95bd09046a3c4afa77a1875e588cfa7905cda9d607c7ff0f5'
 const keyImagePrivateKey = 'd2598f31daf1b3c515180d103cd9508139824d001f4260e42a297666305a7308'
 const expectedKeyImage = '79668204508e0ca29820d1bc1bad4e988b71a3c7b007fe52735e1526e4f30217'
