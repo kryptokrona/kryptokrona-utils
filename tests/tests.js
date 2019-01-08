@@ -148,3 +148,35 @@ console.log('New Athena Address: ', newAthenaAddress)
 console.log('New Athena Address By Keys: ', newAthenaAddressByKey.address)
 
 assert(newAthenaAddress === newAthenaAddressByKey.address)
+
+console.log('')
+console.log('Verifying output discovery...')
+console.log('')
+
+/* For reference, this is transaction fd9b0767c18752610833a8138e4bbb31d02b29bf50aa3af1557e2974a45c629c */
+const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94'
+
+const walletPrivateViewKey = '6968a0b8f744ec4b8cea5ec124a1b4bd1626a2e6f31e999f8adbab52c4dfa909'
+
+/* Not using this right now, but will probably need this later to test something else */
+// const walletPrivateSpendKey = 'd9d555a892a85f64916cae1a168bd3f7f400b6471c7b12b438b599601298210b';
+
+const walletPublicSpendKey = '854a637b2863af9e8e8216eb2382f3d16616b3ac3e53d0976fbd6f8da6c56418'
+
+const derivation = cnUtil.generateKeyDerivation(txPublicKey, walletPrivateViewKey)
+
+/* (First output) This is not our output. */
+const publicSpendKey1 = cnUtil.underivePublicKey(derivation, 0, 'aae1b90b4d0a7debb417d91b7f7aa8fdfd80c42ebc6757e1449fd1618a5a3ff1')
+
+console.log('Derived public spend key: ', publicSpendKey1)
+console.log('Our public spend key: ', walletPublicSpendKey)
+
+assert(publicSpendKey1 !== walletPublicSpendKey)
+
+/* (Third output) This is our output. */
+const publicSpendKey2 = cnUtil.underivePublicKey(derivation, 2, 'bb55bef919d1c9f74b5b52a8a6995a1dc4af4c0bb8824f5dc889012bc748173d')
+
+console.log('Derived public spend key: ', publicSpendKey2)
+console.log('Our public spend key: ', walletPublicSpendKey)
+
+assert(publicSpendKey2 === walletPublicSpendKey)

@@ -129,6 +129,19 @@ Gets the corresponding private key from the given public key.
 
 *Documentation In Progress*
 
+#### generateKeyDerivation(transactionPublicKey, privateViewKey)
+
+Creates the key 'derivation' given a transaction public key, and the private view key.
+Can then be supplied to underivePublicKey, to determine if the transaction output belongs to you.
+Returns a string.
+
+#### underivePublicKey(derivation, outputIndex, outputKey)
+
+Given the output index in the transaction, and the outputs key, along with a
+derivation from `generateKeyDerivation`, this method will return a public spend key.
+If the public spend key matches your public spend key, the transaction output is yours.
+Returns a string.
+
 ## Common Data Structures
 
 #### Address
