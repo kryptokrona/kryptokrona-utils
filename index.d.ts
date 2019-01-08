@@ -77,6 +77,15 @@ declare class CryptoNote {
         unlockTime?: number): Transaction;
 
     formatMoney(amount: number): string;
+
+    generateKeyDerivation(
+        transactionPublicKey: string,
+        privateViewKey: string): string;
+
+    underivePublicKey(
+        derivation: string,
+        outputIndex: number,
+        outputKey: string): string;
 }
 
 interface CryptoNoteOptions {

@@ -413,7 +413,7 @@ class CryptoNote {
     }
 
     /* Generate the key deriviation from the random transaction public key and our private view key */
-    const derivedKey = generateKeyDerivation(transactionPublicKey, privateViewKey)
+    const derivedKey = this.generateKeyDerivation(transactionPublicKey, privateViewKey)
 
     /* Derive the transfer public key from the derived key, the output index, and our public spend key */
     const publicEphemeral = derivePublicKey(derivedKey, output.index, publicSpendKey)
@@ -462,7 +462,7 @@ class CryptoNote {
     }
 
     /* Generate the key deriviation from the random transaction public key and our private view key */
-    const recvDerivation = generateKeyDerivation(transactionPublicKey, privateViewKey)
+    const recvDerivation = this.generateKeyDerivation(transactionPublicKey, privateViewKey)
 
     /* Derive the transfer public key from the derived key, the output index, and our public spend key */
     const publicEphemeral = derivePublicKey(recvDerivation, outputIndex, publicSpendKey)
@@ -553,6 +553,27 @@ class CryptoNote {
       places += '0'
     }
     return Numeral(amount / Math.pow(10, this.config.coinUnitPlaces)).format('0,0.' + places)
+  }
+
+  generateKeyDerivation (transactionPublicKey, privateViewKey) {
+    if (!isHex64(transactionPublicKey)) {
+      throw new Error('Invalid public key format')
+    }
+
+    if (!isHex64(privateViewKey)) {
+      throw new Error('Invalid secret key format')
+    }
+
+    var p = geScalarMult(transactionPublicKey, privateViewKey)
+    return geScalarMult(p, d2s(8))
+  }
+
+  underivePublicKey (derivation, outputIndex, outputKey) {
+    if (!isHex64(derivation)) {
+      throw new Error('Invalid derivation key format')
+    }
+
+    return RingSigs.underivePublicKey(derivation, outputIndex, outputKey)
   }
 }
 
@@ -689,19 +710,6 @@ function geScalarMult (publicKey, privateKey) {
 
 function getScalarMultBase (privateKey) {
   return privateKeyToPublicKey(privateKey)
-}
-
-function generateKeyDerivation (publicKey, privateKey) {
-  if (!isHex64(publicKey)) {
-    throw new Error('Invalid public key format')
-  }
-
-  if (!isHex64(privateKey)) {
-    throw new Error('Invalid secret key format')
-  }
-
-  var p = geScalarMult(publicKey, privateKey)
-  return geScalarMult(p, d2s(8))
 }
 
 function derivePublicKey (derivation, outputIndex, publicKey) {
@@ -1164,9 +1172,9 @@ function prepareTransactionOutputs (wallet, outputs) {
     var outDerivation
     /* If the amount is being sent to us, we need to handle that correctly */
     if (output.keys.publicViewKey === wallet.view.publicKey) {
-      outDerivation = generateKeyDerivation(transactionKeys.publicKey, wallet.view.privateKey)
+      outDerivation = this.generateKeyDerivation(transactionKeys.publicKey, wallet.view.privateKey)
     } else {
-      outDerivation = generateKeyDerivation(output.keys.publicViewKey, transactionKeys.privateKey)
+      outDerivation = this.generateKeyDerivation(output.keys.publicViewKey, transactionKeys.privateKey)
     }
 
     /* Generate the one time output key */
