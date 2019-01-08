@@ -121,6 +121,10 @@ Gets the corresponding private key from the given public key.
 
 *Documentation In Progress*
 
+#### generateKeyImagePrimative(publicSpendKey, privateSpendKey, outputIndex, derivation)
+
+The same as generateKeyImage, but allows you to reuse a derivation you have previously created, instead of re-deriving it.
+
 #### createTransaction(ourKeys, transfers, ourOutputs, randomOuts, mixin, feeAmount, [paymentId], [unlockTime])
 
 *Documentation In Progress*

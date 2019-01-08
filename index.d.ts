@@ -64,7 +64,13 @@ declare class CryptoNote {
         privateViewKey: string,
         publicSpendKey: string,
         privateSpendKey: string,
-        outputIndex: number): KeyImage;
+        outputIndex: number): string;
+
+    generateKeyImagePrimitive(
+        publicSpendKey: string,
+        privateSpendKey: string,
+        outputIndex: number,
+        derivation: string): string;
 
     createTransaction(
         ourKeys: Wallet,
@@ -136,11 +142,6 @@ interface DecodedAddress {
     encodedPrefix: string,
     prefix: number,
     rawAddress: string
-}
-
-interface KeyImage {
-    input: Input,
-    keyImage: string
 }
 
 interface TxDestination {

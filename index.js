@@ -452,7 +452,15 @@ class CryptoNote {
     if (!isHex64(privateViewKey)) {
       throw new Error('Invalid private view key format')
     }
+    /* Generate the key deriviation from the random transaction public key and our private view key */
+    let derivation = this.generateKeyDerivation(transactionPublicKey, privateViewKey)
 
+    return this.generateKeyImagePrimitive(publicSpendKey, privateSpendKey, outputIndex, derivation)
+  }
+
+  /* If the user already has a derivation, they can pass that in instead of
+     the privateViewKey and transactionPublicKey */
+  generateKeyImagePrimitive (publicSpendKey, privateSpendKey, outputIndex, derivation) {
     if (!isHex64(publicSpendKey)) {
       throw new Error('Invalid public spend key format')
     }
@@ -461,33 +469,16 @@ class CryptoNote {
       throw new Error('Invalid private spend key format')
     }
 
-    /* Generate the key deriviation from the random transaction public key and our private view key */
-    const recvDerivation = this.generateKeyDerivation(transactionPublicKey, privateViewKey)
-
     /* Derive the transfer public key from the derived key, the output index, and our public spend key */
-    const publicEphemeral = derivePublicKey(recvDerivation, outputIndex, publicSpendKey)
+    const publicEphemeral = derivePublicKey(derivation, outputIndex, publicSpendKey)
 
     /* Derive the key image private key from the derived key, the output index, and our spend secret key */
-    const privateEphemeral = deriveSecretKey(recvDerivation, outputIndex, privateSpendKey)
+    const privateEphemeral = deriveSecretKey(derivation, outputIndex, privateSpendKey)
 
     /* Generate the key image */
     const keyImage = generateKeyImage(publicEphemeral, privateEphemeral)
 
-    return {
-      input: {
-        transactionKey: {
-          publicKey: transactionPublicKey,
-          privateKey: recvDerivation
-        },
-        publicEphemeral: publicEphemeral,
-        privateEphemeral: privateEphemeral
-      },
-      keyImage: keyImage
-    }
-  }
-
-  generateKeyImagePrimitive (publicKey, privateKey) {
-    return generateKeyImage(publicKey, privateKey)
+    return keyImage
   }
 
   /* This method is designed to create new outputs for use
