@@ -86,18 +86,6 @@ console.log('In Non Mnemonic Seed: ', nonMnemonicAddressByKey.mnemonic)
 
 assert(nonMnemonicAddressByKey.mnemonic === null)
 
-const keyImagePublicKey = 'de80940143b344f95bd09046a3c4afa77a1875e588cfa7905cda9d607c7ff0f5'
-const keyImagePrivateKey = 'd2598f31daf1b3c515180d103cd9508139824d001f4260e42a297666305a7308'
-const expectedKeyImage = '79668204508e0ca29820d1bc1bad4e988b71a3c7b007fe52735e1526e4f30217'
-const keyImage = cnUtil.generateKeyImagePrimitive(keyImagePublicKey, keyImagePrivateKey)
-
-console.log('')
-console.log('Public Key: ', keyImagePublicKey)
-console.log('Private Key: ', keyImagePrivateKey)
-console.log('Key Image: ', keyImage)
-
-assert(keyImage === expectedKeyImage)
-
 var amount = 1234567
 console.log('')
 console.log('Creating outputs for amount %s to %s', amount, newAddress.address)
@@ -159,11 +147,13 @@ const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff
 const walletPrivateViewKey = '6968a0b8f744ec4b8cea5ec124a1b4bd1626a2e6f31e999f8adbab52c4dfa909'
 
 /* Not using this right now, but will probably need this later to test something else */
-// const walletPrivateSpendKey = 'd9d555a892a85f64916cae1a168bd3f7f400b6471c7b12b438b599601298210b';
+const walletPrivateSpendKey = 'd9d555a892a85f64916cae1a168bd3f7f400b6471c7b12b438b599601298210b'
 
 const walletPublicSpendKey = '854a637b2863af9e8e8216eb2382f3d16616b3ac3e53d0976fbd6f8da6c56418'
 
 const derivation = cnUtil.generateKeyDerivation(txPublicKey, walletPrivateViewKey)
+
+const ourOutputIndex = 2
 
 /* (First output) This is not our output. */
 const publicSpendKey1 = cnUtil.underivePublicKey(derivation, 0, 'aae1b90b4d0a7debb417d91b7f7aa8fdfd80c42ebc6757e1449fd1618a5a3ff1')
@@ -174,9 +164,27 @@ console.log('Our public spend key: ', walletPublicSpendKey)
 assert(publicSpendKey1 !== walletPublicSpendKey)
 
 /* (Third output) This is our output. */
-const publicSpendKey2 = cnUtil.underivePublicKey(derivation, 2, 'bb55bef919d1c9f74b5b52a8a6995a1dc4af4c0bb8824f5dc889012bc748173d')
+const publicSpendKey2 = cnUtil.underivePublicKey(derivation, ourOutputIndex, 'bb55bef919d1c9f74b5b52a8a6995a1dc4af4c0bb8824f5dc889012bc748173d')
 
 console.log('Derived public spend key: ', publicSpendKey2)
 console.log('Our public spend key: ', walletPublicSpendKey)
 
 assert(publicSpendKey2 === walletPublicSpendKey)
+
+console.log('')
+console.log('Verifying key images are correctly created...')
+console.log('')
+
+const keyImage = cnUtil.generateKeyImage(txPublicKey, walletPrivateViewKey, walletPublicSpendKey, walletPrivateSpendKey, ourOutputIndex)
+const keyImagePrimitive = cnUtil.generateKeyImagePrimitive(walletPublicSpendKey, walletPrivateSpendKey, ourOutputIndex, derivation)
+
+console.log('Generated key image: ', keyImage)
+console.log('Generated key image (primitive): ', keyImagePrimitive)
+
+assert(keyImage === keyImagePrimitive)
+
+const expectedKeyImage = '5997cf23543ce2e05c327297a47f26e710af868344859a6f8d65683d8a2498b0'
+
+console.log('Expected key image: ', expectedKeyImage)
+
+assert(keyImage === expectedKeyImage)
