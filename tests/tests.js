@@ -5,10 +5,10 @@
 'use strict'
 
 const assert = require('assert')
-const CryptoNoteUtils = require('../')
 
+const TurtleCoinUtils = require('../').CryptoNote
 const config = require('../config.json')
-const cnUtil = new CryptoNoteUtils(config)
+const cnUtil = new TurtleCoinUtils(config)
 
 const rawSeed = 'dd0c02d3202634821b4d9d91b63d919725f5c3e97e803f3512e52fb0dc2aab0c'
 const rawMnemonic = 'teeming taken piano ramped vegan jazz earth enjoy suture quick lied awkward ferry python often exotic cube hexagon ionic joyous cage abnormal hull jigsaw lied'

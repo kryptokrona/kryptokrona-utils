@@ -23,7 +23,16 @@ npm i git+https://github.com/turtlecoin/turtlecoin-utils
 
 ## Initialization
 
+### JavaScript
+
 ```javascript
+const TurtleCoinUtils = require('turtlecoin-utils').CryptoNote
+const coinUtils = new TurtleCoinUtils()
+```
+
+### TypeScript
+
+```typescript
 import { CryptoNote } from 'turtlecoin-utils'
 const coinUtils = new CryptoNote()
 ```
@@ -36,8 +45,8 @@ If initializing for a different CryptoNote project you can specify the configura
 All parameters are optional.
 
 ```javascript
-import { CryptoNote } from 'turtlecoin-utils'
-const coinUtils = new CryptoNote({
+const TurtleCoinUtils = require('turtlecoin-utils').CryptoNote
+const coinUtils = new TurtleCoinUtils({
   /* The amount of decimals your coin has */
   coinUnitPlaces: 8,
 
