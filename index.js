@@ -1258,4 +1258,6 @@ function serializeTransaction (tx, headerOnly) {
   return buf
 }
 
-module.exports = CryptoNote
+module.exports = {
+  CryptoNote
+}
