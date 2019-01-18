@@ -33,8 +33,8 @@ const coinUtils = new TurtleCoinUtils()
 ### TypeScript
 
 ```typescript
-import TurtleCoinUtils = require('turtlecoin-utils');
-const coinUtils = new TurtleCoinUtils()
+import { CryptoNote } from 'turtlecoin-utils';
+const coinUtils = new CryptoNote();
 ```
 
 You can find type definitions [here](index.d.ts)
