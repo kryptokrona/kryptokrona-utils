@@ -20,6 +20,9 @@
     "zpalmtree <22151537+zpalmtree@users.noreply.github.com>"
   ],
   "license": "GPL-3.0",
+  "optionalDependencies": {
+    "turtlecoin-crypto": "0.0.1"
+  },
   "dependencies": {
     "crc": "^3.8.0",
     "get-random-values": "^1.2.0",
