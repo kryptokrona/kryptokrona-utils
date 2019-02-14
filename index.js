@@ -16,7 +16,7 @@ const NACL = require('./lib/nacl-fast-cn.js')
 const VarintDecoder = require('varint-decoder')
 const SecureRandomString = require('secure-random-string')
 const Numeral = require('numeral')
-const RingSigs = require('./lib/ringsigs.js')
+const SHA3 = require('./lib/sha3.js')
 
 const SIZES = {
   HASH: 64,
@@ -555,6 +555,8 @@ class CryptoNote {
       throw new Error('Invalid derivation key format')
     }
 
+    const RingSigs = require('./lib/ringsigs.js')
+
     return RingSigs.underivePublicKey(derivation, outputIndex, outputKey)
   }
 }
@@ -743,6 +745,8 @@ function generateKeyImage (publicKey, privateKey) {
     throw new Error('Invalid secret key format')
   }
 
+  const RingSigs = require('./lib/ringsigs.js')
+
   return RingSigs.generate_key_image(publicKey, privateKey)
 }
 
@@ -782,7 +786,7 @@ function cnFastHash (input) {
     throw new Error('Invalid input: ' + input)
   }
 
-  return RingSigs.cn_fast_hash(input)
+  return SHA3.keccak_256(hex2bin(input))
 }
 
 function simpleKdf (str, iterations) {
@@ -890,6 +894,8 @@ function generateRingSignature (transactionPrefixHash, keyImage, inputKeys, priv
   if (realIndex >= inputKeys.length || realIndex < 0) {
     throw new Error('Invalid realIndex supplied')
   }
+
+  const RingSigs = require('./lib/ringsigs.js')
 
   var cSigs = new RingSigs.VectorString()
   var cInputKeys = new RingSigs.VectorString()
