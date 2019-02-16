@@ -211,10 +211,80 @@ export class CryptoNote {
 }
 
 export interface CryptoNoteOptions {
+    /**
+     * The amount of decimal places your coin has.
+     */
     coinUnitPlaces?: number;
+
+    /**
+     * The hex/decimal address prefix of your coin.
+     */
     addressPrefix?: number;
+
+    /**
+     * The amount of iterations to perform on pseudo pbkdf2.
+     */
     keccakIterations?: number;
+
+    /**
+     * The default fee to use on a transaction when not specified.
+     */
     defaultNetworkFee?: number;
+
+    /**
+     * A replacement function for the JS/C++ underivePublicKey.
+     */
+    underivePublicKey?: (derivation: string,
+                         outputIndex: number,
+                         outputKey: string) => string;
+
+    /**
+     * A replacement function for the JS/C++ derivePublicKey.
+     */
+    derivePublicKey?: (derivation: string,
+                       outputIndex: number,
+                       publicKey: string) => string;
+
+    /**
+     * A replacement function for the JS/C++ deriveSecretKey.
+     */
+    deriveSecretKey?: (derivation: string,
+                       outputIndex: number,
+                       privateKey: string) => string;
+
+    /**
+     * A replacement function for the JS/C++ generateKeyImage.
+     */
+    generateKeyImage?: (transactionPublicKey: string,
+                        privateViewKey: string,
+                        publicSpendKey: string,
+                        privateSpendKey: string,
+                        outputIndex: number) => string;
+
+    /**
+     * A replacement function for the JS/C++ secretKeyToPublicKey.
+     */
+    secretKeyToPublicKey?: (privateKey: string) => string;
+
+    /**
+     * A replacement function for the JS/C++ cnFastHash.
+     */
+    cnFastHash?: (input: string) => string;
+
+    /**
+     * A replacement function for the JS/C++ generateRingSignatures.
+     */
+    generateRingSignatures?: (transactionPrefixHash: string,
+                              keyImage: string,
+                              inputKeys: string[],
+                              privateKey: string,
+                              realIndex: number) => string[];
+
+    /**
+     * A replacement function for the JS/C++ generateKeyDerivation.
+     */
+    generateKeyDerivation?: (transactionPublicKey: string,
+                             privateViewKey: string) => string;
 }
 
 export interface Output {
