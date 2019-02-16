@@ -4,17 +4,6 @@ os:
   - linux
   - osx
 
-env:
-  - CC=gcc-7 CXX=g++-7
-
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - g++-7
-      - gcc-7
-
 node_js:
   - '6'
   - '8'
