@@ -36,6 +36,14 @@ try {
   TurtleCoinCrypto = false
 }
 
+/* This sets up the ability for the caller to specify
+   their own cryptographic functions to use for parts
+   of the methods used by this module. It is tracked outside
+   of the instance of the module instance as there are
+   a number of function calls that are not directly exposed
+   to the caller to prevent confusion */
+const userCryptoFunctions = {}
+
 const SIZES = {
   HASH: 64,
   KEY: 64,
@@ -84,6 +92,42 @@ class CryptoNote {
 
       if (config.defaultNetworkFee) {
         this.config.defaultNetworkFee = config.defaultNetworkFee
+      }
+
+      /* The checks below are for detecting customer caller
+         cryptographic functions and loading them into the
+         stack so that they can be used later throughout the
+         module and it's underlying functions */
+      if (typeof config.underivePublicKey === 'function') {
+        userCryptoFunctions.underivePublicKey = config.underivePublicKey
+      }
+
+      if (typeof config.derivePublicKey === 'function') {
+        userCryptoFunctions.derivePublicKey = config.derivePublicKey
+      }
+
+      if (typeof config.deriveSecretKey === 'function') {
+        userCryptoFunctions.deriveSecretKey = config.deriveSecretKey
+      }
+
+      if (typeof config.generateKeyImage === 'function') {
+        userCryptoFunctions.generateKeyImage = config.generateKeyImage
+      }
+
+      if (typeof config.secretKeyToPublicKey === 'function') {
+        userCryptoFunctions.secretKeyToPublicKey = config.secretKeyToPublicKey
+      }
+
+      if (typeof config.cnFastHash === 'function') {
+        userCryptoFunctions.cnFastHash = config.cnFastHash
+      }
+
+      if (typeof config.generateRingSignatures === 'function') {
+        userCryptoFunctions.generateRingSignatures = config.generateRingSignatures
+      }
+
+      if (typeof config.generateKeyDerivation === 'function') {
+        userCryptoFunctions.generateKeyDerivation = config.generateKeyDerivation
       }
     }
   }
@@ -573,7 +617,9 @@ class CryptoNote {
       throw new Error('Invalid derivation key format')
     }
 
-    if (TurtleCoinCrypto) {
+    if (userCryptoFunctions.underivePublicKey) {
+      userCryptoFunctions.underivePublicKey(derivation, outputIndex, outputKey)
+    } else if (TurtleCoinCrypto) {
       return TurtleCoinCrypto.underivePublicKey(derivation, outputIndex, outputKey)
     } else {
       const RingSigs = require('./lib/ringsigs.js')
@@ -699,7 +745,11 @@ function scReduce (hex, size) {
 }
 
 function scReduce32 (hex) {
-  return scReduce(hex, 32)
+  if (TurtleCoinCrypto) {
+    return TurtleCoinCrypto.scReduce32(hex)
+  } else {
+    return scReduce(hex, 32)
+  }
 }
 
 function geScalarMult (publicKey, privateKey) {
@@ -727,7 +777,9 @@ function derivePublicKey (derivation, outputIndex, publicKey) {
     throw new Error('Invalid public key format')
   }
 
-  if (TurtleCoinCrypto) {
+  if (userCryptoFunctions.derivePublicKey) {
+    return userCryptoFunctions.derivePublicKey(derivation, outputIndex, publicKey)
+  } else if (TurtleCoinCrypto) {
     return TurtleCoinCrypto.derivePublicKey(derivation, outputIndex, publicKey)
   } else {
     var s = derivationToScalar(derivation, outputIndex)
@@ -744,7 +796,9 @@ function deriveSecretKey (derivation, outputIndex, privateKey) {
     throw new Error('Invalid secret key format')
   }
 
-  if (TurtleCoinCrypto) {
+  if (userCryptoFunctions.deriveSecretKey) {
+    return userCryptoFunctions.deriveSecretKey(derivation, outputIndex, privateKey)
+  } else if (TurtleCoinCrypto) {
     return TurtleCoinCrypto.deriveSecretKey(derivation, outputIndex, privateKey)
   } else {
     var m = CNCrypto._malloc(SIZES.ECSCALAR)
@@ -775,7 +829,9 @@ function generateKeyImage (publicKey, privateKey) {
     throw new Error('Invalid secret key format')
   }
 
-  if (TurtleCoinCrypto) {
+  if (userCryptoFunctions.generateKeyImage) {
+    return userCryptoFunctions.generateKeyImage(publicKey, privateKey)
+  } else if (TurtleCoinCrypto) {
     return TurtleCoinCrypto.generateKeyImage(publicKey, privateKey)
   } else {
     const RingSigs = require('./lib/ringsigs.js')
@@ -812,7 +868,9 @@ function privateKeyToPublicKey (privateKey) {
     throw new Error('Invalid secret key length')
   }
 
-  if (TurtleCoinCrypto) {
+  if (userCryptoFunctions.secretKeyToPublicKey) {
+    return userCryptoFunctions.secretKeyToPublicKey(privateKey)
+  } else if (TurtleCoinCrypto) {
     return TurtleCoinCrypto.secretKeyToPublicKey(privateKey)
   } else {
     return bin2hex(NACL.ll.geScalarmultBase(hex2bin(privateKey)))
@@ -824,7 +882,9 @@ function cnFastHash (input) {
     throw new Error('Invalid input: ' + input)
   }
 
-  if (TurtleCoinCrypto) {
+  if (userCryptoFunctions.cnFastHash) {
+    return userCryptoFunctions.cnFastHash(input)
+  } else if (TurtleCoinCrypto) {
     return TurtleCoinCrypto.cnFastHash(input)
   } else {
     return SHA3.keccak_256(hex2bin(input))
@@ -937,7 +997,9 @@ function generateRingSignature (transactionPrefixHash, keyImage, inputKeys, priv
     throw new Error('Invalid realIndex supplied')
   }
 
-  if (TurtleCoinCrypto) {
+  if (userCryptoFunctions.generateRingSignatures) {
+    return userCryptoFunctions.generateRingSignatures(transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex)
+  } else if (TurtleCoinCrypto) {
     return TurtleCoinCrypto.generateRingSignatures(transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex)
   } else {
     const RingSigs = require('./lib/ringsigs.js')
@@ -1302,7 +1364,9 @@ function generateKeyDerivation (transactionPublicKey, privateViewKey) {
     throw new Error('Invalid secret key format')
   }
 
-  if (TurtleCoinCrypto) {
+  if (userCryptoFunctions.generateKeyDerivation) {
+    return userCryptoFunctions.generateKeyDerivation(privateViewKey, transactionPublicKey)
+  } else if (TurtleCoinCrypto) {
     return TurtleCoinCrypto.generateKeyDerivation(privateViewKey, transactionPublicKey)
   } else {
     var p = geScalarMult(transactionPublicKey, privateViewKey)
