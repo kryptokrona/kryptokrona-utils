@@ -1449,7 +1449,7 @@ function generateKeyDerivation (transactionPublicKey, privateViewKey) {
   }
 
   if (userCryptoFunctions.generateKeyDerivation) {
-    return userCryptoFunctions.generateKeyDerivation(privateViewKey, transactionPublicKey)
+    return userCryptoFunctions.generateKeyDerivation(transactionPublicKey, privateViewKey)
   } else if (TurtleCoinCrypto) {
     return TurtleCoinCrypto.generateKeyDerivation(privateViewKey, transactionPublicKey)
   } else {
