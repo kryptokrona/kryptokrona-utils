@@ -1,3 +1,7 @@
+// Copyright (c) 2018-2019, The TurtleCoin Developers
+//
+// Please see the included LICENSE file for more information.
+
 export class CryptoNote {
     constructor(config?: CryptoNoteOptions);
 
@@ -221,6 +225,11 @@ export class CryptoNote {
         derivation: string,
         outputIndex: number,
         outputKey: string): string;
+
+    /**
+     * Hashes the supplied data using the CN Fast Hash method
+     */
+    public cnFastHash(data: string): string;
 }
 
 export interface CryptoNoteOptions {

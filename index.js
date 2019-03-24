@@ -2,7 +2,7 @@
 // Copyright (c) 2014-2017, MyMonero.com
 // Copyright (c) 2016, Paul Shapiro
 // Copyright (c) 2017, Luigi111
-// Copyright (c) 2018, The TurtleCoin Developers
+// Copyright (c) 2018-2019, The TurtleCoin Developers
 //
 // Please see the included LICENSE file for more information.
 
@@ -641,6 +641,10 @@ class CryptoNote {
 
       return RingSigs.underivePublicKey(derivation, outputIndex, outputKey)
     }
+  }
+
+  cnFastHash (data) {
+    return cnFastHash(data)
   }
 }
 

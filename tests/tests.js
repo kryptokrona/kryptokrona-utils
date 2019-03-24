@@ -1,4 +1,4 @@
-// Copyright (c) 2018, The TurtleCoin Developers
+// Copyright (c) 2018-2019, The TurtleCoin Developers
 //
 // Please see the included LICENSE file for more information.
 
@@ -188,3 +188,16 @@ const expectedKeyImage = '5997cf23543ce2e05c327297a47f26e710af868344859a6f8d6568
 console.log('Expected key image: ', expectedKeyImage)
 
 assert(keyImage === expectedKeyImage)
+
+const inputData = '0100fb8e8ac805899323371bb790db19218afd8db8e3755d8b90f39b3d5506a9abce4fa912244500000000ee8146d49fa93ee724deb57d12cbc6c6f3b924d946127c7a97418f9348828f0f02'
+const expectedHash = 'b542df5b6e7f5f05275c98e7345884e2ac726aeeb07e03e44e0389eb86cd05f0'
+const calculatedHash = cnUtil.cnFastHash(inputData)
+
+console.log('')
+console.log('Hashing Tests...')
+console.log('')
+console.log('CN Fast Hash')
+console.log('Expected Hash: %s', expectedHash)
+console.log('Calculated Hash: %s', calculatedHash)
+
+assert(expectedHash === calculatedHash)
