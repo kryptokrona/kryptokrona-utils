@@ -15,14 +15,6 @@ const VarintDecoder = require('varint-decoder')
 const SecureRandomString = require('secure-random-string')
 const Numeral = require('numeral')
 
-/* These are the JS implementations of the
-   crypto functions that we need to do what
-   we are trying to do. They are slow and
-   painful */
-const NACL = require('./lib/nacl-fast-cn.js')
-const CNCrypto = require('./lib/crypto.js')
-const SHA3 = require('./lib/sha3.js')
-
 /* Try to load the Node C++ Addon module
    so that we can use that as it's a magnitudes
    faster, if not, we'll fall back to the
@@ -34,6 +26,21 @@ try {
   /* Silence standardjs check */
   TurtleCoinCrypto = e
   TurtleCoinCrypto = false
+}
+
+/* These are the JS implementations of the
+   crypto functions that we need to do what
+   we are trying to do. They are slow and
+   painful and only used as a last ditch
+   attempt if we can't use the native module
+   for whatever reason */
+var NACL
+var CNCrypto
+var SHA3
+if (!TurtleCoinCrypto) {
+  NACL = require('./lib/nacl-fast-cn.js')
+  CNCrypto = require('./lib/crypto.js')
+  SHA3 = require('./lib/sha3.js')
 }
 
 /* This sets up the ability for the caller to specify
