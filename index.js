@@ -20,24 +20,22 @@ const Numeral = require('numeral')
    faster, if not, we'll fall back to the
    JS implementations of the crypto functions */
 var TurtleCoinCrypto
+var NACL
+var CNCrypto
+var SHA3
 try {
   TurtleCoinCrypto = require('turtlecoin-crypto')
 } catch (e) {
   /* Silence standardjs check */
   TurtleCoinCrypto = e
   TurtleCoinCrypto = false
-}
 
-/* These are the JS implementations of the
+  /* These are the JS implementations of the
    crypto functions that we need to do what
    we are trying to do. They are slow and
    painful and only used as a last ditch
    attempt if we can't use the native module
    for whatever reason */
-var NACL
-var CNCrypto
-var SHA3
-if (!TurtleCoinCrypto) {
   NACL = require('./lib/nacl-fast-cn.js')
   CNCrypto = require('./lib/crypto.js')
   SHA3 = require('./lib/sha3.js')
