@@ -11,7 +11,7 @@
 const BigInteger = require('./lib/biginteger.js')
 const Base58 = require('./lib/base58.js')
 const Mnemonic = require('./lib/mnemonic.js')
-const VarintDecoder = require('varint-decoder')
+const Varint = require('varint')
 const SecureRandomString = require('secure-random-string')
 const Numeral = require('numeral')
 
@@ -748,7 +748,7 @@ function encodeVarint (i) {
 
 function decodeVarint (hex) {
   const buffer = Buffer.from(hex, 'hex')
-  return parseInt(VarintDecoder(buffer))
+  return parseInt(Varint.decode(buffer))
 }
 
 function scReduce (hex, size) {
