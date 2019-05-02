@@ -5,7 +5,7 @@
 'use strict'
 
 const assert = require('assert')
-
+const BlockTemplateSample = require('./blocktemplate.json')
 const TurtleCoinUtils = require('../').CryptoNote
 const config = require('../config.json')
 const cnUtil = new TurtleCoinUtils(config)
@@ -201,3 +201,15 @@ console.log('Expected Hash: %s', expectedHash)
 console.log('Calculated Hash: %s', calculatedHash)
 
 assert(expectedHash === calculatedHash)
+
+const BlockTemplate = cnUtil.blockTemplate(BlockTemplateSample)
+
+console.log('')
+console.log('Block Template: %s', BlockTemplate.blockTemplate)
+console.log('')
+console.log('Block Version: %s.%s', BlockTemplate.block.majorVersion, BlockTemplate.block.minorVersion)
+console.log('Transaction Count: %s', BlockTemplate.block.transactions.length)
+console.log('')
+console.log('Re-serialized Block Template: %s', BlockTemplate.blob)
+
+assert(BlockTemplate.blockTemplate === BlockTemplate.blob)

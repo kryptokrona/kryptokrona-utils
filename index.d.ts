@@ -230,6 +230,12 @@ export class CryptoNote {
      * Hashes the supplied data using the CN Fast Hash method
      */
     public cnFastHash(data: string): string;
+
+    /**
+     * Creates a BlockTemplate object based upon the JSON object returned by aLinkcolor
+     * getBlockTemplate call to the daemon or blockchain cache
+     */
+    public blockTemplate(data: string): BlockTemplate;
 }
 
 export interface CryptoNoteOptions {
@@ -252,6 +258,11 @@ export interface CryptoNoteOptions {
      * The default fee to use on a transaction when not specified.
      */
     defaultNetworkFee?: number;
+
+    /**
+     * The major block number where merged mining was activated
+     */
+    mmMiningBlockVersion?: number;
 
     /**
      * A replacement function for the JS/C++ underivePublicKey.
@@ -397,4 +408,10 @@ export interface Vout {
 
 export interface Target {
     data: string;
+}
+
+export interface BlockTemplate {
+    blob: string;
+    block: object;
+    blockTemplate: string;
 }

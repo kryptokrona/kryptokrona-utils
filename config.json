@@ -2,5 +2,6 @@
   "coinUnitPlaces": 2,
   "addressPrefix": 3914525,
   "keccakIterations": 1,
-  "defaultNetworkFee": 10
+  "defaultNetworkFee": 10,
+  "mmMiningBlockVersion": 2
 }

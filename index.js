@@ -10,6 +10,7 @@
 
 const BigInteger = require('./lib/biginteger.js')
 const Base58 = require('./lib/base58.js')
+const BlockTemplate = require('./lib/blocktemplate.js')
 const Mnemonic = require('./lib/mnemonic.js')
 const Varint = require('varint')
 const SecureRandomString = require('secure-random-string')
@@ -97,6 +98,10 @@ class CryptoNote {
 
       if (config.defaultNetworkFee) {
         this.config.defaultNetworkFee = config.defaultNetworkFee
+      }
+
+      if (config.mmMiningBlockVersion) {
+        this.config.mmMiningBlockVersion = config.mmMiningBlockVersion
       }
 
       /* The checks below are for detecting customer caller
@@ -650,6 +655,10 @@ class CryptoNote {
 
   cnFastHash (data) {
     return cnFastHash(data)
+  }
+
+  blockTemplate (payload) {
+    return new BlockTemplate(payload, this.mmMiningBlockVersion)
   }
 }
 
