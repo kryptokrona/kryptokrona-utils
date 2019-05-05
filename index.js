@@ -645,7 +645,10 @@ class CryptoNote {
     if (userCryptoFunctions.underivePublicKey) {
       userCryptoFunctions.underivePublicKey(derivation, outputIndex, outputKey)
     } else if (TurtleCoinCrypto) {
-      return TurtleCoinCrypto.underivePublicKey(derivation, outputIndex, outputKey)
+      const [err, key] = TurtleCoinCrypto.underivePublicKey(derivation, outputIndex, outputKey)
+      if (err) throw new Error('Could not underive public key')
+
+      return key
     } else {
       const RingSigs = require('./lib/ringsigs.js')
 
@@ -779,7 +782,10 @@ function scReduce (hex, size) {
 
 function scReduce32 (hex) {
   if (TurtleCoinCrypto) {
-    return TurtleCoinCrypto.scReduce32(hex)
+    const [err, result] = TurtleCoinCrypto.scReduce32(hex)
+    if (err) throw new Error('Could not scReduce32')
+
+    return result
   } else {
     return scReduce(hex, 32)
   }
@@ -813,7 +819,10 @@ function derivePublicKey (derivation, outputIndex, publicKey) {
   if (userCryptoFunctions.derivePublicKey) {
     return userCryptoFunctions.derivePublicKey(derivation, outputIndex, publicKey)
   } else if (TurtleCoinCrypto) {
-    return TurtleCoinCrypto.derivePublicKey(derivation, outputIndex, publicKey)
+    const [err, key] = TurtleCoinCrypto.derivePublicKey(derivation, outputIndex, publicKey)
+    if (err) throw new Error('Could not derive public key')
+
+    return key
   } else {
     var s = derivationToScalar(derivation, outputIndex)
     return bin2hex(NACL.ll.geAdd(hex2bin(publicKey), hex2bin(getScalarMultBase(s))))
@@ -832,7 +841,10 @@ function deriveSecretKey (derivation, outputIndex, privateKey) {
   if (userCryptoFunctions.deriveSecretKey) {
     return userCryptoFunctions.deriveSecretKey(derivation, outputIndex, privateKey)
   } else if (TurtleCoinCrypto) {
-    return TurtleCoinCrypto.deriveSecretKey(derivation, outputIndex, privateKey)
+    const [err, key] = TurtleCoinCrypto.deriveSecretKey(derivation, outputIndex, privateKey)
+    if (err) throw new Error('Could not derive secret key')
+
+    return key
   } else {
     var m = CNCrypto._malloc(SIZES.ECSCALAR)
     var b = hex2bin(derivationToScalar(derivation, outputIndex))
@@ -865,7 +877,10 @@ function generateKeyImage (publicKey, privateKey) {
   if (userCryptoFunctions.generateKeyImage) {
     return userCryptoFunctions.generateKeyImage(publicKey, privateKey)
   } else if (TurtleCoinCrypto) {
-    return TurtleCoinCrypto.generateKeyImage(publicKey, privateKey)
+    const [err, keyImage] = TurtleCoinCrypto.generateKeyImage(publicKey, privateKey)
+    if (err) throw new Error('Could not generate key image')
+
+    return keyImage
   } else {
     const RingSigs = require('./lib/ringsigs.js')
 
@@ -904,7 +919,10 @@ function privateKeyToPublicKey (privateKey) {
   if (userCryptoFunctions.secretKeyToPublicKey) {
     return userCryptoFunctions.secretKeyToPublicKey(privateKey)
   } else if (TurtleCoinCrypto) {
-    return TurtleCoinCrypto.secretKeyToPublicKey(privateKey)
+    const [err, key] = TurtleCoinCrypto.secretKeyToPublicKey(privateKey)
+    if (err) throw new Error('Could not derive public key from secret key')
+
+    return key
   } else {
     return bin2hex(NACL.ll.geScalarmultBase(hex2bin(privateKey)))
   }
@@ -918,7 +936,10 @@ function cnFastHash (input) {
   if (userCryptoFunctions.cnFastHash) {
     return userCryptoFunctions.cnFastHash(input)
   } else if (TurtleCoinCrypto) {
-    return TurtleCoinCrypto.cnFastHash(input)
+    const [err, hash] = TurtleCoinCrypto.cnFastHash(input)
+    if (err) throw new Error('Could not calculate CN Fast Hash')
+
+    return hash
   } else {
     return SHA3.keccak_256(hex2bin(input))
   }
@@ -1033,7 +1054,10 @@ function generateRingSignature (transactionPrefixHash, keyImage, inputKeys, priv
   if (userCryptoFunctions.generateRingSignatures) {
     return userCryptoFunctions.generateRingSignatures(transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex)
   } else if (TurtleCoinCrypto) {
-    return TurtleCoinCrypto.generateRingSignatures(transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex)
+    const [err, signatures] = TurtleCoinCrypto.generateRingSignatures(transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex)
+    if (err) return new Error('Could not generate ring signatures')
+
+    return signatures
   } else {
     const RingSigs = require('./lib/ringsigs.js')
 
@@ -1469,7 +1493,10 @@ function generateKeyDerivation (transactionPublicKey, privateViewKey) {
   if (userCryptoFunctions.generateKeyDerivation) {
     return userCryptoFunctions.generateKeyDerivation(transactionPublicKey, privateViewKey)
   } else if (TurtleCoinCrypto) {
-    return TurtleCoinCrypto.generateKeyDerivation(privateViewKey, transactionPublicKey)
+    const [err, derivation] = TurtleCoinCrypto.generateKeyDerivation(privateViewKey, transactionPublicKey)
+    if (err) throw new Error('Could not generate key derivation')
+
+    return derivation
   } else {
     var p = geScalarMult(transactionPublicKey, privateViewKey)
     return geScalarMult(p, d2s(8))
