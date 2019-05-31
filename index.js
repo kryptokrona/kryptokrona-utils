@@ -15,32 +15,7 @@ const Mnemonic = require('./lib/mnemonic.js')
 const Varint = require('varint')
 const SecureRandomString = require('secure-random-string')
 const Numeral = require('numeral')
-
-/* Try to load the Node C++ Addon module
-   so that we can use that as it's a magnitudes
-   faster, if not, we'll fall back to the
-   JS implementations of the crypto functions */
-var TurtleCoinCrypto
-var NACL
-var CNCrypto
-var SHA3
-try {
-  TurtleCoinCrypto = require('turtlecoin-crypto')
-} catch (e) {
-  /* Silence standardjs check */
-  TurtleCoinCrypto = e
-  TurtleCoinCrypto = false
-
-  /* These are the JS implementations of the
-   crypto functions that we need to do what
-   we are trying to do. They are slow and
-   painful and only used as a last ditch
-   attempt if we can't use the native module
-   for whatever reason */
-  NACL = require('./lib/nacl-fast-cn.js')
-  CNCrypto = require('./lib/crypto.js')
-  SHA3 = require('./lib/sha3.js')
-}
+const TurtleCoinCrypto = require('./lib/turtlecoin-crypto')()
 
 /* This sets up the ability for the caller to specify
    their own cryptographic functions to use for parts
@@ -644,16 +619,13 @@ class CryptoNote {
 
     if (userCryptoFunctions.underivePublicKey) {
       userCryptoFunctions.underivePublicKey(derivation, outputIndex, outputKey)
-    } else if (TurtleCoinCrypto) {
-      const [err, key] = TurtleCoinCrypto.underivePublicKey(derivation, outputIndex, outputKey)
-      if (err) throw new Error('Could not underive public key')
-
-      return key
-    } else {
-      const RingSigs = require('./lib/ringsigs.js')
-
-      return RingSigs.underivePublicKey(derivation, outputIndex, outputKey)
     }
+
+    const [err, key] = TurtleCoinCrypto.underivePublicKey(derivation, outputIndex, outputKey)
+
+    if (err) throw new Error('Could not underive public key')
+
+    return key
   }
 
   cnFastHash (data) {
@@ -674,52 +646,6 @@ function isHex (str) {
 function isHex64 (str) {
   const regex = new RegExp('^[0-9a-fA-F]{64}$')
   return regex.test(str)
-}
-
-function swapEndian (hex) {
-  if (hex.length % 2 !== 0) {
-    throw new Error('Hex string length must be a multiple of 2!')
-  }
-  var result = ''
-
-  var loopCount = hex.length / 2
-  for (var i = 1; i <= loopCount; i++) {
-    result += hex.substr(0 - 2 * i, 2)
-  }
-
-  return result
-}
-
-function d2h (integer) {
-  if (typeof integer !== 'string' && integer.toString().length > 15) {
-    throw new Error('Integer should be entered as a string for precision')
-  }
-
-  var padding = ''
-  for (var i = 0; i < 64; i++) {
-    padding += '0'
-  }
-
-  const result = (padding + BigInteger(integer).toString(16).toLowerCase()).slice(-(SIZES.KEY))
-  return result
-}
-
-function d2s (integer) {
-  return swapEndian(d2h(integer))
-}
-
-function hex2bin (hex) {
-  if (hex.length % 2 !== 0) {
-    throw new Error('Hex string has invalid length')
-  }
-
-  var result = new Uint8Array(hex.length / 2)
-  var hexLength = hex.length / 2
-  for (var i = 0; i < hexLength; i++) {
-    result[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16)
-  }
-
-  return result
 }
 
 function bin2hex (bin) {
@@ -763,48 +689,12 @@ function decodeVarint (hex) {
   return parseInt(Varint.decode(buffer))
 }
 
-function scReduce (hex, size) {
-  size = size || 64
-  var input = hex2bin(hex)
-  if (input.length !== size) {
-    throw new Error('Invalid input length')
-  }
-
-  var memory = CNCrypto._malloc(size)
-  CNCrypto.HEAPU8.set(input, memory)
-  CNCrypto.ccall('sc_reduce32', 'void', ['number'], [memory])
-
-  var result = CNCrypto.HEAPU8.subarray(memory, memory + size)
-  CNCrypto._free(memory)
-
-  return bin2hex(result)
-}
-
 function scReduce32 (hex) {
-  if (TurtleCoinCrypto) {
-    const [err, result] = TurtleCoinCrypto.scReduce32(hex)
-    if (err) throw new Error('Could not scReduce32')
+  const [err, result] = TurtleCoinCrypto.scReduce32(hex)
 
-    return result
-  } else {
-    return scReduce(hex, 32)
-  }
-}
+  if (err) throw new Error('Could not scReduce32')
 
-function geScalarMult (publicKey, privateKey) {
-  if (!isHex64(publicKey)) {
-    throw new Error('Invalid public key format')
-  }
-
-  if (!isHex64(privateKey)) {
-    throw new Error('Invalid secret key format')
-  }
-
-  return bin2hex(NACL.ll.geScalarmult(hex2bin(publicKey), hex2bin(privateKey)))
-}
-
-function getScalarMultBase (privateKey) {
-  return privateKeyToPublicKey(privateKey)
+  return result
 }
 
 function derivePublicKey (derivation, outputIndex, publicKey) {
@@ -818,15 +708,13 @@ function derivePublicKey (derivation, outputIndex, publicKey) {
 
   if (userCryptoFunctions.derivePublicKey) {
     return userCryptoFunctions.derivePublicKey(derivation, outputIndex, publicKey)
-  } else if (TurtleCoinCrypto) {
-    const [err, key] = TurtleCoinCrypto.derivePublicKey(derivation, outputIndex, publicKey)
-    if (err) throw new Error('Could not derive public key')
-
-    return key
-  } else {
-    var s = derivationToScalar(derivation, outputIndex)
-    return bin2hex(NACL.ll.geAdd(hex2bin(publicKey), hex2bin(getScalarMultBase(s))))
   }
+
+  const [err, key] = TurtleCoinCrypto.derivePublicKey(derivation, outputIndex, publicKey)
+
+  if (err) throw new Error('Could not derive public key')
+
+  return key
 }
 
 function deriveSecretKey (derivation, outputIndex, privateKey) {
@@ -840,29 +728,13 @@ function deriveSecretKey (derivation, outputIndex, privateKey) {
 
   if (userCryptoFunctions.deriveSecretKey) {
     return userCryptoFunctions.deriveSecretKey(derivation, outputIndex, privateKey)
-  } else if (TurtleCoinCrypto) {
-    const [err, key] = TurtleCoinCrypto.deriveSecretKey(derivation, outputIndex, privateKey)
-    if (err) throw new Error('Could not derive secret key')
-
-    return key
-  } else {
-    var m = CNCrypto._malloc(SIZES.ECSCALAR)
-    var b = hex2bin(derivationToScalar(derivation, outputIndex))
-    CNCrypto.HEAPU8.set(b, m)
-
-    var baseM = CNCrypto._malloc(SIZES.ECSCALAR)
-    CNCrypto.HEAPU8.set(hex2bin(privateKey), baseM)
-
-    var derivedM = CNCrypto._malloc(SIZES.ECSCALAR)
-    CNCrypto.ccall('sc_add', 'void', ['number', 'number', 'number'], [derivedM, baseM, m])
-
-    var result = CNCrypto.HEAPU8.subarray(derivedM, derivedM + SIZES.ECSCALAR)
-    CNCrypto._free(m)
-    CNCrypto._free(baseM)
-    CNCrypto._free(derivedM)
-
-    return bin2hex(result)
   }
+
+  const [err, key] = TurtleCoinCrypto.deriveSecretKey(derivation, outputIndex, privateKey)
+
+  if (err) throw new Error('Could not derive secret key')
+
+  return key
 }
 
 function generateKeyImage (publicKey, privateKey) {
@@ -876,39 +748,13 @@ function generateKeyImage (publicKey, privateKey) {
 
   if (userCryptoFunctions.generateKeyImage) {
     return userCryptoFunctions.generateKeyImage(publicKey, privateKey)
-  } else if (TurtleCoinCrypto) {
-    const [err, keyImage] = TurtleCoinCrypto.generateKeyImage(publicKey, privateKey)
-    if (err) throw new Error('Could not generate key image')
-
-    return keyImage
-  } else {
-    const RingSigs = require('./lib/ringsigs.js')
-
-    return RingSigs.generate_key_image(publicKey, privateKey)
-  }
-}
-
-function hashToScalar (buf) {
-  const hash = cnFastHash(buf)
-  return scReduce32(hash)
-}
-
-function derivationToScalar (derivation, outputIndex) {
-  var buf = ''
-
-  if (derivation.length !== (SIZES.ECPOINT * 2)) {
-    throw new Error('Invalid derivation length')
   }
 
-  buf += derivation
+  const [err, keyImage] = TurtleCoinCrypto.generateKeyImage(publicKey, privateKey)
 
-  var enc = encodeVarint(outputIndex)
-  if (enc.length > (10 * 2)) {
-    throw new Error('outputIndex does not fit in 64-bit varint')
-  }
+  if (err) throw new Error('Could not generate key image')
 
-  buf += enc
-  return hashToScalar(buf)
+  return keyImage
 }
 
 function privateKeyToPublicKey (privateKey) {
@@ -918,14 +764,13 @@ function privateKeyToPublicKey (privateKey) {
 
   if (userCryptoFunctions.secretKeyToPublicKey) {
     return userCryptoFunctions.secretKeyToPublicKey(privateKey)
-  } else if (TurtleCoinCrypto) {
-    const [err, key] = TurtleCoinCrypto.secretKeyToPublicKey(privateKey)
-    if (err) throw new Error('Could not derive public key from secret key')
-
-    return key
-  } else {
-    return bin2hex(NACL.ll.geScalarmultBase(hex2bin(privateKey)))
   }
+
+  const [err, key] = TurtleCoinCrypto.secretKeyToPublicKey(privateKey)
+
+  if (err) throw new Error('Could not derive public key from secret key')
+
+  return key
 }
 
 function cnFastHash (input) {
@@ -935,14 +780,13 @@ function cnFastHash (input) {
 
   if (userCryptoFunctions.cnFastHash) {
     return userCryptoFunctions.cnFastHash(input)
-  } else if (TurtleCoinCrypto) {
-    const [err, hash] = TurtleCoinCrypto.cnFastHash(input)
-    if (err) throw new Error('Could not calculate CN Fast Hash')
-
-    return hash
-  } else {
-    return SHA3.keccak_256(hex2bin(input))
   }
+
+  const [err, hash] = TurtleCoinCrypto.cn_fast_hash(input)
+
+  if (err) throw new Error('Could not calculate CN Fast Hash')
+
+  return hash
 }
 
 function simpleKdf (str, iterations) {
@@ -960,8 +804,9 @@ function generateKeys (seed) {
     throw new Error('Invalid seed length')
   }
 
-  var privateKey = scReduce32(seed)
-  var publicKey = privateKeyToPublicKey(privateKey)
+  const privateKey = scReduce32(seed)
+
+  const publicKey = privateKeyToPublicKey(privateKey)
 
   return {
     privateKey: privateKey,
@@ -1033,8 +878,6 @@ function addNonceToExtra (extra, nonce) {
 }
 
 function generateRingSignature (transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex) {
-  var sigs = []
-
   if (!isHex64(keyImage)) {
     throw new Error('Invalid Key Image format')
   }
@@ -1053,29 +896,13 @@ function generateRingSignature (transactionPrefixHash, keyImage, inputKeys, priv
 
   if (userCryptoFunctions.generateRingSignatures) {
     return userCryptoFunctions.generateRingSignatures(transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex)
-  } else if (TurtleCoinCrypto) {
-    const [err, signatures] = TurtleCoinCrypto.generateRingSignatures(transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex)
-    if (err) return new Error('Could not generate ring signatures')
-
-    return signatures
-  } else {
-    const RingSigs = require('./lib/ringsigs.js')
-
-    var cSigs = new RingSigs.VectorString()
-    var cInputKeys = new RingSigs.VectorString()
-
-    inputKeys.forEach((key) => {
-      cInputKeys.push_back(key)
-    })
-
-    cSigs = RingSigs.generateRingSignatures(transactionPrefixHash, keyImage, cInputKeys, privateKey, realIndex)
-
-    for (var i = 0; i < cSigs.size(); i++) {
-      sigs.push(cSigs.get(i))
-    }
-
-    return sigs
   }
+
+  const [err, signatures] = TurtleCoinCrypto.generateRingSignatures(transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex)
+
+  if (err) return new Error('Could not generate ring signatures')
+
+  return signatures
 }
 
 function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, _async) {
@@ -1492,15 +1319,13 @@ function generateKeyDerivation (transactionPublicKey, privateViewKey) {
 
   if (userCryptoFunctions.generateKeyDerivation) {
     return userCryptoFunctions.generateKeyDerivation(transactionPublicKey, privateViewKey)
-  } else if (TurtleCoinCrypto) {
-    const [err, derivation] = TurtleCoinCrypto.generateKeyDerivation(privateViewKey, transactionPublicKey)
-    if (err) throw new Error('Could not generate key derivation')
-
-    return derivation
-  } else {
-    var p = geScalarMult(transactionPublicKey, privateViewKey)
-    return geScalarMult(p, d2s(8))
   }
+
+  const [err, derivation] = TurtleCoinCrypto.generateKeyDerivation(transactionPublicKey, privateViewKey)
+
+  if (err) throw new Error('Could not generate key derivation')
+
+  return derivation
 }
 
 module.exports = {

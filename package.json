@@ -21,7 +21,7 @@
   ],
   "license": "GPL-3.0",
   "optionalDependencies": {
-    "turtlecoin-crypto": "^1.0.0"
+    "turtlecoin-crypto": "turtlecoin/turtlecoin-crypto#development"
   },
   "dependencies": {
     "crc": "^3.8.0",
@@ -32,12 +32,14 @@
   },
   "standard": {
     "ignore": [
-      "lib/crypto.js",
-      "lib/nacl-fast-cn.js",
-      "lib/ringsigs.js"
+      "lib/mnemonic.js",
+      "lib/turtlecoin-crypto/turtlecoin-crypto.js",
+      "lib/turtlecoin-crypto/turtlecoin-crypto-wasm.js",
+      "dist/*"
     ]
   },
   "devDependencies": {
-    "standard": "^12.0.1"
+    "standard": "^12.0.1",
+    "webpack": "^4.32.2"
   }
 }
