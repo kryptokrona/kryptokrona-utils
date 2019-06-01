@@ -902,6 +902,12 @@ function generateRingSignature (transactionPrefixHash, keyImage, inputKeys, priv
 
   if (err) return new Error('Could not generate ring signatures')
 
+  if (typeof TurtleCoinCrypto.checkRingSignatures !== 'undefined') {
+    if (!TurtleCoinCrypto.checkRingSignatures(transactionPrefixHash, keyImage, inputKeys, signatures)) {
+      return new Error('Could not verify generated ring signatures')
+    }
+  }
+
   return signatures
 }
 
