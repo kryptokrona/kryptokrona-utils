@@ -7,18 +7,14 @@
 
 # TurtleCoin Javascript Utilities
 
-## Disclaimer
+This package contains code that wraps [turtlecoin-crypto](https://github.com/turtlecoin/turtlecoin-crypto] primitives into an easier to use interface. This includes the ability to easily discover funds for a wallet, create transactions, sign transactions (ring signatures), create new wallets, verify addresses, and handful of other useful methods. These methods can then be wrapped into a Javascript-based wallet such as [turtlecoin-wallet-backend-js](https://github.com/turtlecoin/turtlecoin-wallet-backend-js).
 
-***Use of this code in its current state may lead to unexpected results***
-
-This repository contains highly experimental code  with the goal of making it possible to interact with a daemon including wallet functionaity (sending/receiving transactions) without the need for `turtle-service` or `wallet-api` using Node.js. By using the code in this repo, you understand that some functions may not work, others may work but be untested, while others may upset you.
-
-The best way to address such situations is to submit a Pull Request to resolve the issue you're running into.
+If you experience any issues with this library, the best way to address such situations is to submit a Pull Request to resolve the issue you are running into.
 
 ## Installation
 
 ```bash
-npm i git+https://github.com/turtlecoin/turtlecoin-utils
+npm install turtlecoin-utils
 ```
 
 ## Initialization
