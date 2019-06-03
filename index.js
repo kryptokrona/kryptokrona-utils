@@ -79,7 +79,7 @@ class CryptoNote {
         this.config.mmMiningBlockVersion = config.mmMiningBlockVersion
       }
 
-      /* The checks below are for detecting customer caller
+      /* The checks below are for detecting custom caller
          cryptographic functions and loading them into the
          stack so that they can be used later throughout the
          module and it's underlying functions */
