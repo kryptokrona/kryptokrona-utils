@@ -10,7 +10,7 @@
 
 const BigInteger = require('./lib/biginteger.js')
 const Base58 = require('./lib/base58.js')
-const BlockTemplate = require('./lib/blocktemplate.js')
+const BlockTemplate = require('./lib/block.js')
 const Mnemonic = require('./lib/mnemonic.js')
 const Varint = require('varint')
 const SecureRandomString = require('secure-random-string')
