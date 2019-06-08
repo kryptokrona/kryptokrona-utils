@@ -7,6 +7,7 @@
 const assert = require('assert')
 const BlockTemplateSample = require('./blocktemplate.json')
 const TurtleCoinUtils = require('../').CryptoNote
+const BlockTemplate = require('../').BlockTemplate
 const config = require('../config.json')
 const cnUtil = new TurtleCoinUtils(config)
 
@@ -230,6 +231,7 @@ try {
   console.log('Raw Transaction: %s', tx.rawTransaction)
 } catch (e) {
   console.log('Create Transaction Failed: %s', e.toString())
+  assert(false === true)
 }
 
 console.log('')
@@ -241,14 +243,14 @@ console.log('Calculated Hash: %s', calculatedHash)
 
 assert(expectedHash === calculatedHash)
 
-const BlockTemplate = cnUtil.blockTemplate(BlockTemplateSample)
+const testBlock = new BlockTemplate(BlockTemplateSample)
 
 console.log('')
-console.log('Block Template: %s', BlockTemplate.blockTemplate)
+console.log('Block Template: %s', testBlock.blockTemplate)
 console.log('')
-console.log('Block Version: %s.%s', BlockTemplate.block.majorVersion, BlockTemplate.block.minorVersion)
-console.log('Transaction Count: %s', BlockTemplate.block.transactions.length)
+console.log('Block Version: %s.%s', testBlock.block.majorVersion, testBlock.block.minorVersion)
+console.log('Transaction Count: %s', testBlock.block.transactions.length)
 console.log('')
-console.log('Re-serialized Block Template: %s', BlockTemplate.blob)
+console.log('Re-serialized Block Template: %s', testBlock.blob)
 
-assert(BlockTemplate.blockTemplate === BlockTemplate.blob)
+assert(testBlock.blockTemplate === testBlock.blob)

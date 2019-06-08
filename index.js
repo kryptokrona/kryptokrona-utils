@@ -11,6 +11,7 @@
 const BigInteger = require('./lib/biginteger.js')
 const Base58 = require('./lib/base58.js')
 const BlockTemplate = require('./lib/block.js')
+const TransactionTemplate = require('./lib/transaction.js')
 const Mnemonic = require('./lib/mnemonic.js')
 const Varint = require('varint')
 const SecureRandomString = require('secure-random-string')
@@ -26,31 +27,11 @@ const TurtleCoinCrypto = require('./lib/turtlecoin-crypto')()
 const userCryptoFunctions = {}
 
 const SIZES = {
-  HASH: 64,
   KEY: 64,
-  PAYMENTID_HEX: 64,
   CHECKSUM: 8,
-  ECPOINT: 32,
-  GEP3: 160,
-  GEP2: 120,
-  GEP1P1: 160,
-  GECACHED: 160,
-  ECSCALAR: 32,
-  KEYIMAGE: 32,
-  GEDSMP: 160 * 8,
-  SIGNATURE: 64
+  ECPOINT: 32
 }
-const TX_EXTRA_NONCE_MAX_COUNT = 255
-const TX_EXTRA_TAGS = {
-  PADDING: '00',
-  PUBKEY: '01',
-  NONCE: '02',
-  MERGE_MINING: '03'
-}
-const TX_EXTRA_NONCE_TAGS = {
-  PAYMENT_ID: '00',
-  ENCRYPTED_PAYMENT_ID: '01'
-}
+
 const UINT64_MAX = BigInteger(2).pow(64)
 const CURRENT_TX_VERSION = 1
 
@@ -571,13 +552,11 @@ class CryptoNote {
 
   createTransaction (newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime) {
     var tx = this.createTransactionStructure(newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime, false)
-    var serializedTransaction = serializeTransaction(tx)
-    var txnHash = cnFastHash(serializedTransaction)
 
     return {
       transaction: tx,
-      rawTransaction: serializedTransaction,
-      hash: txnHash
+      rawTransaction: tx.blob,
+      hash: tx.hash
     }
   }
 
@@ -585,19 +564,12 @@ class CryptoNote {
     return this.createTransactionStructure(
       newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime, true
     ).then((tx) => {
-      var serializedTransaction = serializeTransaction(tx)
-      var txnHash = cnFastHash(serializedTransaction)
-
       return {
         transaction: tx,
-        rawTransaction: serializedTransaction,
-        hash: txnHash
+        rawTransaction: tx.blob,
+        hash: tx.hash
       }
     })
-  }
-
-  serializeTransaction (transaction) {
-    return serializeTransaction(transaction, false)
   }
 
   formatMoney (amount) {
@@ -630,10 +602,6 @@ class CryptoNote {
 
   cnFastHash (data) {
     return cnFastHash(data)
-  }
-
-  blockTemplate (payload) {
-    return new BlockTemplate(payload, this.mmMiningBlockVersion)
   }
 }
 
@@ -837,46 +805,6 @@ function absoluteToRelativeOffsets (offsets) {
   return offsets
 }
 
-function addTransactionPublicKeyToExtra (extra, transactionPublicKey) {
-  if (!isHex64(transactionPublicKey)) {
-    throw new Error('Invalid Transaction Public Key Format')
-  }
-
-  extra += TX_EXTRA_TAGS.PUBKEY
-  extra += transactionPublicKey
-
-  return extra
-}
-
-function getPaymentIdNonce (paymentId) {
-  if (!isHex64(paymentId)) {
-    throw new Error('Payment ID must be 64 hexadecimal characters')
-  }
-
-  return TX_EXTRA_NONCE_TAGS.PAYMENT_ID + paymentId
-}
-
-function addNonceToExtra (extra, nonce) {
-  if ((nonce.length % 2) !== 0) {
-    throw new Error('Invalid extra nonce')
-  }
-
-  if ((nonce.length / 2) > TX_EXTRA_NONCE_MAX_COUNT) {
-    throw new Error('Extra nonce must be at most ' + TX_EXTRA_NONCE_MAX_COUNT + ' bytes')
-  }
-
-  /* Add the NONCE tag */
-  extra += TX_EXTRA_TAGS.NONCE
-
-  /* Encode the length of the NONCE */
-  extra += ('0' + (nonce.length / 2).toString(16)).slice(-2)
-
-  /* Add the NONCE */
-  extra += nonce
-
-  return extra
-}
-
 function generateRingSignature (transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex) {
   if (!isHex64(keyImage)) {
     throw new Error('Invalid Key Image format')
@@ -980,22 +908,14 @@ function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmo
   /* Prepare our transaction outputs using the helper function */
   var transactionOutputs = prepareTransactionOutputs(newOutputs, _async)
 
-  var transactionExtra = ''
-  /* If we have a payment ID we need to add it to tx_extra */
-  if (isHex64(paymentId)) {
-    const nonce = getPaymentIdNonce(paymentId)
-    transactionExtra = addNonceToExtra(transactionExtra, nonce)
-  }
-
   /* Start constructing our actual transaction */
-  const tx = {
-    unlockTime: unlockTime,
-    version: CURRENT_TX_VERSION,
-    extra: transactionExtra,
-    transactionKeys: transactionOutputs.transactionKeys,
-    vin: [],
-    vout: [],
-    signatures: []
+  const tx = new TransactionTemplate()
+  tx.version = CURRENT_TX_VERSION
+  tx.unlockTime = unlockTime
+
+  /* If there is a payment ID add it to the transaction */
+  if (isHex64(paymentId)) {
+    tx.addPaymentId(paymentId)
   }
 
   transactionInputs.sort(function (a, b) {
@@ -1004,7 +924,7 @@ function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmo
 
   transactionInputs.forEach((input) => {
     const inputToKey = {
-      type: 'input_to_key',
+      type: '02',
       amount: input.amount,
       keyImage: input.keyImage,
       keyOffsets: []
@@ -1016,20 +936,21 @@ function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmo
 
     inputToKey.keyOffsets = absoluteToRelativeOffsets(inputToKey.keyOffsets)
 
-    tx.vin.push(inputToKey)
+    tx.inputs.push(inputToKey)
   })
 
-  tx.extra = addTransactionPublicKeyToExtra(tx.extra, transactionOutputs.transactionKeys.publicKey)
+  /* Add the transaction public key to the transaction */
+  tx.addPublicKey(transactionOutputs.transactionKeys.publicKey)
 
   if (_async) {
     /* Use Promise.resolve so even if the result isn't a promise, it still
        works */
     return Promise.resolve(transactionOutputs.outputs).then((outputs) => {
       outputs.forEach((output) => {
-        tx.vout.push(output)
+        tx.outputs.push(output)
       })
 
-      const txPrefixHash = getTransactionPrefixHash(tx)
+      const txPrefixHash = tx.prefixHash
 
       const sigPromises = []
 
@@ -1057,10 +978,10 @@ function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmo
     })
   } else {
     transactionOutputs.outputs.forEach((output) => {
-      tx.vout.push(output)
+      tx.outputs.push(output)
     })
 
-    const txPrefixHash = getTransactionPrefixHash(tx)
+    const txPrefixHash = tx.prefixHash
 
     for (i = 0; i < transactionInputs.length; i++) {
       var txInput = transactionInputs[i]
@@ -1198,10 +1119,8 @@ function prepareTransactionOutputs (outputs, _async) {
       }).then((outEphemeralPub) => {
         return ({
           amount: output.amount,
-          target: {
-            data: outEphemeralPub
-          },
-          type: 'txout_to_key'
+          key: outEphemeralPub,
+          type: '02'
         })
       })
     })
@@ -1220,10 +1139,8 @@ function prepareTransactionOutputs (outputs, _async) {
       /* Push it on to our stack */
       preparedOutputs.push({
         amount: output.amount,
-        target: {
-          data: outEphemeralPub
-        },
-        type: 'txout_to_key'
+        key: outEphemeralPub,
+        type: '02'
       })
     }
   }
@@ -1238,80 +1155,6 @@ function prepareTransactionOutputs (outputs, _async) {
   }
 
   return { transactionKeys, outputs: preparedOutputs }
-}
-
-function getTransactionPrefixHash (tx) {
-  /* Serialize the transaction as a string (blob) but
-     do not include the signatures */
-  var prefix = serializeTransaction(tx, true)
-
-  /* Hash it */
-  return cnFastHash(prefix)
-}
-
-function serializeTransaction (tx, headerOnly) {
-  headerOnly = headerOnly || false
-
-  var buf = ''
-  buf += encodeVarint(tx.version)
-  buf += encodeVarint(tx.unlockTime)
-
-  /* Loop through the transaction inputs and put them in the buffer */
-  buf += encodeVarint(tx.vin.length)
-  for (var i = 0; i < tx.vin.length; i++) {
-    var vin = tx.vin[i]
-    switch (vin.type.toLowerCase()) {
-      case 'input_to_key':
-        buf += '02'
-        buf += encodeVarint(vin.amount)
-        buf += encodeVarint(vin.keyOffsets.length)
-        for (var j = 0; j < vin.keyOffsets.length; j++) {
-          buf += encodeVarint(vin.keyOffsets[j])
-        }
-        buf += vin.keyImage
-        break
-      default:
-        throw new Error('Unhandled transaction input type: ' + vin.type)
-    }
-  }
-
-  /* Loop through the transaction outputs and put them in the buffer */
-  buf += encodeVarint(tx.vout.length)
-  for (i = 0; i < tx.vout.length; i++) {
-    var vout = tx.vout[i]
-    buf += encodeVarint(vout.amount)
-    switch (vout.type.toLowerCase()) {
-      case 'txout_to_key':
-        buf += '02'
-        buf += vout.target.data
-        break
-      default:
-        throw new Error('Unhandled transacount output type: ' + vout.type)
-    }
-  }
-
-  /* If we supplied extra data, it needs to be hexadecimal */
-  if (!isHex(tx.extra)) {
-    throw new Error('Transaction extra has invalid hexadecimal data')
-  }
-
-  buf += encodeVarint(tx.extra.length / 2)
-  buf += tx.extra
-
-  /* Loop through the transaction signatures if this is a full transaction payload
-     and put them in the buffer */
-  if (!headerOnly) {
-    if (tx.vin.length !== tx.signatures.length) {
-      throw new Error('Number of signatures supplied does not equal the number of inputs used')
-    }
-    for (i = 0; i < tx.vin.length; i++) {
-      for (j = 0; j < tx.signatures[i].length; j++) {
-        buf += tx.signatures[i][j]
-      }
-    }
-  }
-
-  return buf
 }
 
 function generateKeyDerivation (transactionPublicKey, privateViewKey) {
@@ -1335,5 +1178,7 @@ function generateKeyDerivation (transactionPublicKey, privateViewKey) {
 }
 
 module.exports = {
-  CryptoNote
+  CryptoNote,
+  BlockTemplate,
+  TransactionTemplate
 }
