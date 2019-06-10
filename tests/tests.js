@@ -243,14 +243,27 @@ console.log('Calculated Hash: %s', calculatedHash)
 
 assert(expectedHash === calculatedHash)
 
-const testBlock = new BlockTemplate(BlockTemplateSample)
+const testBlock = new BlockTemplate()
+testBlock.blob = BlockTemplateSample.blocktemplate
 
 console.log('')
-console.log('Block Template: %s', testBlock.blockTemplate)
+console.log('Original Block Template: %s', BlockTemplateSample.blocktemplate)
 console.log('')
-console.log('Block Version: %s.%s', testBlock.block.majorVersion, testBlock.block.minorVersion)
-console.log('Transaction Count: %s', testBlock.block.transactions.length)
+console.log('Block Version: %s.%s', testBlock.majorVersion, testBlock.minorVersion)
+console.log('Transaction Count: %s', testBlock.transactions.length)
 console.log('')
-console.log('Re-serialized Block Template: %s', testBlock.blob)
+console.log('Generated Block Template: %s', testBlock.blob)
 
-assert(testBlock.blockTemplate === testBlock.blob)
+assert(BlockTemplateSample.blocktemplate === testBlock.blob)
+
+const genesisBlockRaw = '010000000000000000000000000000000000000000000000000000000000000000000046000000010a01ff000188f3b501029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd088071210142694232c5b04151d9e4c27d31ec7a68ea568b19488cfcb422659a07a0e44dd500'
+const genesisBlock = new BlockTemplate()
+genesisBlock.blob = genesisBlockRaw
+
+console.log('')
+console.log('Genesis Block: %s', genesisBlockRaw)
+console.log('Genesis Block: %s', genesisBlock.blob)
+
+console.log(require('util').inspect(genesisBlock.block, { depth: 10 }))
+
+assert(genesisBlockRaw === genesisBlock.blob)
