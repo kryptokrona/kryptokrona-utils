@@ -243,6 +243,9 @@ console.log('Calculated Hash: %s', calculatedHash)
 
 assert(expectedHash === calculatedHash)
 
+console.log('')
+console.log('Block Template Tests...')
+
 const testBlock = new BlockTemplate()
 testBlock.blob = BlockTemplateSample.blocktemplate
 
@@ -263,7 +266,5 @@ genesisBlock.blob = genesisBlockRaw
 console.log('')
 console.log('Genesis Block: %s', genesisBlockRaw)
 console.log('Genesis Block: %s', genesisBlock.blob)
-
-console.log(require('util').inspect(genesisBlock.block, { depth: 10 }))
 
 assert(genesisBlockRaw === genesisBlock.blob)
