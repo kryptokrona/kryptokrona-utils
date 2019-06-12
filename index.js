@@ -1180,5 +1180,6 @@ function generateKeyDerivation (transactionPublicKey, privateViewKey) {
 module.exports = {
   CryptoNote,
   BlockTemplate,
-  TransactionTemplate
+  TransactionTemplate,
+  TurtleCoinCrypto
 }
