@@ -5,9 +5,7 @@
 'use strict'
 
 const assert = require('assert')
-const BlockTemplateSample = require('./blocktemplate.json')
 const TurtleCoinUtils = require('../').CryptoNote
-const BlockTemplate = require('../').BlockTemplate
 const config = require('../config.json')
 const cnUtil = new TurtleCoinUtils(config)
 
@@ -242,29 +240,3 @@ console.log('Expected Hash: %s', expectedHash)
 console.log('Calculated Hash: %s', calculatedHash)
 
 assert(expectedHash === calculatedHash)
-
-console.log('')
-console.log('Block Template Tests...')
-
-const testBlock = new BlockTemplate()
-testBlock.blob = BlockTemplateSample.blocktemplate
-
-console.log('')
-console.log('Original Block Template: %s', BlockTemplateSample.blocktemplate)
-console.log('')
-console.log('Block Version: %s.%s', testBlock.majorVersion, testBlock.minorVersion)
-console.log('Transaction Count: %s', testBlock.transactions.length)
-console.log('')
-console.log('Generated Block Template: %s', testBlock.blob)
-
-assert(BlockTemplateSample.blocktemplate === testBlock.blob)
-
-const genesisBlockRaw = '010000000000000000000000000000000000000000000000000000000000000000000046000000010a01ff000188f3b501029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd088071210142694232c5b04151d9e4c27d31ec7a68ea568b19488cfcb422659a07a0e44dd500'
-const genesisBlock = new BlockTemplate()
-genesisBlock.blob = genesisBlockRaw
-
-console.log('')
-console.log('Genesis Block: %s', genesisBlockRaw)
-console.log('Genesis Block: %s', genesisBlock.blob)
-
-assert(genesisBlockRaw === genesisBlock.blob)
