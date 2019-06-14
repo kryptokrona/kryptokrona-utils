@@ -5,7 +5,7 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "test": "npm install && standard && node tests/tests.js"
+    "test": "npm install && standard && node tests/tests.js && node tests/blockTests.js"
   },
   "keywords": [
     "TurtleCoin",
