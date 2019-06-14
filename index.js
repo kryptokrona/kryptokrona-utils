@@ -10,8 +10,8 @@
 
 const BigInteger = require('./lib/biginteger.js')
 const Base58 = require('./lib/base58.js')
-const BlockTemplate = require('./lib/block.js')
-const TransactionTemplate = require('./lib/transaction.js')
+const Block = require('./lib/block.js')
+const Transaction = require('./lib/transaction.js')
 const Mnemonic = require('./lib/mnemonic.js')
 const Varint = require('varint')
 const SecureRandomString = require('secure-random-string')
@@ -909,7 +909,7 @@ function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmo
   var transactionOutputs = prepareTransactionOutputs(newOutputs, _async)
 
   /* Start constructing our actual transaction */
-  const tx = new TransactionTemplate()
+  const tx = new Transaction()
   tx.version = CURRENT_TX_VERSION
   tx.unlockTime = unlockTime
 
@@ -1179,7 +1179,7 @@ function generateKeyDerivation (transactionPublicKey, privateViewKey) {
 
 module.exports = {
   CryptoNote,
-  BlockTemplate,
-  TransactionTemplate,
-  TurtleCoinCrypto
+  Block,
+  Transaction,
+  Crypto: TurtleCoinCrypto
 }
