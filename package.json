@@ -21,7 +21,7 @@
   ],
   "license": "GPL-3.0",
   "optionalDependencies": {
-    "turtlecoin-crypto": "^3.0.1"
+    "turtlecoin-crypto": "^3.0.2"
   },
   "dependencies": {
     "crc": "^3.8.0",
