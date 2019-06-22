@@ -56,10 +56,6 @@ class CryptoNote {
         this.config.defaultNetworkFee = config.defaultNetworkFee
       }
 
-      if (config.mmMiningBlockVersion) {
-        this.config.mmMiningBlockVersion = config.mmMiningBlockVersion
-      }
-
       /* The checks below are for detecting custom caller
          cryptographic functions and loading them into the
          stack so that they can be used later throughout the
@@ -207,7 +203,12 @@ class CryptoNote {
 
   decodeAddressPrefix (address) {
     /* First we decode the address from Base58 into the raw address */
-    var decodedAddress = Base58.decode(address)
+    var decodedAddress
+    try {
+      decodedAddress = Base58.decode(address)
+    } catch (err) {
+      throw new Error('Could not Base58 decode supplied address. Please check the length and try again.: ' + err.toString())
+    }
 
     /* Now we need to work in reverse, starting with chopping off
        the checksum which is always the same */
@@ -269,7 +270,12 @@ class CryptoNote {
     addressPrefix = addressPrefix || this.config.addressPrefix
 
     /* First, we decode the base58 string to hex */
-    var decodedAddress = Base58.decode(address)
+    var decodedAddress
+    try {
+      decodedAddress = Base58.decode(address)
+    } catch (err) {
+      throw new Error('Could not Base58 decode supplied address. Please check the length and try again.: ' + err.toString())
+    }
 
     /* We need to encode the address prefix from our config
        so that we can compare it later */
@@ -336,7 +342,19 @@ class CryptoNote {
   }
 
   encodeRawAddress (rawAddress) {
-    return Base58.encode(rawAddress)
+    if (!isHex(rawAddress)) {
+      throw new Error('Supplied Raw address must be hexadecimal characters')
+    }
+
+    if (rawAddress.length % 2 !== 0) {
+      throw new Error('Supplied Raw address must be an even number of characters')
+    }
+
+    try {
+      return Base58.encode(rawAddress)
+    } catch (err) {
+      throw new Error('Could not encode supplied Raw Address to Base58.: ' + err.toString())
+    }
   }
 
   encodeAddress (publicViewKey, publicSpendKey, paymentId, addressPrefix) {
@@ -636,7 +654,11 @@ function str2bin (str) {
 
 function rand32 () {
   /* Go get 256-bits (32 bytes) of random data */
-  return Mnemonic.random(256)
+  try {
+    return Mnemonic.random(256)
+  } catch (err) {
+    throw new Error('Could not retrieve 32-bytes of random data: ' + err.toString())
+  }
 }
 
 function encodeVarint (i) {
