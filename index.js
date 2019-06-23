@@ -885,6 +885,7 @@ function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmo
      is actually possible within the confines of a uint64 */
   var neededMoney = BigInteger.ZERO
   for (i = 0; i < newOutputs.length; i++) {
+    if (newOutputs[i].amount <= 0) throw new Error('Cannot create an output with an amount <= 0')
     neededMoney = neededMoney.add(newOutputs[i].amount)
     if (neededMoney.compare(UINT64_MAX) !== -1) {
       throw new Error('Total output amount exceeds UINT64_MAX')
@@ -895,6 +896,7 @@ function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmo
      is actually possible within the confines of a uint64 */
   var foundMoney = BigInteger.ZERO
   for (i = 0; i < ourOutputs.length; i++) {
+    if (ourOutputs[i].amount <= 0) throw new Error('Cannot spend outputs with an amount <= 0')
     foundMoney = foundMoney.add(ourOutputs[i].amount)
     if (foundMoney.compare(UINT64_MAX) !== -1) {
       throw new Error('Total input amount exceeds UINT64_MAX')
@@ -1036,6 +1038,8 @@ function createTransactionInputs (ourOutputs, randomOutputs, mixin) {
   for (i = 0; i < ourOutputs.length; i++) {
     const mixedOutputs = []
     const realOutput = ourOutputs[i]
+
+    if (realOutput.amount <= 0) throw new Error('Real Inputs cannot have an amount <= 0')
 
     /* If we're using mixins, then we need to use the random outputs */
     if (mixin !== 0) {
