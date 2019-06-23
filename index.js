@@ -8,15 +8,15 @@
 
 'use strict'
 
-const BigInteger = require('./lib/biginteger.js')
 const Base58 = require('./lib/base58.js')
+const BigInteger = require('./lib/biginteger.js')
 const Block = require('./lib/block.js')
-const Transaction = require('./lib/transaction.js')
 const Mnemonic = require('./lib/mnemonic.js')
-const Varint = require('varint')
-const SecureRandomString = require('secure-random-string')
 const Numeral = require('numeral')
+const SecureRandomString = require('secure-random-string')
+const Transaction = require('./lib/transaction.js')
 const TurtleCoinCrypto = require('./lib/turtlecoin-crypto')()
+const Varint = require('varint')
 
 /* This sets up the ability for the caller to specify
    their own cryptographic functions to use for parts
@@ -28,8 +28,7 @@ const userCryptoFunctions = {}
 
 const SIZES = {
   KEY: 64,
-  CHECKSUM: 8,
-  ECPOINT: 32
+  CHECKSUM: 8
 }
 
 const UINT64_MAX = BigInteger(2).pow(64)
@@ -122,7 +121,7 @@ class CryptoNote {
     /* When we have a seed, then we can create a new key
        pair based on that seed */
     lang = lang || 'english'
-    var keys = {}
+    const keys = {}
 
     /* First we create the spend key pair; however,
        if the seed we were supplied isn't 64 characters
@@ -217,14 +216,14 @@ class CryptoNote {
     /* Now we find out how many extra characters there are
        in what's left after we find all of the keys in the address.
        Remember, this works because payment IDs are the same size as keys */
-    var prefixLength = decodedAddress.length % SIZES.KEY
+    const prefixLength = decodedAddress.length % SIZES.KEY
 
     /* Great, now we that we know how long the prefix length is, we
        can grab just that from the front of the address information */
-    var prefixDecoded = decodedAddress.slice(0, prefixLength)
+    const prefixDecoded = decodedAddress.slice(0, prefixLength)
 
     /* Then we can decode it into the integer that it represents */
-    var prefixVarint = decodeVarint(prefixDecoded)
+    const prefixVarint = decodeVarint(prefixDecoded)
 
     /* This block of code is a hack to figure out what the human readable
        address prefix is. While it has been tested with a few different
@@ -237,7 +236,7 @@ class CryptoNote {
 
     /* First we need the need to know how long the varint representation
        of the prefix is, we're going to need it later */
-    var prefixVarintLength = prefixVarint.toString().length
+    const prefixVarintLength = prefixVarint.toString().length
 
     /* This is where it starts to get funny. If the length is an even
        number of characters, we'll need to grab the one extra character
@@ -256,7 +255,7 @@ class CryptoNote {
     /* Using all of that above, we can chop off the first couple of
        characters from the supplied address and get something that looks
        like the Base58 prefix we expected. */
-    var prefixEncoded = address.slice(0, Math.ceil(prefixVarintLength / 2) + offset)
+    const prefixEncoded = address.slice(0, Math.ceil(prefixVarintLength / 2) + offset)
 
     return {
       prefix: prefixDecoded,
@@ -282,7 +281,7 @@ class CryptoNote {
     const encodedPrefix = encodeVarint(addressPrefix)
 
     /* Let's chop off the prefix from the address we decoded */
-    var prefix = decodedAddress.slice(0, encodedPrefix.length)
+    const prefix = decodedAddress.slice(0, encodedPrefix.length)
 
     /* Do they match? They better... */
     if (prefix !== encodedPrefix) {
@@ -406,7 +405,8 @@ class CryptoNote {
     addressPrefix = addressPrefix || this.config.addressPrefix
 
     /* Decode our address */
-    var addr = this.decodeAddress(address)
+    const addr = this.decodeAddress(address)
+
     /* Encode the address but this time include the payment ID */
     return this.encodeAddress(addr.publicViewKey, addr.publicSpendKey, paymentId, addressPrefix)
   }
@@ -419,13 +419,13 @@ class CryptoNote {
     /* Given the transaction public key and the array of outputs, let's see if
        any of the outputs belong to us */
 
-    var ourOutputs = []
+    const ourOutputs = []
 
     for (var i = 0; i < outputs.length; i++) {
-      var output = outputs[i]
+      const output = outputs[i]
 
       /* Check to see if this output belongs to us */
-      var ourOutput = this.isOurTransactionOutput(transactionPublicKey, output, privateViewKey, publicSpendKey, privateSpendKey)
+      const ourOutput = this.isOurTransactionOutput(transactionPublicKey, output, privateViewKey, publicSpendKey, privateSpendKey)
       if (ourOutput) {
         ourOutputs.push(ourOutput)
       }
@@ -540,18 +540,18 @@ class CryptoNote {
     const result = []
 
     /* Decode the address into it's important bits */
-    var addressDecoded = this.decodeAddress(address)
+    const addressDecoded = this.decodeAddress(address)
 
     /* Now we need to decompose the amount into "pretty" amounts
        that we can actually mix later. We're doing this by
        converting the amount to a character array and reversing
        it so that we have the digits in each place */
-    var amountChars = amount.toString().split('').reverse()
+    const amountChars = amount.toString().split('').reverse()
 
     /* Loop through the amount characters */
     for (var i = 0; i < amountChars.length; i++) {
       /* Create pretty amounts */
-      var amt = parseInt(amountChars[i]) * Math.pow(10, i)
+      const amt = parseInt(amountChars[i]) * Math.pow(10, i)
 
       if (amt !== 0) {
         result.push({
@@ -569,7 +569,7 @@ class CryptoNote {
   }
 
   createTransaction (newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime) {
-    var tx = this.createTransactionStructure(newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime, false)
+    const tx = this.createTransactionStructure(newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime, false)
 
     return {
       transaction: tx,
@@ -635,7 +635,7 @@ function isHex64 (str) {
 }
 
 function bin2hex (bin) {
-  var result = []
+  const result = []
   for (var i = 0; i < bin.length; ++i) {
     result.push(('0' + bin[i].toString(16)).slice(-2))
   }
@@ -644,7 +644,7 @@ function bin2hex (bin) {
 }
 
 function str2bin (str) {
-  var result = new Uint8Array(str.length)
+  const result = new Uint8Array(str.length)
   for (var i = 0; i < str.length; i++) {
     result[i] = str.charCodeAt(i)
   }
@@ -661,17 +661,9 @@ function rand32 () {
   }
 }
 
-function encodeVarint (i) {
-  i = BigInteger(i)
-
-  var result = ''
-  while (i.compare(0x80) >= 0) {
-    result += ('0' + ((i.lowVal() & 0x7f) | 0x80).toString(16)).slice(-2)
-    i = i.divide(BigInteger(2).pow(7))
-  }
-  result += ('0' + i.toJSValue().toString(16)).slice(-2)
-
-  return result
+function encodeVarint (val) {
+  const buf = Buffer.from(Varint.encode(val))
+  return buf.toString('hex')
 }
 
 function decodeVarint (hex) {
@@ -688,7 +680,7 @@ function scReduce32 (hex) {
 }
 
 function derivePublicKey (derivation, outputIndex, publicKey) {
-  if (derivation.length !== (SIZES.ECPOINT * 2)) {
+  if (derivation.length !== SIZES.KEY) {
     throw new Error('Invalid derivation length')
   }
 
@@ -708,7 +700,7 @@ function derivePublicKey (derivation, outputIndex, publicKey) {
 }
 
 function deriveSecretKey (derivation, outputIndex, privateKey) {
-  if (derivation.length !== (SIZES.ECPOINT * 2)) {
+  if (derivation.length !== SIZES.KEY) {
     throw new Error('Invalid derivation length')
   }
 
@@ -914,7 +906,7 @@ function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmo
      relatively early as everything starts to get a little
      more computationally expensive from here on out */
   var change = BigInteger.ZERO
-  var cmp = neededMoney.compare(foundMoney)
+  const cmp = neededMoney.compare(foundMoney)
   if (cmp < 0) {
     change = foundMoney.subtract(neededMoney)
     if (change.compare(feeAmount) !== 0) {
@@ -925,10 +917,10 @@ function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmo
   }
 
   /* Create our transaction inputs using the helper function */
-  var transactionInputs = createTransactionInputs(ourOutputs, randomOutputs, mixin)
+  const transactionInputs = createTransactionInputs(ourOutputs, randomOutputs, mixin)
 
   /* Prepare our transaction outputs using the helper function */
-  var transactionOutputs = prepareTransactionOutputs(newOutputs, _async)
+  const transactionOutputs = prepareTransactionOutputs(newOutputs, _async)
 
   /* Start constructing our actual transaction */
   const tx = new Transaction()
@@ -977,14 +969,14 @@ function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmo
       const sigPromises = []
 
       for (i = 0; i < transactionInputs.length; i++) {
-        var txInput = transactionInputs[i]
+        const txInput = transactionInputs[i]
 
-        var srcKeys = []
+        const srcKeys = []
         txInput.outputs.forEach((out) => {
           srcKeys.push(out.key)
         })
 
-        var sigPromise = Promise.resolve(generateRingSignature(
+        const sigPromise = Promise.resolve(generateRingSignature(
           txPrefixHash, txInput.keyImage, srcKeys, txInput.input.privateEphemeral, txInput.realOutputIndex
         )).then((sigs) => {
           tx.signatures.push(sigs)
@@ -1006,9 +998,9 @@ function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmo
     const txPrefixHash = tx.prefixHash
 
     for (i = 0; i < transactionInputs.length; i++) {
-      var txInput = transactionInputs[i]
+      const txInput = transactionInputs[i]
 
-      var srcKeys = []
+      const srcKeys = []
       txInput.outputs.forEach((out) => {
         srcKeys.push(out.key)
       })
@@ -1038,7 +1030,7 @@ function createTransactionInputs (ourOutputs, randomOutputs, mixin) {
     }
   }
 
-  var mixedInputs = []
+  const mixedInputs = []
 
   /* Loop through our outputs that we're using to send funds */
   for (i = 0; i < ourOutputs.length; i++) {
@@ -1148,12 +1140,12 @@ function prepareTransactionOutputs (outputs, _async) {
     })
   } else {
     for (var i = 0; i < outputs.length; i++) {
-      var output = outputs[i]
+      const output = outputs[i]
       if (output.amount <= 0) {
         throw new Error('Cannot have an amount <= 0')
       }
 
-      var outDerivation = generateKeyDerivation(output.keys.publicViewKey, transactionKeys.privateKey)
+      const outDerivation = generateKeyDerivation(output.keys.publicViewKey, transactionKeys.privateKey)
 
       /* Generate the one time output key */
       const outEphemeralPub = derivePublicKey(outDerivation, i, output.keys.publicSpendKey)
