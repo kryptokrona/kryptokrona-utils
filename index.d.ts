@@ -117,10 +117,10 @@ export class CryptoNote {
      */
     public scanTransactionOutputs(
         transactionPublicKey: string,
-        outputs: Output[],
+        outputs: OutputToScan[],
         privateViewKey: string,
         publicSpendKey: string,
-        privateSpendKey?: string): Output[];
+        privateSpendKey?: string): OurOutput[];
 
     /**
      * Scans a single transaction output to determine if it belongs to us.
@@ -132,15 +132,16 @@ export class CryptoNote {
      *                              Optional. Required to aquire the neccessary information for
      *                              spending transactions.
      *
-     * @returns Returns true if the output is ours, and no private spend key is given.
-     *          Returns false if the output is not ours.
-     *          Returns the output if the output is ours, and a private spend key is given.
+     * @returns Returns false if the output is not ours.
+     *          Returns the output with the input filled in, if the output is ours.
+     *          If a private spend key is given, the `input.privateEphemeral` and `keyImage` properties
+     *          will be filled in.
      */
     public isOurTransactionOutput(
         transactionPublicKey: string,
-        output: Output,
+        output: OutputToScan,
         privateViewKey: string,
-        privateSpendKey?: string): Output | boolean;
+        privateSpendKey?: string): OurOutput | boolean;
 
     /**
      * Generates a key image for the given transaction data.
@@ -318,6 +319,22 @@ export interface CryptoNoteOptions {
      */
     generateKeyDerivation?: (transactionPublicKey: string,
                              privateViewKey: string) => string;
+}
+
+export interface OutputToScan {
+    key: string;
+    index: number;
+}
+
+export interface CreatedInput {
+    transactionKey: Keys;
+    publicEphemeral: string;
+    privateEphemeral?: string;
+}
+
+export interface OurOutput extends OutputToScan {
+    input: CreatedInput;
+    keyImage?: string;
 }
 
 export interface Output {
