@@ -183,7 +183,7 @@ export class CryptoNote {
      * Creates a valid transaction to be submitted to the network for sending.
      */
     public createTransaction(
-        transfers: TxDestination[],
+        newOutputs: TxDestination[],
         ourOutputs: Output[],
         randomOuts: RandomOutput[][],
         mixin: number,
@@ -196,7 +196,7 @@ export class CryptoNote {
      * Supports passed in user functions that are asynchronous.
      */
     public createTransactionAsync(
-        transfers: TxDestination[],
+        newOutputs: TxDestination[],
         ourOutputs: Output[],
         randomOuts: RandomOutput[][],
         mixin: number,
@@ -401,13 +401,37 @@ export interface CreatedTransaction {
 }
 
 export interface Transaction {
-    unlockTime: number;
     version: number;
-    extra: string;
-    transactionKeys: Keys;
-    vin: Vin[];
-    vout: Vout[];
+    unlockTime: number;
+    inputs: Vin[];
+    outputs: Vout[];
+    extra: Extra;
     signatures: string[][];
+    ignoredField: boolean;
+    transactionKeys: Keys;
+}
+
+type Extra = Array<PublicKeyTag | NonceTag | MergeMiningTag>;
+
+export interface PublicKeyTag {
+    tag: 1;
+    publicKey: string;
+}
+
+export interface NonceTag {
+    tag: 2;
+    nonces: Nonce[];
+}
+
+export interface MergeMiningTag {
+    tag: 3;
+    depth: number;
+    merkleRoot: string;
+}
+
+export interface Nonce {
+    tag: 0;
+    paymentId: string;
 }
 
 export interface Vin {
@@ -419,12 +443,8 @@ export interface Vin {
 
 export interface Vout {
     amount: number;
-    target: Target;
     type: string;
-}
-
-export interface Target {
-    data: string;
+    key: string;
 }
 
 export interface BlockTemplate {
