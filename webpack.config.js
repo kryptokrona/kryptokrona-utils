@@ -16,9 +16,7 @@ module.exports = {
   target: 'web',
   plugins: [
     new CopyWebPackPlugin([
-      { from: 'lib/turtlecoin-crypto/turtlecoin-crypto.js.mem', to: 'turtlecoin-crypto.js.mem' },
-      { from: 'lib/turtlecoin-crypto/turtlecoin-crypto-wasm.js', to: 'turtlecoin-crypto-wasm.js' },
-      { from: 'lib/turtlecoin-crypto/turtlecoin-crypto-wasm.wasm', to: 'turtlecoin-crypto-wasm.wasm' }
+      { from: 'lib/turtlecoin-crypto/turtlecoin-crypto-wasm.js', to: 'turtlecoin-crypto-wasm.js' }
     ])
   ]
 }
