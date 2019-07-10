@@ -928,6 +928,7 @@ function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmo
   const tx = new Transaction()
   tx.version = CURRENT_TX_VERSION
   tx.unlockTime = unlockTime
+  tx.transactionKeys = transactionOutputs.transactionKeys
 
   /* If there is a payment ID add it to the transaction */
   if (isHex64(paymentId)) {
