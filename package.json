@@ -1,6 +1,6 @@
 {
   "name": "turtlecoin-utils",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A Node.js collection of utilities useful for TurtleCoin developers",
   "main": "index.js",
   "types": "index.d.ts",
@@ -21,7 +21,7 @@
   ],
   "license": "GPL-3.0",
   "optionalDependencies": {
-    "turtlecoin-crypto": "^3.0.3"
+    "turtlecoin-crypto": "^3.0.4"
   },
   "dependencies": {
     "crc": "^3.8.0",
