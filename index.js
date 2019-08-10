@@ -11,6 +11,7 @@
 const Base58 = require('./lib/base58.js')
 const BigInteger = require('./lib/biginteger.js')
 const Block = require('./lib/block.js')
+const BlockTemplate = require('./lib/blocktemplate.js')
 const Mnemonic = require('./lib/mnemonic.js')
 const Numeral = require('numeral')
 const SecureRandomString = require('secure-random-string')
@@ -174,7 +175,7 @@ class CryptoNote {
   createAddressFromKeys (privateSpendKey, privateViewKey, addressPrefix) {
     addressPrefix = addressPrefix || this.config.addressPrefix
 
-    let derivedViewKey = scReduce32(cnFastHash(privateSpendKey))
+    const derivedViewKey = scReduce32(cnFastHash(privateSpendKey))
 
     /* We have our private keys so we can generate everything for use
        later except the mnemonic as we don't have the seed */
@@ -499,7 +500,7 @@ class CryptoNote {
       throw new Error('Invalid private view key format')
     }
     /* Generate the key deriviation from the random transaction public key and our private view key */
-    let derivation = this.generateKeyDerivation(transactionPublicKey, privateViewKey)
+    const derivation = this.generateKeyDerivation(transactionPublicKey, privateViewKey)
 
     return this.generateKeyImagePrimitive(publicSpendKey, privateSpendKey, outputIndex, derivation)
   }
@@ -1197,8 +1198,9 @@ function generateKeyDerivation (transactionPublicKey, privateViewKey) {
 }
 
 module.exports = {
-  CryptoNote,
   Block,
-  Transaction,
-  Crypto: TurtleCoinCrypto
+  BlockTemplate,
+  Crypto: TurtleCoinCrypto,
+  CryptoNote,
+  Transaction
 }

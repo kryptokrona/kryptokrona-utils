@@ -5,8 +5,9 @@
 'use strict'
 
 const assert = require('assert')
-const BlockTemplateSample = require('./blocktemplate.json')
+const BlockTemplateSample = require('./template.json')
 const Block = require('../').Block
+const BlockTemplate = require('../').BlockTemplate
 
 console.log('')
 console.log('Block Template Tests...')
@@ -33,6 +34,18 @@ console.log('Genesis Block: %s', genesisBlockRaw)
 console.log('Genesis Block: %s', genesisBlock.blob)
 
 assert(genesisBlockRaw === genesisBlock.blob)
+
+console.log('')
+console.log('')
+console.log('BlockTemplate Handling Tests')
+const miningBlob = '0100b5f9abe605b4318c1249164393f7b9d691e60aba81ca9bbffb9e0b23e6b01c93d9c621ab80000000004b27c162bc89b0bdfa0db8b5c99977943caf754bb6181d8e1bafc6af2ab0b0bb01'
+const testBlockTemplate = new BlockTemplate(BlockTemplateSample)
+const convertedTemplate = testBlockTemplate.convert()
+console.log('')
+console.log('Converted BlockTemplate: %s', convertedTemplate.hashingBlob)
+console.log('Expected BlockTemplate:  %s', miningBlob)
+
+assert(convertedTemplate.hashingBlob === miningBlob)
 
 const blocks = [
   { block: '010000000000000000000000000000000000000000000000000000000000000000000046000000010a01ff000188f3b501029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd088071210142694232c5b04151d9e4c27d31ec7a68ea568b19488cfcb422659a07a0e44dd500', hash: '7fb97df81221dd1366051b2d0bc7f49c66c22ac4431d879c895b06d66ef66f4c', pow: 'c47674de70b0f4b4dafcd5b3e423ee301de6c16093e57e93c7997c28c18a1b92' },
