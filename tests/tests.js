@@ -207,16 +207,16 @@ const madeInput = cnUtil.isOurTransactionOutput(txPublicKey, fakeInput, walletPr
 
 const randomOutputs = [[
   {
-    'globalIndex': 53984,
-    'key': 'a5add8e36ca2473734fc7019730593888ae8c320753215976aac105816ba4848'
+    globalIndex: 53984,
+    key: 'a5add8e36ca2473734fc7019730593888ae8c320753215976aac105816ba4848'
   },
   {
-    'globalIndex': 403047,
-    'key': '273dd5b63e84e6d7f12cf05eab092a7556708d8aac836c8748c1f0df3f0ff7fa'
+    globalIndex: 403047,
+    key: '273dd5b63e84e6d7f12cf05eab092a7556708d8aac836c8748c1f0df3f0ff7fa'
   },
   {
-    'globalIndex': 1533859,
-    'key': '147121ea91715ee21af16513bc058d4ac445accfbe5cedc377c897fb04f4fecc'
+    globalIndex: 1533859,
+    key: '147121ea91715ee21af16513bc058d4ac445accfbe5cedc377c897fb04f4fecc'
   }
 ]]
 
