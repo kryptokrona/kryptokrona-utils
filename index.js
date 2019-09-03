@@ -88,6 +88,10 @@ class CryptoNote {
         userCryptoFunctions.generateRingSignatures = config.generateRingSignatures
       }
 
+      if (typeof config.checkRingSignatures === 'function') {
+        userCryptoFunctions.checkRingSignatures = config.checkRingSignatures
+      }
+
       if (typeof config.generateKeyDerivation === 'function') {
         userCryptoFunctions.generateKeyDerivation = config.generateKeyDerivation
       }
@@ -837,18 +841,28 @@ function generateRingSignature (transactionPrefixHash, keyImage, inputKeys, priv
     throw new Error('Invalid realIndex supplied')
   }
 
+  var signatures
+
   if (userCryptoFunctions.generateRingSignatures) {
-    return userCryptoFunctions.generateRingSignatures(transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex)
+    signatures = userCryptoFunctions.generateRingSignatures(transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex)
+  } else {
+    const [err, sigs] = TurtleCoinCrypto.generateRingSignatures(transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex)
+
+    if (err) return new Error('Could not generate ring signatures')
+
+    signatures = sigs
   }
 
-  const [err, signatures] = TurtleCoinCrypto.generateRingSignatures(transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex)
+  var validSigs = false
 
-  if (err) return new Error('Could not generate ring signatures')
+  if (userCryptoFunctions.checkRingSignatures) {
+    validSigs = userCryptoFunctions.checkRingSignatures(transactionPrefixHash, keyImage, inputKeys, signatures)
+  } else {
+    validSigs = TurtleCoinCrypto.checkRingSignatures(transactionPrefixHash, keyImage, inputKeys, signatures)
+  }
 
-  if (typeof TurtleCoinCrypto.checkRingSignatures !== 'undefined') {
-    if (!TurtleCoinCrypto.checkRingSignatures(transactionPrefixHash, keyImage, inputKeys, signatures)) {
-      return new Error('Could not verify generated ring signatures')
-    }
+  if (!validSigs) {
+    return new Error('Could not verify generated ring signatures')
   }
 
   return signatures
