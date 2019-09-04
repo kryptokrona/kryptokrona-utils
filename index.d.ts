@@ -319,6 +319,16 @@ export interface CryptoNoteOptions {
      */
     generateKeyDerivation?: (transactionPublicKey: string,
                              privateViewKey: string) => string;
+
+    /**
+     * A method to convert absolute offsets to relative offsets
+     */
+    absoluteToRelativeOffsets?: (offsets: number[]) => number[];
+
+    /**
+     * A method to convert relative offsets to absolute offsets
+     */
+    relativeToAbsoluteOffsets?: (offsets: number[]) => number[];
 }
 
 export interface OutputToScan {

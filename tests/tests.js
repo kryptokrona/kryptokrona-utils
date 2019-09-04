@@ -223,6 +223,20 @@ const randomOutputs = [[
 console.log('')
 console.log('Transaction Creation Tests...')
 console.log('')
+
+const idx = ['53984', '403047', '1533859', '1595598']
+const expectedIdx = ['53984', '349063', '1130812', '61739']
+const calculatedRelativeOffsets = cnUtil.absoluteToRelativeOffsets(idx)
+const calculatedAbsoluteOffsets = cnUtil.relativeToAbsoluteOffsets(calculatedRelativeOffsets)
+
+console.log('Input Indexes   : ', idx)
+console.log('Relative Indexes: ', calculatedRelativeOffsets)
+assert(JSON.stringify(expectedIdx) === JSON.stringify(calculatedRelativeOffsets))
+
+console.log('Absolute Indexes: ', calculatedAbsoluteOffsets)
+assert(JSON.stringify(idx) === JSON.stringify(calculatedAbsoluteOffsets))
+console.log('')
+
 try {
   const tx = cnUtil.createTransaction(madeOutputs, [madeInput], randomOutputs, 3, 10, '')
   console.log('Transaction Hash: %s', tx.hash)

@@ -623,6 +623,14 @@ class CryptoNote {
     return key
   }
 
+  absoluteToRelativeOffsets (offsets) {
+    return absoluteToRelativeOffsets(offsets)
+  }
+
+  relativeToAbsoluteOffsets (offsets) {
+    return relativeToAbsoluteOffsets(offsets)
+  }
+
   cnFastHash (data) {
     return cnFastHash(data)
   }
@@ -809,19 +817,36 @@ function randomKeypair () {
 /* This method calculates our relative offset positions for
    the globalIndexes for inclusion in a new transaction */
 function absoluteToRelativeOffsets (offsets) {
-  if (offsets.length === 0) {
-    return offsets
+  const temp = offsets.slice()
+  if (temp.length < 2) {
+    return temp
   }
 
-  for (var i = offsets.length - 1; i >= 1; --i) {
-    offsets[i] = BigInteger(offsets[i]).subtract(offsets[i - 1]).toString()
+  for (var i = temp.length - 1; i >= 1; --i) {
+    temp[i] = BigInteger(temp[i]).subtract(temp[i - 1]).toString()
   }
 
   /* All the other offsets are strings, not numbers. It still works, but, muh
      autism */
-  offsets[0] = offsets[0].toString()
+  temp[0] = temp[0].toString()
 
-  return offsets
+  return temp
+}
+
+function relativeToAbsoluteOffsets (offsets) {
+  const temp = offsets.slice()
+
+  if (temp.length < 2) {
+    return temp
+  }
+
+  for (var i = 1; i < temp.length; i++) {
+    temp[i] = BigInteger(temp[i - 1]).add(temp[i]).toString()
+  }
+
+  temp[0] = temp[0].toString()
+
+  return temp
 }
 
 function generateRingSignature (transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex) {
