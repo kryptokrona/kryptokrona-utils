@@ -4,6 +4,9 @@
   "description": "A Node.js collection of utilities useful for TurtleCoin developers",
   "main": "index.js",
   "types": "index.d.ts",
+  "engines": {
+    "node": ">=6"
+  },
   "scripts": {
     "test": "npm install && standard && node tests/tests.js && node tests/blockTests.js && node tests/p2pTests.js"
   },
