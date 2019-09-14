@@ -114,10 +114,12 @@ console.log('Validating prefix detection for alternate chain...')
 console.log('')
 
 const athenaAddress = 'athena28QHa49cTHWjRLYN1XW46Xj8D2mPiu7bovQ67V4z1C84R16VSJvbHmD2Yfq5Yvw5GKVTnfuS5pX3LXH3LNPezfLhhe5Lc27'
-const athenaPrefix = { prefix: 'ca9f97c218',
+const athenaPrefix = {
+  prefix: 'ca9f97c218',
   base58: 'athena',
   decimal: 6581243850,
-  hexadecimal: '18845cfca' }
+  hexadecimal: '18845cfca'
+}
 
 const calculatedPrefix = cnUtil.decodeAddressPrefix(athenaAddress)
 
