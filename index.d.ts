@@ -237,6 +237,16 @@ export class CryptoNote {
      * getBlockTemplate call to the daemon or blockchain cache
      */
     public blockTemplate(data: string): BlockTemplate;
+
+    /**
+     * A method to convert absolute offsets to relative offsets
+     */
+    public absoluteToRelativeOffsets(offsets: number[]): number[];
+
+    /**
+     * A method to convert relative offsets to absolute offsets
+     */
+    public relativeToAbsoluteOffsets(offsets: number[]): number[];
 }
 
 export interface CryptoNoteOptions {
@@ -319,16 +329,6 @@ export interface CryptoNoteOptions {
      */
     generateKeyDerivation?: (transactionPublicKey: string,
                              privateViewKey: string) => string;
-
-    /**
-     * A method to convert absolute offsets to relative offsets
-     */
-    absoluteToRelativeOffsets?: (offsets: number[]) => number[];
-
-    /**
-     * A method to convert relative offsets to absolute offsets
-     */
-    relativeToAbsoluteOffsets?: (offsets: number[]) => number[];
 }
 
 export interface OutputToScan {
