@@ -103,7 +103,7 @@ Creates an Integrated Address using the supplied address and payment ID.
 
 #### privateKeyToPublicKey(privateKey)
 
-Gets the corresponding private key from the given public key.
+Gets the corresponding public key from the given private key.
 
 #### scanTransactionOutputs(transactionPublicKey, outputs, privateViewKey, publicSpendKey, [privateSpendKey])
 
@@ -129,10 +129,6 @@ The same as generateKeyImage, but allows you to reuse a derivation you have prev
 
 Functions as `createTransaction`, but runs asynchronously, and additionaly, supports user provided async functions.
 The regular code only supports synchronous provided funcs, so ensure any async user provided functions are not being used in other calls you make.
-
-#### serializeTransaction(transaction)
-
-*Documentation In Progress*
 
 #### generateKeyDerivation(transactionPublicKey, privateViewKey)
 
