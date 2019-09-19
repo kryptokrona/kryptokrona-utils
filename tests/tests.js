@@ -8,6 +8,11 @@ const assert = require('assert')
 const TurtleCoinUtils = require('../').CryptoNote
 const config = require('../config.json')
 const cnUtil = new TurtleCoinUtils(config)
+const Crypto = require('../').Crypto
+
+console.log('')
+console.log('Using Crypto: %s', Crypto.type)
+console.log('')
 
 const rawSeed = 'dd0c02d3202634821b4d9d91b63d919725f5c3e97e803f3512e52fb0dc2aab0c'
 const rawMnemonic = 'teeming taken piano ramped vegan jazz earth enjoy suture quick lied awkward ferry python often exotic cube hexagon ionic joyous cage abnormal hull jigsaw lied'
