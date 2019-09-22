@@ -20,23 +20,23 @@ describe('Wallets', () => {
   const testAddressRaw = '9df6ee01f71e440f9a5aab08dbdab0f4f36bba813660a0600f109b1371dc53be33f23c99f0ba225065e1b9c2e43165b3e41f10fcb768853126dfa7e612a3df2deb332492cc073a66'
 
   describe('Mnemonics', () => {
-    it('create an address from the mnemonic phrase', () => {
+    it('address from mnemonic phrase has matching seed', () => {
       const outputSeed = cnUtil.createAddressFromMnemonic(rawMnemonic)
       assert(rawSeed === outputSeed.seed)
     })
 
-    it('create an address from the raw seed', () => {
+    it('address from seed has matching mnemonic phrase', () => {
       const outputMnemonic = cnUtil.createAddressFromSeed(rawSeed)
       assert(rawMnemonic === outputMnemonic.mnemonic)
     })
 
-    it('create an address from keys', () => {
+    it('address from keys and seed have matching mnemonic phrases', () => {
       const outputSeed = cnUtil.createAddressFromMnemonic(rawMnemonic)
       const mnemonicAddressByKey = cnUtil.createAddressFromKeys(outputSeed.spend.privateKey, outputSeed.view.privateKey)
       assert(mnemonicAddressByKey.mnemonic === outputSeed.mnemonic)
     })
 
-    it('not create a mnemonic for a non-deterministic key pay', () => {
+    it('cannot create mnemonic phrase from non-deterministic keys', () => {
       const nonMnemonicPrivateSpendKey = '7a4a9a5b174e5713433fb5735a35b8fe8ce5bf411d5f6a587002e455a2b33703'
       const nonMnemonicPrivateViewKey = '3c986487d9b85e979e4f30eca56558874d2792ec73326d7aa0b2cf24c099ad0f'
       const nonMnemonicAddressByKey = cnUtil.createAddressFromKeys(nonMnemonicPrivateSpendKey, nonMnemonicPrivateViewKey)
