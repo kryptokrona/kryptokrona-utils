@@ -36,7 +36,6 @@
   },
   "standard": {
     "ignore": [
-      "lib/mnemonic.js",
       "lib/turtlecoin-crypto/turtlecoin-crypto.js",
       "lib/turtlecoin-crypto/turtlecoin-crypto-wasm.js",
       "dist/*",
