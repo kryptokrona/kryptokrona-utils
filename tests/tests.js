@@ -15,7 +15,11 @@ const cnUtil = new TurtleCoinUtils(require('../config.json'))
 console.log('Using Crypto: %s', TurtleCoinCrypto.type)
 
 describe('Cryptography', () => {
-  const testdata = '0100fb8e8ac805899323371bb790db19218afd8db8e3755d8b90f39b3d5506a9abce4fa912244500000000ee8146d49fa93ee724deb57d12cbc6c6f3b924d946127c7a97418f9348828f0f02'
+  it('Generate Random Keys', () => {
+    const [err, keys] = TurtleCoinCrypto.generateKeys()
+
+    assert(!err && (keys))
+  })
 
   it('Check Key - Public Key', () => {
     const key = '7849297236cd7c0d6c69a3c8c179c038d3c1c434735741bb3c8995c3c9d6f2ac'
@@ -58,6 +62,8 @@ describe('Cryptography', () => {
     assert(!err)
     assert.deepStrictEqual(treeBranch, expectedTreeBranch)
   })
+
+  const testdata = '0100fb8e8ac805899323371bb790db19218afd8db8e3755d8b90f39b3d5506a9abce4fa912244500000000ee8146d49fa93ee724deb57d12cbc6c6f3b924d946127c7a97418f9348828f0f02'
 
   const algos = [
     { name: 'CryptoNight Fast Hash', func: 'cn_fast_hash', hash: 'b542df5b6e7f5f05275c98e7345884e2ac726aeeb07e03e44e0389eb86cd05f0' },
