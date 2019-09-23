@@ -94,6 +94,23 @@ class Crypto {
   }
 
   /**
+   * Checks that the given key is a valid public key
+   * @param {string} key - the public key to check
+   * @returns {boolean} whether the key is a valid public key
+   */
+  checkKey (key) {
+    try {
+      if (!this.isNative) {
+        return this.crypto.checkKey(key)
+      } else {
+        return this.crypto.checkKey(key)
+      }
+    } catch (e) {
+      return (!e)
+    }
+  }
+
+  /**
    * Validates that the ring signatures provided are valid
    * @param {string} transactionPrefixHash - the transaction prefix hash
    * @param {string} keyImage - the key image that the signature pertains to
@@ -102,40 +119,63 @@ class Crypto {
    * @returns {boolean} whether the signatures are valid or not
    */
   checkRingSignatures (transactionPrefixHash, keyImage, inputKeys, signatures) {
-    if (!this.isNative) {
-      return this.crypto.checkRingSignature(transactionPrefixHash, keyImage, inputKeys, signatures)
-    } else {
-      const cSigs = new this.crypto.VectorString()
-      const cInputKeys = new this.crypto.VectorString()
+    try {
+      if (!this.isNative) {
+        return this.crypto.checkRingSignature(transactionPrefixHash, keyImage, inputKeys, signatures)
+      } else {
+        const cSigs = new this.crypto.VectorString()
+        const cInputKeys = new this.crypto.VectorString()
 
-      inputKeys.forEach((key) => {
-        cInputKeys.push_back(key)
-      })
+        inputKeys.forEach((key) => {
+          cInputKeys.push_back(key)
+        })
 
-      signatures.forEach((sig) => {
-        cSigs.push_back(sig)
-      })
+        signatures.forEach((sig) => {
+          cSigs.push_back(sig)
+        })
 
-      return this.crypto.checkRingSignature(transactionPrefixHash, keyImage, cInputKeys, cSigs)
+        return this.crypto.checkRingSignature(transactionPrefixHash, keyImage, cInputKeys, cSigs)
+      }
+    } catch (e) {
+      return (!e)
+    }
+  }
+
+  /**
+   * Checks an individual signature
+   * @param {string} hash - the input hash
+   * @param {string} publicKey - the public key used
+   * @param {string} signature - the signature to check
+   * @returns {boolean} whether the signature is valid
+   */
+  checkSignature (hash, publicKey, signature) {
+    try {
+      return this.crypto.checkSignature(hash, publicKey, signature)
+    } catch (e) {
+      return (!e)
     }
   }
 
   /**
    * CryptoNight Fast Hash Method
    * @param {string} data - hexadecimal string to hash
-   * @returns {string} the resulting hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, hash]
    */
   cn_fast_hash (data) {
-    if (!this.isNative) {
-      return this.crypto.cn_fast_hash(data)
-    } else {
-      const result = this.crypto.cn_fast_hash(data)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.cn_fast_hash(data)
       } else {
-        return [null, result]
+        const result = this.crypto.cn_fast_hash(data)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
@@ -144,26 +184,23 @@ class Crypto {
    * @param {string} derivation - the derivation
    * @param {number} outputIndex - the output index in the transaction
    * @param {string} publicKey - the public key
-   * @returns {string} the resulting public key
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, publicKey]
    */
   derivePublicKey (derivation, outputIndex, publicKey) {
-    if (!this.isNative) {
-      return this.crypto.derivePublicKey(derivation, outputIndex, publicKey)
-    } else {
-      var result
-
-      try {
-        result = this.crypto.derivePublicKey(derivation, outputIndex, publicKey)
-      } catch (e) {
-        result = e
-        result = false
-      }
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.derivePublicKey(derivation, outputIndex, publicKey)
       } else {
-        return [null, result]
+        const result = this.crypto.derivePublicKey(derivation, outputIndex, publicKey)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
@@ -172,26 +209,23 @@ class Crypto {
    * @param {string} derivation - the derivation
    * @param {number} outputIndex - the output index in the transaction
    * @param {string} secretKey - the secret key
-   * @returns {string} the resulting secret key
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, secretKey]
    */
   deriveSecretKey (derivation, outputIndex, secretKey) {
-    if (!this.isNative) {
-      return this.crypto.deriveSecretKey(derivation, outputIndex, secretKey)
-    } else {
-      var result
-
-      try {
-        result = this.crypto.deriveSecretKey(derivation, outputIndex, secretKey)
-      } catch (e) {
-        result = e
-        result = false
-      }
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.deriveSecretKey(derivation, outputIndex, secretKey)
       } else {
-        return [null, result]
+        const result = this.crypto.deriveSecretKey(derivation, outputIndex, secretKey)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
@@ -199,26 +233,23 @@ class Crypto {
    * Generates the key derivation of the given keys
    * @param {string} transactionPublicKey - the transaction public key
    * @param {string} privateViewKey - the private view key
-   * @returns {string} the derivation
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, derivation]
    */
   generateKeyDerivation (transactionPublicKey, privateViewKey) {
-    if (!this.isNative) {
-      return this.crypto.generateKeyDerivation(transactionPublicKey, privateViewKey)
-    } else {
-      var result
-
-      try {
-        result = this.crypto.generateKeyDerivation(transactionPublicKey, privateViewKey)
-      } catch (e) {
-        result = e
-        result = false
-      }
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.generateKeyDerivation(transactionPublicKey, privateViewKey)
       } else {
-        return [null, result]
+        const result = this.crypto.generateKeyDerivation(transactionPublicKey, privateViewKey)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
@@ -226,26 +257,71 @@ class Crypto {
    * Generates the key  image from the given public and private keys
    * @param {string} publicKey - the public emphemeral
    * @param {string} privateKey - the private emphemeral
-   * @returns {string} the key image
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, keyImage]
    */
   generateKeyImage (publicKey, privateKey) {
-    if (!this.isNative) {
-      return this.crypto.generateKeyImage(publicKey, privateKey)
-    } else {
-      var result
-
-      try {
-        result = this.crypto.generateKeyImage(publicKey, privateKey)
-      } catch (e) {
-        result = e
-        result = false
-      }
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.generateKeyImage(publicKey, privateKey)
       } else {
-        return [null, result]
+        const result = this.crypto.generateKeyImage(publicKey, privateKey)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
+    }
+  }
+
+  /**
+   * Generates a key pair
+   * @returns {Array.&lt;boolean|{publicKey: string, secretKey: string}>} array consisting of [error, keys]
+   */
+  generateKeys () {
+    try {
+      if (!this.isNative) {
+        return this.crypto.generateKeys()
+      } else {
+        const result = this.crypto.generateKeys()
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, {
+            publicKey: result.publicKey || result.PublicKey,
+            secretKey: result.secretKey || result.SecretKey
+          }]
+        }
+      }
+    } catch (e) {
+      return [(e), null]
+    }
+  }
+
+  /**
+   * Generates the deterministic private view key from the supplied private spend key
+   * @param {string} privateKey - the private spend key
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, privateKey]
+   */
+  generatePrivateViewKeyFromPrivateSpendKey (privateKey) {
+    try {
+      if (!this.isNative) {
+        return this.crypto.generatePrivateViewKeyFromPrivateSpendKey(privateKey)
+      } else {
+        const result = this.crypto.generatePrivateViewKeyFromPrivateSpendKey(privateKey)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
+      }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
@@ -256,159 +332,291 @@ class Crypto {
    * @param {string[]} inputKeys - the input keys used in the ring
    * @param {string} privateKey - the real private key used for signing
    * @param {number} realIndex - the index of the real output in the inputKeys array
-   * @returns {string[]} the resulting ring signatures
+   * @returns {Array.&lt;boolean|string[]>} array consisting of [error, signatures]
    */
   generateRingSignatures (transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex) {
-    if (!this.isNative) {
-      return this.crypto.generateRingSignatures(transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex)
-    } else {
-      var cSigs = new this.crypto.VectorString()
-      const cInputKeys = new this.crypto.VectorString()
+    try {
+      if (!this.isNative) {
+        return this.crypto.generateRingSignatures(transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex)
+      } else {
+        var cSigs = new this.crypto.VectorString()
+        const cInputKeys = new this.crypto.VectorString()
 
-      inputKeys.forEach((key) => {
-        cInputKeys.push_back(key)
-      })
+        inputKeys.forEach((key) => {
+          cInputKeys.push_back(key)
+        })
 
-      try {
-        cSigs = this.crypto.generateRingSignatures(transactionPrefixHash, keyImage, cInputKeys, privateKey, realIndex)
-      } catch (e) {
-        cSigs = e
-        cSigs = false
+        try {
+          cSigs = this.crypto.generateRingSignatures(transactionPrefixHash, keyImage, cInputKeys, privateKey, realIndex)
+        } catch (e) {
+          cSigs = e
+          cSigs = false
+        }
+
+        if (!cSigs) return [true, null]
+
+        const sigs = []
+
+        for (var i = 0; i &lt; cSigs.size(); i++) {
+          sigs.push(cSigs.get(i))
+        }
+
+        return [null, sigs]
       }
+    } catch (e) {
+      return [(e), null]
+    }
+  }
 
-      if (!cSigs) return [true, null]
+  /**
+   * Generates a single signature
+   * @param {string} hash - the input hash
+   * @param {string} publicKey - the public key to use
+   * @param {string} privateKey - the private key to use for the signing process
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, signature]
+   */
+  generateSignature (hash, publicKey, privateKey) {
+    try {
+      if (!this.isNative) {
+        return this.crypto.generateSignature(hash, publicKey, privateKey)
+      } else {
+        const result = this.crypto.generateSignature(hash, publicKey, privateKey)
 
-      const sigs = []
-
-      for (var i = 0; i &lt; cSigs.size(); i++) {
-        sigs.push(cSigs.get(i))
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
+    }
+  }
 
-      return [null, sigs]
+  /**
+   * Generates the deterministic view keys from the supplied private spend key
+   * @param {string} privateKey - the private spend key
+   * @returns {Array.&lt;boolean|{publicKey: string, secretKey: string}>} array consisting of [error, keys]
+   */
+  generateViewKeysFromPrivateSpendKey (privateKey) {
+    try {
+      if (!this.isNative) {
+        return this.crypto.generateViewKeysFromPrivateSpendKey(privateKey)
+      } else {
+        const result = this.crypto.generateViewKeysFromPrivateSpendKey(privateKey)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, {
+            publicKey: result.publicKey || result.PublicKey,
+            secretKey: result.secretKey || result.SecretKey
+          }]
+        }
+      }
+    } catch (e) {
+      return [(e), null]
+    }
+  }
+
+  /**
+   * Converts a hash to an elliptic curve
+   * @param {string} hash - the hash to convert
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, ellipticCurve]
+   */
+  hashToEllipticCurve (hash) {
+    try {
+      if (!this.isNative) {
+        return this.crypto.hashToEllipticCurve(hash)
+      } else {
+        const result = this.crypto.hashToEllipticCurve(hash)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
+      }
+    } catch (e) {
+      return [(e), null]
+    }
+  }
+
+  /**
+   * Converts a hash to a scalar
+   * @param {string} hash - the hash to convert
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, scalar]
+   */
+  hashToScalar (hash) {
+    try {
+      if (!this.isNative) {
+        return this.crypto.hashToScalar(hash)
+      } else {
+        const result = this.crypto.hashToScalar(hash)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
+      }
+    } catch (e) {
+      return [(e), null]
+    }
+  }
+
+  /**
+   * Performs a scalar multkey operation
+   * @param {string} keyImageA - the first key image
+   * @param {string} keyImageB - the second key image
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, keyImage]
+   */
+  scalarmultKey (keyImageA, keyImageB) {
+    try {
+      if (!this.isNative) {
+        return this.crypto.scalarmultKey(keyImageA, keyImageB)
+      } else {
+        const result = this.crypto.scalarmultKey(keyImageA, keyImageB)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
+      }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
   /**
    * scalar 32-bit reduction
    * @param {string} data - hexadecimal data to reduce
-   * @returns {string} the reduction
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, result]
    */
   scReduce32 (data) {
-    if (!this.isNative) {
-      return this.crypto.scReduce32(data)
-    } else {
-      const result = this.crypto.scReduce32(data)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.scReduce32(data)
       } else {
-        return [null, result]
+        const result = this.crypto.scReduce32(data)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
   /**
    * Generates the public key from the private key
    * @param {string} privateKey - the private key
-   * @return {string} the public key
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, publicKey]
    */
   secretKeyToPublicKey (privateKey) {
-    if (!this.isNative) {
-      return this.crypto.secretKeyToPublicKey(privateKey)
-    } else {
-      var result
-
-      try {
-        result = this.crypto.secretKeyToPublicKey(privateKey)
-      } catch (e) {
-        result = e
-        result = false
-      }
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.secretKeyToPublicKey(privateKey)
       } else {
-        return [null, result]
+        const result = this.crypto.secretKeyToPublicKey(privateKey)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
   /**
    * Calculates the tree branch of the given hashes
    * @param {string[]} arr - the hashes to use in the calculation
-   * @return {string[]} the resulting tree branches
+   * @returns {Array.&lt;boolean|string[]>} array consisting of [error, treeBranches]
    */
   tree_branch (arr) {
-    if (!this.isNative) {
-      return this.crypto.tree_branch(arr)
-    } else {
-      var branches = new this.crypto.VectorString()
-      const hashes = new this.crypto.VectorString()
+    try {
+      if (!this.isNative) {
+        return this.crypto.tree_branch(arr)
+      } else {
+        const hashes = new this.crypto.VectorString()
 
-      arr.forEach((item) => {
-        hashes.push_back(item)
-      })
+        arr.forEach((item) => {
+          hashes.push_back(item)
+        })
 
-      try {
-        branches = this.crypto.tree_branch(hashes)
-      } catch (e) {
-        branches = e
-        branches = false
+        const branches = this.crypto.tree_branch(hashes)
+
+        if (!branches) return [true, null]
+
+        const results = []
+
+        for (var i = 0; i &lt; branches.size(); i++) {
+          results.push(branches.get(i))
+        }
+
+        return [null, results]
       }
-
-      if (!branches) return [true, null]
-
-      const results = []
-
-      for (var i = 0; i &lt; branches.size(); i++) {
-        results.push(branches.get(i))
-      }
-
-      return [null, results]
+    } catch (e) {
+      return [(e), null]
     }
   }
 
   /**
    * Calculates the tree depth of the given value
    * @param {number} count - the number of items
-   * @returns {number} the depth of the tree
+   * @returns {Array.&lt;boolean|number>} array consisting of [error, treeDepth]
    */
   tree_depth (count) {
-    if (!this.isNative) {
-      return this.crypto.tree_depth(count)
-    } else {
-      const result = this.crypto.tree_depth(count)
-
-      if (typeof result !== 'number') {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.tree_depth(count)
       } else {
-        return [null, result]
+        const result = this.crypto.tree_depth(count)
+
+        if (typeof result !== 'number') {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
   /**
    * Calculates the tree hash of the given hashes
    * @param {string[]} arr - the hashes to use in the calculation
-   * @return {string} the resulting tree hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, treeHash]
    */
   tree_hash (arr) {
-    if (!this.isNative) {
-      return this.crypto.tree_hash(arr)
-    } else {
-      const hashes = new this.crypto.VectorString()
-
-      arr.forEach((item) => {
-        hashes.push_back(item)
-      })
-
-      const result = this.crypto.tree_hash(hashes)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.tree_hash(arr)
       } else {
-        return [null, result]
+        const hashes = new this.crypto.VectorString()
+
+        arr.forEach((item) => {
+          hashes.push_back(item)
+        })
+
+        const result = this.crypto.tree_hash(hashes)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
@@ -417,25 +625,29 @@ class Crypto {
    * @param {string[]} branches - the hashes of the branches to use in the calculation
    * @param {string} leaf - the leaf to include in the calculation
    * @param {number} path - the path to include in the calculation
-   * @return {string} the resulting tree hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, treeHash]
    */
   tree_hash_from_branch (branches, leaf, path) {
-    if (!this.isNative) {
-      return this.crypto.tree_hash_from_branch(branches, leaf, path)
-    } else {
-      const _branches = new this.crypto.VectorString()
-
-      branches.forEach((branch) => {
-        _branches.push_back(branch)
-      })
-
-      const result = this.crypto.tree_hash_from_branch(_branches, leaf, path.toString())
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.tree_hash_from_branch(branches, leaf, path)
       } else {
-        return [null, result]
+        const _branches = new this.crypto.VectorString()
+
+        branches.forEach((branch) => {
+          _branches.push_back(branch)
+        })
+
+        const result = this.crypto.tree_hash_from_branch(_branches, leaf, path.toString())
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
@@ -444,26 +656,23 @@ class Crypto {
    * @param {string} derivation - the derivation
    * @param {number} outputIndex - the output index in the transaction
    * @param {string} outputKey - the output key
-   * @returns {string} the public key
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, publicKey]
    */
   underivePublicKey (derivation, outputIndex, outputKey) {
-    if (!this.isNative) {
-      return this.crypto.underivePublicKey(derivation, outputIndex, outputKey)
-    } else {
-      var result
-
-      try {
-        result = this.crypto.underivePublicKey(derivation, outputIndex, outputKey)
-      } catch (e) {
-        result = e
-        result = false
-      }
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.underivePublicKey(derivation, outputIndex, outputKey)
       } else {
-        return [null, result]
+        const result = this.crypto.underivePublicKey(derivation, outputIndex, outputKey)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
@@ -472,342 +681,414 @@ class Crypto {
   /**
    * CryptoNight v0 Slow Hash Method
    * @param {string} data - hexadecimal string to hash
-   * @returns {string} the resulting hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, hash]
    */
   cn_slow_hash_v0 (data) {
-    if (!this.isNative) {
-      return this.crypto.cn_slow_hash_v0(data)
-    } else {
-      const result = this.crypto.cn_slow_hash_v0(data)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.cn_slow_hash_v0(data)
       } else {
-        return [null, result]
+        const result = this.crypto.cn_slow_hash_v0(data)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
   /**
    * CryptoNight v1 Slow Hash Method
    * @param {string} data - hexadecimal string to hash
-   * @returns {string} the resulting hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, hash]
    */
   cn_slow_hash_v1 (data) {
-    if (!this.isNative) {
-      return this.crypto.cn_slow_hash_v1(data)
-    } else {
-      const result = this.crypto.cn_slow_hash_v1(data)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.cn_slow_hash_v1(data)
       } else {
-        return [null, result]
+        const result = this.crypto.cn_slow_hash_v1(data)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
   /**
    * CryptoNight v2 Slow Hash Method
    * @param {string} data - hexadecimal string to hash
-   * @returns {string} the resulting hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, hash]
    */
   cn_slow_hash_v2 (data) {
-    if (!this.isNative) {
-      return this.crypto.cn_slow_hash_v2(data)
-    } else {
-      const result = this.crypto.cn_slow_hash_v2(data)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.cn_slow_hash_v2(data)
       } else {
-        return [null, result]
+        const result = this.crypto.cn_slow_hash_v2(data)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
   /**
    * CryptoNight Lite v0 Slow Hash Method
    * @param {string} data - hexadecimal string to hash
-   * @returns {string} the resulting hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, hash]
    */
   cn_lite_slow_hash_v0 (data) {
-    if (!this.isNative) {
-      return this.crypto.cn_lite_slow_hash_v0(data)
-    } else {
-      const result = this.crypto.cn_lite_slow_hash_v0(data)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.cn_lite_slow_hash_v0(data)
       } else {
-        return [null, result]
+        const result = this.crypto.cn_lite_slow_hash_v0(data)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
   /**
    * CryptoNight Lite v1 Slow Hash Method
    * @param {string} data - hexadecimal string to hash
-   * @returns {string} the resulting hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, hash]
    */
   cn_lite_slow_hash_v1 (data) {
-    if (!this.isNative) {
-      return this.crypto.cn_lite_slow_hash_v1(data)
-    } else {
-      const result = this.crypto.cn_lite_slow_hash_v1(data)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.cn_lite_slow_hash_v1(data)
       } else {
-        return [null, result]
+        const result = this.crypto.cn_lite_slow_hash_v1(data)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
   /**
    * CryptoNight Lite v2 Slow Hash Method
    * @param {string} data - hexadecimal string to hash
-   * @returns {string} the resulting hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, hash]
    */
   cn_lite_slow_hash_v2 (data) {
-    if (!this.isNative) {
-      return this.crypto.cn_lite_slow_hash_v2(data)
-    } else {
-      const result = this.crypto.cn_lite_slow_hash_v2(data)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.cn_lite_slow_hash_v2(data)
       } else {
-        return [null, result]
+        const result = this.crypto.cn_lite_slow_hash_v2(data)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
   /**
    * CryptoNight Dark v0 Slow Hash Method
    * @param {string} data - hexadecimal string to hash
-   * @returns {string} the resulting hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, hash]
    */
   cn_dark_slow_hash_v0 (data) {
-    if (!this.isNative) {
-      return this.crypto.cn_dark_slow_hash_v0(data)
-    } else {
-      const result = this.crypto.cn_dark_slow_hash_v0(data)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.cn_dark_slow_hash_v0(data)
       } else {
-        return [null, result]
+        const result = this.crypto.cn_dark_slow_hash_v0(data)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
   /**
    * CryptoNight Dark v1 Slow Hash Method
    * @param {string} data - hexadecimal string to hash
-   * @returns {string} the resulting hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, hash]
    */
   cn_dark_slow_hash_v1 (data) {
-    if (!this.isNative) {
-      return this.crypto.cn_dark_slow_hash_v1(data)
-    } else {
-      const result = this.crypto.cn_dark_slow_hash_v1(data)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.cn_dark_slow_hash_v1(data)
       } else {
-        return [null, result]
+        const result = this.crypto.cn_dark_slow_hash_v1(data)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
   /**
    * CryptoNight Dark v2 Slow Hash Method
    * @param {string} data - hexadecimal string to hash
-   * @returns {string} the resulting hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, hash]
    */
   cn_dark_slow_hash_v2 (data) {
-    if (!this.isNative) {
-      return this.crypto.cn_dark_slow_hash_v2(data)
-    } else {
-      const result = this.crypto.cn_dark_slow_hash_v2(data)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.cn_dark_slow_hash_v2(data)
       } else {
-        return [null, result]
+        const result = this.crypto.cn_dark_slow_hash_v2(data)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
   /**
    * CryptoNight Dark Lite v0 Slow Hash Method
    * @param {string} data - hexadecimal string to hash
-   * @returns {string} the resulting hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, hash]
    */
   cn_dark_lite_slow_hash_v0 (data) {
-    if (!this.isNative) {
-      return this.crypto.cn_dark_lite_slow_hash_v0(data)
-    } else {
-      const result = this.crypto.cn_dark_lite_slow_hash_v0(data)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.cn_dark_lite_slow_hash_v0(data)
       } else {
-        return [null, result]
+        const result = this.crypto.cn_dark_lite_slow_hash_v0(data)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
   /**
    * CryptoNight Dark Lite v1 Slow Hash Method
    * @param {string} data - hexadecimal string to hash
-   * @returns {string} the resulting hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, hash]
    */
   cn_dark_lite_slow_hash_v1 (data) {
-    if (!this.isNative) {
-      return this.crypto.cn_dark_lite_slow_hash_v1(data)
-    } else {
-      const result = this.crypto.cn_dark_lite_slow_hash_v1(data)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.cn_dark_lite_slow_hash_v1(data)
       } else {
-        return [null, result]
+        const result = this.crypto.cn_dark_lite_slow_hash_v1(data)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
   /**
    * CryptoNight Dark Lite v2 Slow Hash Method
    * @param {string} data - hexadecimal string to hash
-   * @returns {string} the resulting hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, hash]
    */
   cn_dark_lite_slow_hash_v2 (data) {
-    if (!this.isNative) {
-      return this.crypto.cn_dark_lite_slow_hash_v2(data)
-    } else {
-      const result = this.crypto.cn_dark_lite_slow_hash_v2(data)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.cn_dark_lite_slow_hash_v2(data)
       } else {
-        return [null, result]
+        const result = this.crypto.cn_dark_lite_slow_hash_v2(data)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
   /**
    * CryptoNight Turtle v0 Slow Hash Method
    * @param {string} data - hexadecimal string to hash
-   * @returns {string} the resulting hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, hash]
    */
   cn_turtle_slow_hash_v0 (data) {
-    if (!this.isNative) {
-      return this.crypto.cn_turtle_slow_hash_v0(data)
-    } else {
-      const result = this.crypto.cn_turtle_slow_hash_v0(data)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.cn_turtle_slow_hash_v0(data)
       } else {
-        return [null, result]
+        const result = this.crypto.cn_turtle_slow_hash_v0(data)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
   /**
    * CryptoNight Turtle v1 Slow Hash Method
    * @param {string} data - hexadecimal string to hash
-   * @returns {string} the resulting hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, hash]
    */
   cn_turtle_slow_hash_v1 (data) {
-    if (!this.isNative) {
-      return this.crypto.cn_turtle_slow_hash_v1(data)
-    } else {
-      const result = this.crypto.cn_turtle_slow_hash_v1(data)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.cn_turtle_slow_hash_v1(data)
       } else {
-        return [null, result]
+        const result = this.crypto.cn_turtle_slow_hash_v1(data)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
   /**
    * CryptoNight Turtle v2 Slow Hash Method
    * @param {string} data - hexadecimal string to hash
-   * @returns {string} the resulting hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, hash]
    */
   cn_turtle_slow_hash_v2 (data) {
-    if (!this.isNative) {
-      return this.crypto.cn_turtle_slow_hash_v2(data)
-    } else {
-      const result = this.crypto.cn_turtle_slow_hash_v2(data)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.cn_turtle_slow_hash_v2(data)
       } else {
-        return [null, result]
+        const result = this.crypto.cn_turtle_slow_hash_v2(data)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
   /**
    * CryptoNight Turtle Lite v0 Slow Hash Method
    * @param {string} data - hexadecimal string to hash
-   * @returns {string} the resulting hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, hash]
    */
   cn_turtle_lite_slow_hash_v0 (data) {
-    if (!this.isNative) {
-      return this.crypto.cn_turtle_lite_slow_hash_v0(data)
-    } else {
-      const result = this.crypto.cn_turtle_lite_slow_hash_v0(data)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.cn_turtle_lite_slow_hash_v0(data)
       } else {
-        return [null, result]
+        const result = this.crypto.cn_turtle_lite_slow_hash_v0(data)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
   /**
    * CryptoNight Turtle Lite v1 Slow Hash Method
    * @param {string} data - hexadecimal string to hash
-   * @returns {string} the resulting hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, hash]
    */
   cn_turtle_lite_slow_hash_v1 (data) {
-    if (!this.isNative) {
-      return this.crypto.cn_turtle_lite_slow_hash_v1(data)
-    } else {
-      const result = this.crypto.cn_turtle_lite_slow_hash_v1(data)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.cn_turtle_lite_slow_hash_v1(data)
       } else {
-        return [null, result]
+        const result = this.crypto.cn_turtle_lite_slow_hash_v1(data)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
   /**
    * CryptoNight Turtle Lite v2 Slow Hash Method
    * @param {string} data - hexadecimal string to hash
-   * @returns {string} the resulting hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, hash]
    */
   cn_turtle_lite_slow_hash_v2 (data) {
-    if (!this.isNative) {
-      return this.crypto.cn_turtle_lite_slow_hash_v2(data)
-    } else {
-      const result = this.crypto.cn_turtle_lite_slow_hash_v2(data)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.cn_turtle_lite_slow_hash_v2(data)
       } else {
-        return [null, result]
+        const result = this.crypto.cn_turtle_lite_slow_hash_v2(data)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
@@ -815,19 +1096,23 @@ class Crypto {
    * CryptoNight Soft Shell v0 Slow Hash Method
    * @param {string} data - hexadecimal string to hash
    * @param {number} height - the height to use in the calculation
-   * @returns {string} the resulting hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, hash]
    */
   cn_soft_shell_slow_hash_v0 (data, height) {
-    if (!this.isNative) {
-      return this.crypto.cn_soft_shell_slow_hash_v0(data, height)
-    } else {
-      const result = this.crypto.cn_soft_shell_slow_hash_v0(data, height)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.cn_soft_shell_slow_hash_v0(data, height)
       } else {
-        return [null, result]
+        const result = this.crypto.cn_soft_shell_slow_hash_v0(data, height)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
@@ -835,19 +1120,23 @@ class Crypto {
    * CryptoNight Soft Shell v1 Slow Hash Method
    * @param {string} data - hexadecimal string to hash
    * @param {number} height - the height to use in the calculation
-   * @returns {string} the resulting hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, hash]
    */
   cn_soft_shell_slow_hash_v1 (data, height) {
-    if (!this.isNative) {
-      return this.crypto.cn_soft_shell_slow_hash_v1(data, height)
-    } else {
-      const result = this.crypto.cn_soft_shell_slow_hash_v1(data, height)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.cn_soft_shell_slow_hash_v1(data, height)
       } else {
-        return [null, result]
+        const result = this.crypto.cn_soft_shell_slow_hash_v1(data, height)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
@@ -855,38 +1144,46 @@ class Crypto {
    * CryptoNight Soft Shell v2 Slow Hash Method
    * @param {string} data - hexadecimal string to hash
    * @param {number} height - the height to use in the calculation
-   * @returns {string} the resulting hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, hash]
    */
   cn_soft_shell_slow_hash_v2 (data, height) {
-    if (!this.isNative) {
-      return this.crypto.cn_soft_shell_slow_hash_v2(data, height)
-    } else {
-      const result = this.crypto.cn_soft_shell_slow_hash_v2(data, height)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.cn_soft_shell_slow_hash_v2(data, height)
       } else {
-        return [null, result]
+        const result = this.crypto.cn_soft_shell_slow_hash_v2(data, height)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 
   /**
    * Chukwa Slow Hash Method
    * @param {string} data - hexadecimal string to hash
-   * @returns {string} the resulting hash
+   * @returns {Array.&lt;boolean|string>} array consisting of [error, hash]
    */
   chukwa_slow_hash (data) {
-    if (!this.isNative) {
-      return this.crypto.chukwa_slow_hash(data)
-    } else {
-      const result = this.crypto.chukwa_slow_hash(data)
-
-      if (!result) {
-        return [true, null]
+    try {
+      if (!this.isNative) {
+        return this.crypto.chukwa_slow_hash(data)
       } else {
-        return [null, result]
+        const result = this.crypto.chukwa_slow_hash(data)
+
+        if (!result) {
+          return [true, null]
+        } else {
+          return [null, result]
+        }
       }
+    } catch (e) {
+      return [(e), null]
     }
   }
 }
@@ -974,7 +1271,7 @@ module.exports = Crypto
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Sep 22 2019 15:49:08 GMT-0400 (Eastern Daylight Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Mon Sep 23 2019 11:24:03 GMT-0400 (Eastern Daylight Time)
 </footer>
 
 <script> prettyPrint(); </script>

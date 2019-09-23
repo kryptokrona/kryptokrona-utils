@@ -297,6 +297,165 @@
     
 
     
+    <h4 class="name" id="checkKey"><span class="type-signature"></span>checkKey<span class="signature">(key)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Checks that the given key is a valid public key
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>key</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">the public key to check</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line73">line 73</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    whether the key is a valid public key
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
     <h4 class="name" id="checkRingSignatures"><span class="type-signature"></span>checkRingSignatures<span class="signature">(transactionPrefixHash, keyImage, inputKeys, signatures)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
     
 
@@ -467,7 +626,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line76">line 76</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line93">line 93</a>
     </li></ul></dd>
     
 
@@ -525,7 +684,212 @@
     
 
     
-    <h4 class="name" id="chukwa_slow_hash"><span class="type-signature"></span>chukwa_slow_hash<span class="signature">(data)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="checkSignature"><span class="type-signature"></span>checkSignature<span class="signature">(hash, publicKey, signature)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Checks an individual signature
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>hash</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">the input hash</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>publicKey</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">the public key used</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>signature</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">the signature to check</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line123">line 123</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    whether the signature is valid
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="chukwa_slow_hash"><span class="type-signature"></span>chukwa_slow_hash<span class="signature">(data)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
     
 
     
@@ -626,7 +990,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line851">line 851</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line1144">line 1144</a>
     </li></ul></dd>
     
 
@@ -655,7 +1019,7 @@
 
         
 <div class="param-desc">
-    the resulting hash
+    array consisting of [error, hash]
 </div>
 
 
@@ -666,7 +1030,7 @@
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;(boolean|string)></span>
 
 
     </dd>
@@ -684,7 +1048,7 @@
     
 
     
-    <h4 class="name" id="cn_dark_lite_slow_hash_v0"><span class="type-signature"></span>cn_dark_lite_slow_hash_v0<span class="signature">(data)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="cn_dark_lite_slow_hash_v0"><span class="type-signature"></span>cn_dark_lite_slow_hash_v0<span class="signature">(data)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
     
 
     
@@ -785,7 +1149,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line620">line 620</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line865">line 865</a>
     </li></ul></dd>
     
 
@@ -814,7 +1178,7 @@
 
         
 <div class="param-desc">
-    the resulting hash
+    array consisting of [error, hash]
 </div>
 
 
@@ -825,7 +1189,7 @@
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;(boolean|string)></span>
 
 
     </dd>
@@ -843,7 +1207,7 @@
     
 
     
-    <h4 class="name" id="cn_dark_lite_slow_hash_v1"><span class="type-signature"></span>cn_dark_lite_slow_hash_v1<span class="signature">(data)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="cn_dark_lite_slow_hash_v1"><span class="type-signature"></span>cn_dark_lite_slow_hash_v1<span class="signature">(data)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
     
 
     
@@ -944,7 +1308,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line639">line 639</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line888">line 888</a>
     </li></ul></dd>
     
 
@@ -973,7 +1337,7 @@
 
         
 <div class="param-desc">
-    the resulting hash
+    array consisting of [error, hash]
 </div>
 
 
@@ -984,7 +1348,7 @@
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;(boolean|string)></span>
 
 
     </dd>
@@ -1002,7 +1366,7 @@
     
 
     
-    <h4 class="name" id="cn_dark_lite_slow_hash_v2"><span class="type-signature"></span>cn_dark_lite_slow_hash_v2<span class="signature">(data)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="cn_dark_lite_slow_hash_v2"><span class="type-signature"></span>cn_dark_lite_slow_hash_v2<span class="signature">(data)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
     
 
     
@@ -1011,6 +1375,1278 @@
 
 <div class="description">
     CryptoNight Dark Lite v2 Slow Hash Method
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">hexadecimal string to hash</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line911">line 911</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    array consisting of [error, hash]
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array.&lt;(boolean|string)></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="cn_dark_slow_hash_v0"><span class="type-signature"></span>cn_dark_slow_hash_v0<span class="signature">(data)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    CryptoNight Dark v0 Slow Hash Method
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">hexadecimal string to hash</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line796">line 796</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    array consisting of [error, hash]
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array.&lt;(boolean|string)></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="cn_dark_slow_hash_v1"><span class="type-signature"></span>cn_dark_slow_hash_v1<span class="signature">(data)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    CryptoNight Dark v1 Slow Hash Method
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">hexadecimal string to hash</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line819">line 819</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    array consisting of [error, hash]
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array.&lt;(boolean|string)></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="cn_dark_slow_hash_v2"><span class="type-signature"></span>cn_dark_slow_hash_v2<span class="signature">(data)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    CryptoNight Dark v2 Slow Hash Method
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">hexadecimal string to hash</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line842">line 842</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    array consisting of [error, hash]
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array.&lt;(boolean|string)></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="cn_fast_hash"><span class="type-signature"></span>cn_fast_hash<span class="signature">(data)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    CryptoNight Fast Hash Method
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">hexadecimal string to hash</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line136">line 136</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    array consisting of [error, hash]
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array.&lt;(boolean|string)></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="cn_lite_slow_hash_v0"><span class="type-signature"></span>cn_lite_slow_hash_v0<span class="signature">(data)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    CryptoNight Lite v0 Slow Hash Method
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">hexadecimal string to hash</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line727">line 727</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    array consisting of [error, hash]
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array.&lt;(boolean|string)></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="cn_lite_slow_hash_v1"><span class="type-signature"></span>cn_lite_slow_hash_v1<span class="signature">(data)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    CryptoNight Lite v1 Slow Hash Method
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">hexadecimal string to hash</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line750">line 750</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    array consisting of [error, hash]
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array.&lt;(boolean|string)></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="cn_lite_slow_hash_v2"><span class="type-signature"></span>cn_lite_slow_hash_v2<span class="signature">(data)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    CryptoNight Lite v2 Slow Hash Method
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">hexadecimal string to hash</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line773">line 773</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    array consisting of [error, hash]
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array.&lt;(boolean|string)></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="cn_slow_hash_v0"><span class="type-signature"></span>cn_slow_hash_v0<span class="signature">(data)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    CryptoNight v0 Slow Hash Method
 </div>
 
 
@@ -1132,7 +2768,7 @@
 
         
 <div class="param-desc">
-    the resulting hash
+    array consisting of [error, hash]
 </div>
 
 
@@ -1143,7 +2779,7 @@
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;(boolean|string)></span>
 
 
     </dd>
@@ -1161,1279 +2797,7 @@
     
 
     
-    <h4 class="name" id="cn_dark_slow_hash_v0"><span class="type-signature"></span>cn_dark_slow_hash_v0<span class="signature">(data)</span><span class="type-signature"> &rarr; {string}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    CryptoNight Dark v0 Slow Hash Method
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>data</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">hexadecimal string to hash</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line563">line 563</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    the resulting hash
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">string</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="cn_dark_slow_hash_v1"><span class="type-signature"></span>cn_dark_slow_hash_v1<span class="signature">(data)</span><span class="type-signature"> &rarr; {string}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    CryptoNight Dark v1 Slow Hash Method
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>data</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">hexadecimal string to hash</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line582">line 582</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    the resulting hash
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">string</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="cn_dark_slow_hash_v2"><span class="type-signature"></span>cn_dark_slow_hash_v2<span class="signature">(data)</span><span class="type-signature"> &rarr; {string}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    CryptoNight Dark v2 Slow Hash Method
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>data</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">hexadecimal string to hash</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line601">line 601</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    the resulting hash
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">string</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="cn_fast_hash"><span class="type-signature"></span>cn_fast_hash<span class="signature">(data)</span><span class="type-signature"> &rarr; {string}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    CryptoNight Fast Hash Method
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>data</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">hexadecimal string to hash</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line100">line 100</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    the resulting hash
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">string</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="cn_lite_slow_hash_v0"><span class="type-signature"></span>cn_lite_slow_hash_v0<span class="signature">(data)</span><span class="type-signature"> &rarr; {string}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    CryptoNight Lite v0 Slow Hash Method
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>data</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">hexadecimal string to hash</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line506">line 506</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    the resulting hash
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">string</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="cn_lite_slow_hash_v1"><span class="type-signature"></span>cn_lite_slow_hash_v1<span class="signature">(data)</span><span class="type-signature"> &rarr; {string}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    CryptoNight Lite v1 Slow Hash Method
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>data</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">hexadecimal string to hash</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line525">line 525</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    the resulting hash
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">string</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="cn_lite_slow_hash_v2"><span class="type-signature"></span>cn_lite_slow_hash_v2<span class="signature">(data)</span><span class="type-signature"> &rarr; {string}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    CryptoNight Lite v2 Slow Hash Method
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>data</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">hexadecimal string to hash</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line544">line 544</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    the resulting hash
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">string</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="cn_slow_hash_v0"><span class="type-signature"></span>cn_slow_hash_v0<span class="signature">(data)</span><span class="type-signature"> &rarr; {string}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    CryptoNight v0 Slow Hash Method
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>data</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">hexadecimal string to hash</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line449">line 449</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    the resulting hash
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">string</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="cn_slow_hash_v1"><span class="type-signature"></span>cn_slow_hash_v1<span class="signature">(data)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="cn_slow_hash_v1"><span class="type-signature"></span>cn_slow_hash_v1<span class="signature">(data)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
     
 
     
@@ -2534,7 +2898,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line468">line 468</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line681">line 681</a>
     </li></ul></dd>
     
 
@@ -2563,7 +2927,7 @@
 
         
 <div class="param-desc">
-    the resulting hash
+    array consisting of [error, hash]
 </div>
 
 
@@ -2574,7 +2938,7 @@
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;(boolean|string)></span>
 
 
     </dd>
@@ -2592,7 +2956,7 @@
     
 
     
-    <h4 class="name" id="cn_slow_hash_v2"><span class="type-signature"></span>cn_slow_hash_v2<span class="signature">(data)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="cn_slow_hash_v2"><span class="type-signature"></span>cn_slow_hash_v2<span class="signature">(data)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
     
 
     
@@ -2693,7 +3057,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line487">line 487</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line704">line 704</a>
     </li></ul></dd>
     
 
@@ -2722,7 +3086,7 @@
 
         
 <div class="param-desc">
-    the resulting hash
+    array consisting of [error, hash]
 </div>
 
 
@@ -2733,7 +3097,7 @@
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;(boolean|string)></span>
 
 
     </dd>
@@ -2751,7 +3115,7 @@
     
 
     
-    <h4 class="name" id="cn_soft_shell_slow_hash_v0"><span class="type-signature"></span>cn_soft_shell_slow_hash_v0<span class="signature">(data, height)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="cn_soft_shell_slow_hash_v0"><span class="type-signature"></span>cn_soft_shell_slow_hash_v0<span class="signature">(data, height)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
     
 
     
@@ -2875,7 +3239,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line792">line 792</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line1073">line 1073</a>
     </li></ul></dd>
     
 
@@ -2904,7 +3268,7 @@
 
         
 <div class="param-desc">
-    the resulting hash
+    array consisting of [error, hash]
 </div>
 
 
@@ -2915,7 +3279,7 @@
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;(boolean|string)></span>
 
 
     </dd>
@@ -2933,7 +3297,7 @@
     
 
     
-    <h4 class="name" id="cn_soft_shell_slow_hash_v1"><span class="type-signature"></span>cn_soft_shell_slow_hash_v1<span class="signature">(data, height)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="cn_soft_shell_slow_hash_v1"><span class="type-signature"></span>cn_soft_shell_slow_hash_v1<span class="signature">(data, height)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
     
 
     
@@ -3057,7 +3421,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line812">line 812</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line1097">line 1097</a>
     </li></ul></dd>
     
 
@@ -3086,7 +3450,7 @@
 
         
 <div class="param-desc">
-    the resulting hash
+    array consisting of [error, hash]
 </div>
 
 
@@ -3097,7 +3461,7 @@
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;(boolean|string)></span>
 
 
     </dd>
@@ -3115,7 +3479,7 @@
     
 
     
-    <h4 class="name" id="cn_soft_shell_slow_hash_v2"><span class="type-signature"></span>cn_soft_shell_slow_hash_v2<span class="signature">(data, height)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="cn_soft_shell_slow_hash_v2"><span class="type-signature"></span>cn_soft_shell_slow_hash_v2<span class="signature">(data, height)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
     
 
     
@@ -3239,7 +3603,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line832">line 832</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line1121">line 1121</a>
     </li></ul></dd>
     
 
@@ -3268,7 +3632,7 @@
 
         
 <div class="param-desc">
-    the resulting hash
+    array consisting of [error, hash]
 </div>
 
 
@@ -3279,7 +3643,7 @@
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;(boolean|string)></span>
 
 
     </dd>
@@ -3297,7 +3661,7 @@
     
 
     
-    <h4 class="name" id="cn_turtle_lite_slow_hash_v0"><span class="type-signature"></span>cn_turtle_lite_slow_hash_v0<span class="signature">(data)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="cn_turtle_lite_slow_hash_v0"><span class="type-signature"></span>cn_turtle_lite_slow_hash_v0<span class="signature">(data)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
     
 
     
@@ -3398,7 +3762,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line734">line 734</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line1003">line 1003</a>
     </li></ul></dd>
     
 
@@ -3427,7 +3791,7 @@
 
         
 <div class="param-desc">
-    the resulting hash
+    array consisting of [error, hash]
 </div>
 
 
@@ -3438,7 +3802,7 @@
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;(boolean|string)></span>
 
 
     </dd>
@@ -3456,7 +3820,7 @@
     
 
     
-    <h4 class="name" id="cn_turtle_lite_slow_hash_v1"><span class="type-signature"></span>cn_turtle_lite_slow_hash_v1<span class="signature">(data)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="cn_turtle_lite_slow_hash_v1"><span class="type-signature"></span>cn_turtle_lite_slow_hash_v1<span class="signature">(data)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
     
 
     
@@ -3557,7 +3921,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line753">line 753</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line1026">line 1026</a>
     </li></ul></dd>
     
 
@@ -3586,7 +3950,7 @@
 
         
 <div class="param-desc">
-    the resulting hash
+    array consisting of [error, hash]
 </div>
 
 
@@ -3597,7 +3961,7 @@
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;(boolean|string)></span>
 
 
     </dd>
@@ -3615,7 +3979,7 @@
     
 
     
-    <h4 class="name" id="cn_turtle_lite_slow_hash_v2"><span class="type-signature"></span>cn_turtle_lite_slow_hash_v2<span class="signature">(data)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="cn_turtle_lite_slow_hash_v2"><span class="type-signature"></span>cn_turtle_lite_slow_hash_v2<span class="signature">(data)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
     
 
     
@@ -3716,7 +4080,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line772">line 772</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line1049">line 1049</a>
     </li></ul></dd>
     
 
@@ -3745,7 +4109,7 @@
 
         
 <div class="param-desc">
-    the resulting hash
+    array consisting of [error, hash]
 </div>
 
 
@@ -3756,7 +4120,7 @@
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;(boolean|string)></span>
 
 
     </dd>
@@ -3774,7 +4138,7 @@
     
 
     
-    <h4 class="name" id="cn_turtle_slow_hash_v0"><span class="type-signature"></span>cn_turtle_slow_hash_v0<span class="signature">(data)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="cn_turtle_slow_hash_v0"><span class="type-signature"></span>cn_turtle_slow_hash_v0<span class="signature">(data)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
     
 
     
@@ -3875,7 +4239,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line677">line 677</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line934">line 934</a>
     </li></ul></dd>
     
 
@@ -3904,7 +4268,7 @@
 
         
 <div class="param-desc">
-    the resulting hash
+    array consisting of [error, hash]
 </div>
 
 
@@ -3915,7 +4279,7 @@
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;(boolean|string)></span>
 
 
     </dd>
@@ -3933,7 +4297,7 @@
     
 
     
-    <h4 class="name" id="cn_turtle_slow_hash_v1"><span class="type-signature"></span>cn_turtle_slow_hash_v1<span class="signature">(data)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="cn_turtle_slow_hash_v1"><span class="type-signature"></span>cn_turtle_slow_hash_v1<span class="signature">(data)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
     
 
     
@@ -4034,7 +4398,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line696">line 696</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line957">line 957</a>
     </li></ul></dd>
     
 
@@ -4063,7 +4427,7 @@
 
         
 <div class="param-desc">
-    the resulting hash
+    array consisting of [error, hash]
 </div>
 
 
@@ -4074,7 +4438,7 @@
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;(boolean|string)></span>
 
 
     </dd>
@@ -4092,7 +4456,7 @@
     
 
     
-    <h4 class="name" id="cn_turtle_slow_hash_v2"><span class="type-signature"></span>cn_turtle_slow_hash_v2<span class="signature">(data)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="cn_turtle_slow_hash_v2"><span class="type-signature"></span>cn_turtle_slow_hash_v2<span class="signature">(data)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
     
 
     
@@ -4193,7 +4557,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line715">line 715</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line980">line 980</a>
     </li></ul></dd>
     
 
@@ -4222,7 +4586,7 @@
 
         
 <div class="param-desc">
-    the resulting hash
+    array consisting of [error, hash]
 </div>
 
 
@@ -4233,7 +4597,7 @@
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;(boolean|string)></span>
 
 
     </dd>
@@ -4251,7 +4615,7 @@
     
 
     
-    <h4 class="name" id="derivePublicKey"><span class="type-signature"></span>derivePublicKey<span class="signature">(derivation, outputIndex, publicKey)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="derivePublicKey"><span class="type-signature"></span>derivePublicKey<span class="signature">(derivation, outputIndex, publicKey)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
     
 
     
@@ -4398,7 +4762,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line121">line 121</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line161">line 161</a>
     </li></ul></dd>
     
 
@@ -4427,7 +4791,7 @@
 
         
 <div class="param-desc">
-    the resulting public key
+    array consisting of [error, publicKey]
 </div>
 
 
@@ -4438,7 +4802,7 @@
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;(boolean|string)></span>
 
 
     </dd>
@@ -4456,7 +4820,7 @@
     
 
     
-    <h4 class="name" id="deriveSecretKey"><span class="type-signature"></span>deriveSecretKey<span class="signature">(derivation, outputIndex, secretKey)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="deriveSecretKey"><span class="type-signature"></span>deriveSecretKey<span class="signature">(derivation, outputIndex, secretKey)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
     
 
     
@@ -4603,7 +4967,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line149">line 149</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line186">line 186</a>
     </li></ul></dd>
     
 
@@ -4632,7 +4996,7 @@
 
         
 <div class="param-desc">
-    the resulting secret key
+    array consisting of [error, secretKey]
 </div>
 
 
@@ -4643,7 +5007,7 @@
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;(boolean|string)></span>
 
 
     </dd>
@@ -4661,7 +5025,7 @@
     
 
     
-    <h4 class="name" id="generateKeyDerivation"><span class="type-signature"></span>generateKeyDerivation<span class="signature">(transactionPublicKey, privateViewKey)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="generateKeyDerivation"><span class="type-signature"></span>generateKeyDerivation<span class="signature">(transactionPublicKey, privateViewKey)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
     
 
     
@@ -4785,7 +5149,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line176">line 176</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line210">line 210</a>
     </li></ul></dd>
     
 
@@ -4814,7 +5178,7 @@
 
         
 <div class="param-desc">
-    the derivation
+    array consisting of [error, derivation]
 </div>
 
 
@@ -4825,7 +5189,7 @@
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;(boolean|string)></span>
 
 
     </dd>
@@ -4843,7 +5207,7 @@
     
 
     
-    <h4 class="name" id="generateKeyImage"><span class="type-signature"></span>generateKeyImage<span class="signature">(publicKey, privateKey)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="generateKeyImage"><span class="type-signature"></span>generateKeyImage<span class="signature">(publicKey, privateKey)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
     
 
     
@@ -4967,7 +5331,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line203">line 203</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line234">line 234</a>
     </li></ul></dd>
     
 
@@ -4996,7 +5360,7 @@
 
         
 <div class="param-desc">
-    the key image
+    array consisting of [error, keyImage]
 </div>
 
 
@@ -5007,7 +5371,7 @@
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;(boolean|string)></span>
 
 
     </dd>
@@ -5025,7 +5389,276 @@
     
 
     
-    <h4 class="name" id="generateRingSignatures"><span class="type-signature"></span>generateRingSignatures<span class="signature">(transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex)</span><span class="type-signature"> &rarr; {Array.&lt;string>}</span></h4>
+    <h4 class="name" id="generateKeys"><span class="type-signature"></span>generateKeys<span class="signature">()</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|{publicKey: string, secretKey: string})>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Generates a key pair
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line256">line 256</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    array consisting of [error, keys]
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array.&lt;(boolean|{publicKey: string, secretKey: string})></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="generatePrivateViewKeyFromPrivateSpendKey"><span class="type-signature"></span>generatePrivateViewKeyFromPrivateSpendKey<span class="signature">(privateKey)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Generates the deterministic private view key from the supplied private spend key
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>privateKey</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">the private spend key</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line282">line 282</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    array consisting of [error, privateKey]
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array.&lt;(boolean|string)></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="generateRingSignatures"><span class="type-signature"></span>generateRingSignatures<span class="signature">(transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|Array.&lt;string>)>}</span></h4>
     
 
     
@@ -5218,7 +5851,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line233">line 233</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line309">line 309</a>
     </li></ul></dd>
     
 
@@ -5247,7 +5880,7 @@
 
         
 <div class="param-desc">
-    the resulting ring signatures
+    array consisting of [error, signatures]
 </div>
 
 
@@ -5258,7 +5891,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Array.&lt;string></span>
+<span class="param-type">Array.&lt;(boolean|Array.&lt;string>)></span>
 
 
     </dd>
@@ -5276,7 +5909,871 @@
     
 
     
-    <h4 class="name" id="scReduce32"><span class="type-signature"></span>scReduce32<span class="signature">(data)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="generateSignature"><span class="type-signature"></span>generateSignature<span class="signature">(hash, publicKey, privateKey)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Generates a single signature
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>hash</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">the input hash</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>publicKey</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">the public key to use</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>privateKey</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">the private key to use for the signing process</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line350">line 350</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    array consisting of [error, signature]
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array.&lt;(boolean|string)></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="generateViewKeysFromPrivateSpendKey"><span class="type-signature"></span>generateViewKeysFromPrivateSpendKey<span class="signature">(privateKey)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|{publicKey: string, secretKey: string})>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Generates the deterministic view keys from the supplied private spend key
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>privateKey</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">the private spend key</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line373">line 373</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    array consisting of [error, keys]
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array.&lt;(boolean|{publicKey: string, secretKey: string})></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="hashToEllipticCurve"><span class="type-signature"></span>hashToEllipticCurve<span class="signature">(hash)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Converts a hash to an elliptic curve
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>hash</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">the hash to convert</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line399">line 399</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    array consisting of [error, ellipticCurve]
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array.&lt;(boolean|string)></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="hashToScalar"><span class="type-signature"></span>hashToScalar<span class="signature">(hash)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Converts a hash to a scalar
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>hash</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">the hash to convert</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line422">line 422</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    array consisting of [error, scalar]
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array.&lt;(boolean|string)></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="scalarmultKey"><span class="type-signature"></span>scalarmultKey<span class="signature">(keyImageA, keyImageB)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Performs a scalar multkey operation
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>keyImageA</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">the first key image</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>keyImageB</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">the second key image</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line446">line 446</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    array consisting of [error, keyImage]
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array.&lt;(boolean|string)></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="scReduce32"><span class="type-signature"></span>scReduce32<span class="signature">(data)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
     
 
     
@@ -5377,7 +6874,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line268">line 268</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line469">line 469</a>
     </li></ul></dd>
     
 
@@ -5406,7 +6903,7 @@
 
         
 <div class="param-desc">
-    the reduction
+    array consisting of [error, result]
 </div>
 
 
@@ -5417,7 +6914,7 @@
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;(boolean|string)></span>
 
 
     </dd>
@@ -5435,7 +6932,7 @@
     
 
     
-    <h4 class="name" id="secretKeyToPublicKey"><span class="type-signature"></span>secretKeyToPublicKey<span class="signature">(privateKey)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="secretKeyToPublicKey"><span class="type-signature"></span>secretKeyToPublicKey<span class="signature">(privateKey)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
     
 
     
@@ -5536,7 +7033,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line287">line 287</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line492">line 492</a>
     </li></ul></dd>
     
 
@@ -5565,7 +7062,7 @@
 
         
 <div class="param-desc">
-    the public key
+    array consisting of [error, publicKey]
 </div>
 
 
@@ -5576,7 +7073,7 @@
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;(boolean|string)></span>
 
 
     </dd>
@@ -5594,7 +7091,7 @@
     
 
     
-    <h4 class="name" id="tree_branch"><span class="type-signature"></span>tree_branch<span class="signature">(arr)</span><span class="type-signature"> &rarr; {Array.&lt;string>}</span></h4>
+    <h4 class="name" id="tree_branch"><span class="type-signature"></span>tree_branch<span class="signature">(arr)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|Array.&lt;string>)>}</span></h4>
     
 
     
@@ -5695,7 +7192,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line313">line 313</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line515">line 515</a>
     </li></ul></dd>
     
 
@@ -5724,7 +7221,7 @@
 
         
 <div class="param-desc">
-    the resulting tree branches
+    array consisting of [error, treeBranches]
 </div>
 
 
@@ -5735,7 +7232,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Array.&lt;string></span>
+<span class="param-type">Array.&lt;(boolean|Array.&lt;string>)></span>
 
 
     </dd>
@@ -5753,7 +7250,7 @@
     
 
     
-    <h4 class="name" id="tree_depth"><span class="type-signature"></span>tree_depth<span class="signature">(count)</span><span class="type-signature"> &rarr; {number}</span></h4>
+    <h4 class="name" id="tree_depth"><span class="type-signature"></span>tree_depth<span class="signature">(count)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|number)>}</span></h4>
     
 
     
@@ -5854,7 +7351,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line348">line 348</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line548">line 548</a>
     </li></ul></dd>
     
 
@@ -5883,7 +7380,7 @@
 
         
 <div class="param-desc">
-    the depth of the tree
+    array consisting of [error, treeDepth]
 </div>
 
 
@@ -5894,7 +7391,7 @@
     </dt>
     <dd>
         
-<span class="param-type">number</span>
+<span class="param-type">Array.&lt;(boolean|number)></span>
 
 
     </dd>
@@ -5912,7 +7409,7 @@
     
 
     
-    <h4 class="name" id="tree_hash"><span class="type-signature"></span>tree_hash<span class="signature">(arr)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="tree_hash"><span class="type-signature"></span>tree_hash<span class="signature">(arr)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
     
 
     
@@ -6013,7 +7510,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line367">line 367</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line571">line 571</a>
     </li></ul></dd>
     
 
@@ -6042,7 +7539,7 @@
 
         
 <div class="param-desc">
-    the resulting tree hash
+    array consisting of [error, treeHash]
 </div>
 
 
@@ -6053,7 +7550,7 @@
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;(boolean|string)></span>
 
 
     </dd>
@@ -6071,7 +7568,7 @@
     
 
     
-    <h4 class="name" id="tree_hash_from_branch"><span class="type-signature"></span>tree_hash_from_branch<span class="signature">(branches, leaf, path)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="tree_hash_from_branch"><span class="type-signature"></span>tree_hash_from_branch<span class="signature">(branches, leaf, path)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
     
 
     
@@ -6218,7 +7715,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line394">line 394</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line602">line 602</a>
     </li></ul></dd>
     
 
@@ -6247,7 +7744,7 @@
 
         
 <div class="param-desc">
-    the resulting tree hash
+    array consisting of [error, treeHash]
 </div>
 
 
@@ -6258,7 +7755,7 @@
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;(boolean|string)></span>
 
 
     </dd>
@@ -6276,7 +7773,7 @@
     
 
     
-    <h4 class="name" id="underivePublicKey"><span class="type-signature"></span>underivePublicKey<span class="signature">(derivation, outputIndex, outputKey)</span><span class="type-signature"> &rarr; {string}</span></h4>
+    <h4 class="name" id="underivePublicKey"><span class="type-signature"></span>underivePublicKey<span class="signature">(derivation, outputIndex, outputKey)</span><span class="type-signature"> &rarr; {Array.&lt;(boolean|string)>}</span></h4>
     
 
     
@@ -6423,7 +7920,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line421">line 421</a>
+        <a href="turtlecoin-crypto_index.js.html">turtlecoin-crypto/index.js</a>, <a href="turtlecoin-crypto_index.js.html#line633">line 633</a>
     </li></ul></dd>
     
 
@@ -6452,7 +7949,7 @@
 
         
 <div class="param-desc">
-    the public key
+    array consisting of [error, publicKey]
 </div>
 
 
@@ -6463,7 +7960,7 @@
     </dt>
     <dd>
         
-<span class="param-type">string</span>
+<span class="param-type">Array.&lt;(boolean|string)></span>
 
 
     </dd>
@@ -6497,7 +7994,7 @@
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Sep 22 2019 15:49:08 GMT-0400 (Eastern Daylight Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Mon Sep 23 2019 11:24:03 GMT-0400 (Eastern Daylight Time)
 </footer>
 
 <script> prettyPrint(); </script>
