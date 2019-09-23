@@ -147,6 +147,32 @@ describe('Wallets', () => {
     })
   })
 
+  describe('Message Signing', () => {
+    it('sign a string message', () => {
+      const signature = cnUtil.signMessage('this is a test message', 'TRTLuwWQ7dBCWnm3rwdLmtUbzMnJ3bJy4G851T184W8gf2f9zrsdC3rPLxKmtG5rmFfa91uXDYRUkYKZvrKNXzXqfKmVvSYVXkx', 'd4c7e338d7efe0468b6498dd2f96620fad6b103d1a70dea76bab4de9db9c0a0b')
+
+      assert((signature))
+    })
+
+    it('sign an object-based message', () => {
+      const signature = cnUtil.signMessage({ mac: 'deadbeef', amount: 10 }, 'TRTLuwWQ7dBCWnm3rwdLmtUbzMnJ3bJy4G851T184W8gf2f9zrsdC3rPLxKmtG5rmFfa91uXDYRUkYKZvrKNXzXqfKmVvSYVXkx', 'd4c7e338d7efe0468b6498dd2f96620fad6b103d1a70dea76bab4de9db9c0a0b')
+
+      assert((signature))
+    })
+
+    it('verify signature - string message', () => {
+      const isValid = cnUtil.verifyMessageSignature('this is a test message', 'TRTLuwWQ7dBCWnm3rwdLmtUbzMnJ3bJy4G851T184W8gf2f9zrsdC3rPLxKmtG5rmFfa91uXDYRUkYKZvrKNXzXqfKmVvSYVXkx', '9ef44c5b3ffe86e31b126e284227953bdb78714b40af4e43c66d4e4a72a3150096b2b8e6a974e5fbc5a6ed700381f5356e6f80ad0ca62b020382f37b00d4d401')
+
+      assert(isValid)
+    })
+
+    it('verify signature - object-based message', () => {
+      const isValid = cnUtil.verifyMessageSignature({ mac: 'deadbeef', amount: 10 }, 'TRTLuwWQ7dBCWnm3rwdLmtUbzMnJ3bJy4G851T184W8gf2f9zrsdC3rPLxKmtG5rmFfa91uXDYRUkYKZvrKNXzXqfKmVvSYVXkx', 'f111faac9365c62eaf016364e9db6ec50060f379e9b0e480ba1dc41993c3380f55a6f4b10bb3e1d18ee0aa139157ee657a451746e5f6358199a7425e4f65af0c')
+
+      assert(isValid)
+    })
+  })
+
   describe('Keys', () => {
     const testPrivateKey = '4a078e76cd41a3d3b534b83dc6f2ea2de500b653ca82273b7bfad8045d85a400'
     const testPublicKey = '7849297236cd7c0d6c69a3c8c179c038d3c1c434735741bb3c8995c3c9d6f2ac'

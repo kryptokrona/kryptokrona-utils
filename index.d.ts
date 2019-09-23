@@ -247,6 +247,38 @@ export class CryptoNote {
      * A method to convert relative offsets to absolute offsets
      */
     public relativeToAbsoluteOffsets(offsets: number[]): number[];
+
+    /**
+     * A primitive method to generate the signature of a message
+     */
+    public generateSignaturePrimitive(
+        hash: string,
+        publicKey: string,
+        privateKey: string): string;
+
+    /**
+     * A primitive method to verify the signature of a message
+     */
+    public verifySignaturePrimitive(
+        hash: string,
+        publicKey: string,
+        signature: string): boolean;
+
+    /**
+     * A method to generate the signature of a message
+     */
+    public signMessage(
+        message: any,
+        signerAddress: string,
+        privateSpendKey: string): string;
+
+    /**
+     * A method to verify the signature of a message
+     */
+    public verifyMessageSignature(
+        message: any,
+        signerAddress: string,
+        signature: string): boolean;
 }
 
 export interface CryptoNoteOptions {
