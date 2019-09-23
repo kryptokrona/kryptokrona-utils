@@ -17,6 +17,20 @@ console.log('Using Crypto: %s', TurtleCoinCrypto.type)
 describe('Cryptography', () => {
   const testdata = '0100fb8e8ac805899323371bb790db19218afd8db8e3755d8b90f39b3d5506a9abce4fa912244500000000ee8146d49fa93ee724deb57d12cbc6c6f3b924d946127c7a97418f9348828f0f02'
 
+  it('Check Key - Public Key', () => {
+    const key = '7849297236cd7c0d6c69a3c8c179c038d3c1c434735741bb3c8995c3c9d6f2ac'
+    const isValid = TurtleCoinCrypto.checkKey(key)
+
+    assert(isValid === true)
+  })
+
+  it('Check Key - Private Key', () => {
+    const key = '4a078e76cd41a3d3b534b83dc6f2ea2de500b653ca82273b7bfad8045d85a400'
+    const isValid = TurtleCoinCrypto.checkKey(key)
+
+    assert(isValid === false)
+  })
+
   it('Tree Hash', () => {
     const expectedTreeHash = 'dff9b4e047803822e97fb25bb9acb8320648954e15a6ddf6fa757873793c535e'
     const [err, treeHash] = TurtleCoinCrypto.tree_hash([
