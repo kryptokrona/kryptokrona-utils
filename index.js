@@ -12,14 +12,51 @@ const Block = require('./lib/block')
 const BlockTemplate = require('./lib/blocktemplate')
 const Crypto = require('./lib/turtlecoin-crypto')
 const CryptoNote = require('./lib/cryptonote')
+const EventEmitter = require('events')
 const LevinPacket = require('./lib/levinpacket')
 const Transaction = require('./lib/transaction')
 
-module.exports = {
-  Block,
-  BlockTemplate,
-  Crypto,
-  CryptoNote,
-  LevinPacket,
-  Transaction
+class TurtleCoinUtils extends EventEmitter {
+  constructor () {
+    super()
+
+    const preload = new Crypto()
+    const that = this
+
+    function check () {
+      if (!preload.isReady) {
+        setTimeout(check, 100)
+      } else {
+        that.emit('ready')
+      }
+    }
+
+    check()
+  }
+
+  get Block () {
+    return Block
+  }
+
+  get BlockTemplate () {
+    return BlockTemplate
+  }
+
+  get Crypto () {
+    return Crypto
+  }
+
+  get CryptoNote () {
+    return CryptoNote
+  }
+
+  get LevinPacket () {
+    return LevinPacket
+  }
+
+  get Transaction () {
+    return Transaction
+  }
 }
+
+module.exports = new TurtleCoinUtils()
