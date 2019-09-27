@@ -427,6 +427,7 @@ export interface Address {
     address: string;
     mnemonic: string;
     seed: string;
+    subWalletIndex: number;
 }
 
 export interface Keys {
