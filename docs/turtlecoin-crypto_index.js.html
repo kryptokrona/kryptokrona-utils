@@ -34,63 +34,75 @@
 
 'use strict'
 
+const types = {
+  UNKNOWN: 0,
+  NODEADDON: 1,
+  WASM: 2,
+  WASMJS: 3,
+  JS: 4
+}
+
+const moduleVars = {
+  crypto: null,
+  type: types.UNKNOWN
+}
+
 /**
  * Module of TurtleCoin Cryptographic Methods
  * @module Crypto
  * @class
  */
 class Crypto {
+  /**
+   * Initializes the module if a callback function is specified
+   */
   constructor () {
-    /**
-     * Whether the module is using native JS or WASM methods
-     * @type {boolean}
-     * @readonly
-     */
-    this.isNative = false
-
-    /**
-     * What type of underlying cryptographic library is being used
-     * @type {string}
-     * @readonly
-     */
-    this.type = 'unloaded'
-
-    this.crypto = loadNativeAddon()
-
-    if (this.crypto) {
-      this.type = 'c++'
+    if (!initialize()) {
+      throw new Error('Could not initialize underlying cryptographic library')
     }
+  }
 
-    if (!this.crypto &amp;&amp; typeof window !== 'undefined' &amp;&amp; typeof window.TurtleCoinCrypto !== 'undefined') {
-      this.crypto = loadBrowserWASM()
-
-      if (this.crypto) {
-        this.type = 'wasm'
-        this.isNative = true
-      }
+  /**
+   * What type of underlying cryptographic library is being used
+   * @type {string}
+   * @readonly
+   */
+  get type () {
+    switch (moduleVars.type) {
+      case types.NODEADDON:
+        return 'c++'
+      case types.WASM:
+        return 'wasm'
+      case types.WASMJS:
+        return 'wasmjs'
+      case types.JS:
+        return 'js'
+      default:
+        return 'unknown'
     }
+  }
 
-    if (!this.crypto &amp;&amp; typeof window !== 'undefined') {
-    /* If the there isn't a TurtleCoinCrypto WASM module
-       preloaded in the environment, then let's try to load
-       the WASM ourselves */
-      this.crypto = loadWASMJS()
-
-      if (this.crypto) {
-        this.type = 'wasmjs'
-        this.isNative = true
-      }
+  /**
+   * Whether the module is using native JS or WASM methods
+   * @type {boolean}
+   * @readonly
+   */
+  get isNative () {
+    switch (moduleVars.type) {
+      case types.NODEADDON:
+        return false
+      default:
+        return true
     }
+  }
 
-    if (!this.crypto) {
-      this.crypto = loadNativeJS()
-      if (this.crypto) {
-        this.type = 'js'
-        this.isNative = true
-      } else {
-        throw new Error('Could not load a core cryptography module')
-      }
-    }
+  /**
+   * Whether the module is loaded and ready
+   * @type {boolean}
+   * @readonly
+   */
+  get isReady () {
+    return (moduleVars.crypto !== null &amp;&amp; typeof moduleVars.crypto.cn_fast_hash === 'function')
   }
 
   /**
@@ -101,9 +113,9 @@ class Crypto {
   checkKey (key) {
     try {
       if (!this.isNative) {
-        return this.crypto.checkKey(key)
+        return moduleVars.crypto.checkKey(key)
       } else {
-        return this.crypto.checkKey(key)
+        return moduleVars.crypto.checkKey(key)
       }
     } catch (e) {
       return (!e)
@@ -121,10 +133,10 @@ class Crypto {
   checkRingSignatures (transactionPrefixHash, keyImage, inputKeys, signatures) {
     try {
       if (!this.isNative) {
-        return this.crypto.checkRingSignature(transactionPrefixHash, keyImage, inputKeys, signatures)
+        return moduleVars.crypto.checkRingSignature(transactionPrefixHash, keyImage, inputKeys, signatures)
       } else {
-        const cSigs = new this.crypto.VectorString()
-        const cInputKeys = new this.crypto.VectorString()
+        const cSigs = new moduleVars.crypto.VectorString()
+        const cInputKeys = new moduleVars.crypto.VectorString()
 
         inputKeys.forEach((key) => {
           cInputKeys.push_back(key)
@@ -134,7 +146,7 @@ class Crypto {
           cSigs.push_back(sig)
         })
 
-        return this.crypto.checkRingSignature(transactionPrefixHash, keyImage, cInputKeys, cSigs)
+        return moduleVars.crypto.checkRingSignature(transactionPrefixHash, keyImage, cInputKeys, cSigs)
       }
     } catch (e) {
       return (!e)
@@ -150,7 +162,7 @@ class Crypto {
    */
   checkSignature (hash, publicKey, signature) {
     try {
-      return this.crypto.checkSignature(hash, publicKey, signature)
+      return moduleVars.crypto.checkSignature(hash, publicKey, signature)
     } catch (e) {
       return (!e)
     }
@@ -164,9 +176,9 @@ class Crypto {
   cn_fast_hash (data) {
     try {
       if (!this.isNative) {
-        return this.crypto.cn_fast_hash(data)
+        return moduleVars.crypto.cn_fast_hash(data)
       } else {
-        const result = this.crypto.cn_fast_hash(data)
+        const result = moduleVars.crypto.cn_fast_hash(data)
 
         if (!result) {
           return [true, null]
@@ -189,9 +201,9 @@ class Crypto {
   derivePublicKey (derivation, outputIndex, publicKey) {
     try {
       if (!this.isNative) {
-        return this.crypto.derivePublicKey(derivation, outputIndex, publicKey)
+        return moduleVars.crypto.derivePublicKey(derivation, outputIndex, publicKey)
       } else {
-        const result = this.crypto.derivePublicKey(derivation, outputIndex, publicKey)
+        const result = moduleVars.crypto.derivePublicKey(derivation, outputIndex, publicKey)
 
         if (!result) {
           return [true, null]
@@ -214,9 +226,9 @@ class Crypto {
   deriveSecretKey (derivation, outputIndex, secretKey) {
     try {
       if (!this.isNative) {
-        return this.crypto.deriveSecretKey(derivation, outputIndex, secretKey)
+        return moduleVars.crypto.deriveSecretKey(derivation, outputIndex, secretKey)
       } else {
-        const result = this.crypto.deriveSecretKey(derivation, outputIndex, secretKey)
+        const result = moduleVars.crypto.deriveSecretKey(derivation, outputIndex, secretKey)
 
         if (!result) {
           return [true, null]
@@ -238,9 +250,9 @@ class Crypto {
   generateKeyDerivation (transactionPublicKey, privateViewKey) {
     try {
       if (!this.isNative) {
-        return this.crypto.generateKeyDerivation(transactionPublicKey, privateViewKey)
+        return moduleVars.crypto.generateKeyDerivation(transactionPublicKey, privateViewKey)
       } else {
-        const result = this.crypto.generateKeyDerivation(transactionPublicKey, privateViewKey)
+        const result = moduleVars.crypto.generateKeyDerivation(transactionPublicKey, privateViewKey)
 
         if (!result) {
           return [true, null]
@@ -262,9 +274,9 @@ class Crypto {
   generateKeyImage (publicKey, privateKey) {
     try {
       if (!this.isNative) {
-        return this.crypto.generateKeyImage(publicKey, privateKey)
+        return moduleVars.crypto.generateKeyImage(publicKey, privateKey)
       } else {
-        const result = this.crypto.generateKeyImage(publicKey, privateKey)
+        const result = moduleVars.crypto.generateKeyImage(publicKey, privateKey)
 
         if (!result) {
           return [true, null]
@@ -284,9 +296,9 @@ class Crypto {
   generateKeys () {
     try {
       if (!this.isNative) {
-        return this.crypto.generateKeys()
+        return moduleVars.crypto.generateKeys()
       } else {
-        const result = this.crypto.generateKeys()
+        const result = moduleVars.crypto.generateKeys()
 
         if (!result) {
           return [true, null]
@@ -310,9 +322,9 @@ class Crypto {
   generatePrivateViewKeyFromPrivateSpendKey (privateKey) {
     try {
       if (!this.isNative) {
-        return this.crypto.generatePrivateViewKeyFromPrivateSpendKey(privateKey)
+        return moduleVars.crypto.generatePrivateViewKeyFromPrivateSpendKey(privateKey)
       } else {
-        const result = this.crypto.generatePrivateViewKeyFromPrivateSpendKey(privateKey)
+        const result = moduleVars.crypto.generatePrivateViewKeyFromPrivateSpendKey(privateKey)
 
         if (!result) {
           return [true, null]
@@ -337,17 +349,17 @@ class Crypto {
   generateRingSignatures (transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex) {
     try {
       if (!this.isNative) {
-        return this.crypto.generateRingSignatures(transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex)
+        return moduleVars.crypto.generateRingSignatures(transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex)
       } else {
-        var cSigs = new this.crypto.VectorString()
-        const cInputKeys = new this.crypto.VectorString()
+        var cSigs = new moduleVars.crypto.VectorString()
+        const cInputKeys = new moduleVars.crypto.VectorString()
 
         inputKeys.forEach((key) => {
           cInputKeys.push_back(key)
         })
 
         try {
-          cSigs = this.crypto.generateRingSignatures(transactionPrefixHash, keyImage, cInputKeys, privateKey, realIndex)
+          cSigs = moduleVars.crypto.generateRingSignatures(transactionPrefixHash, keyImage, cInputKeys, privateKey, realIndex)
         } catch (e) {
           cSigs = e
           cSigs = false
@@ -378,9 +390,9 @@ class Crypto {
   generateSignature (hash, publicKey, privateKey) {
     try {
       if (!this.isNative) {
-        return this.crypto.generateSignature(hash, publicKey, privateKey)
+        return moduleVars.crypto.generateSignature(hash, publicKey, privateKey)
       } else {
-        const result = this.crypto.generateSignature(hash, publicKey, privateKey)
+        const result = moduleVars.crypto.generateSignature(hash, publicKey, privateKey)
 
         if (!result) {
           return [true, null]
@@ -401,9 +413,9 @@ class Crypto {
   generateViewKeysFromPrivateSpendKey (privateKey) {
     try {
       if (!this.isNative) {
-        return this.crypto.generateViewKeysFromPrivateSpendKey(privateKey)
+        return moduleVars.crypto.generateViewKeysFromPrivateSpendKey(privateKey)
       } else {
-        const result = this.crypto.generateViewKeysFromPrivateSpendKey(privateKey)
+        const result = moduleVars.crypto.generateViewKeysFromPrivateSpendKey(privateKey)
 
         if (!result) {
           return [true, null]
@@ -427,9 +439,9 @@ class Crypto {
   hashToEllipticCurve (hash) {
     try {
       if (!this.isNative) {
-        return this.crypto.hashToEllipticCurve(hash)
+        return moduleVars.crypto.hashToEllipticCurve(hash)
       } else {
-        const result = this.crypto.hashToEllipticCurve(hash)
+        const result = moduleVars.crypto.hashToEllipticCurve(hash)
 
         if (!result) {
           return [true, null]
@@ -450,9 +462,9 @@ class Crypto {
   hashToScalar (hash) {
     try {
       if (!this.isNative) {
-        return this.crypto.hashToScalar(hash)
+        return moduleVars.crypto.hashToScalar(hash)
       } else {
-        const result = this.crypto.hashToScalar(hash)
+        const result = moduleVars.crypto.hashToScalar(hash)
 
         if (!result) {
           return [true, null]
@@ -474,9 +486,9 @@ class Crypto {
   scalarmultKey (keyImageA, keyImageB) {
     try {
       if (!this.isNative) {
-        return this.crypto.scalarmultKey(keyImageA, keyImageB)
+        return moduleVars.crypto.scalarmultKey(keyImageA, keyImageB)
       } else {
-        const result = this.crypto.scalarmultKey(keyImageA, keyImageB)
+        const result = moduleVars.crypto.scalarmultKey(keyImageA, keyImageB)
 
         if (!result) {
           return [true, null]
@@ -497,9 +509,9 @@ class Crypto {
   scReduce32 (data) {
     try {
       if (!this.isNative) {
-        return this.crypto.scReduce32(data)
+        return moduleVars.crypto.scReduce32(data)
       } else {
-        const result = this.crypto.scReduce32(data)
+        const result = moduleVars.crypto.scReduce32(data)
 
         if (!result) {
           return [true, null]
@@ -520,9 +532,9 @@ class Crypto {
   secretKeyToPublicKey (privateKey) {
     try {
       if (!this.isNative) {
-        return this.crypto.secretKeyToPublicKey(privateKey)
+        return moduleVars.crypto.secretKeyToPublicKey(privateKey)
       } else {
-        const result = this.crypto.secretKeyToPublicKey(privateKey)
+        const result = moduleVars.crypto.secretKeyToPublicKey(privateKey)
 
         if (!result) {
           return [true, null]
@@ -543,15 +555,15 @@ class Crypto {
   tree_branch (arr) {
     try {
       if (!this.isNative) {
-        return this.crypto.tree_branch(arr)
+        return moduleVars.crypto.tree_branch(arr)
       } else {
-        const hashes = new this.crypto.VectorString()
+        const hashes = new moduleVars.crypto.VectorString()
 
         arr.forEach((item) => {
           hashes.push_back(item)
         })
 
-        const branches = this.crypto.tree_branch(hashes)
+        const branches = moduleVars.crypto.tree_branch(hashes)
 
         if (!branches) return [true, null]
 
@@ -576,9 +588,9 @@ class Crypto {
   tree_depth (count) {
     try {
       if (!this.isNative) {
-        return this.crypto.tree_depth(count)
+        return moduleVars.crypto.tree_depth(count)
       } else {
-        const result = this.crypto.tree_depth(count)
+        const result = moduleVars.crypto.tree_depth(count)
 
         if (typeof result !== 'number') {
           return [true, null]
@@ -599,15 +611,15 @@ class Crypto {
   tree_hash (arr) {
     try {
       if (!this.isNative) {
-        return this.crypto.tree_hash(arr)
+        return moduleVars.crypto.tree_hash(arr)
       } else {
-        const hashes = new this.crypto.VectorString()
+        const hashes = new moduleVars.crypto.VectorString()
 
         arr.forEach((item) => {
           hashes.push_back(item)
         })
 
-        const result = this.crypto.tree_hash(hashes)
+        const result = moduleVars.crypto.tree_hash(hashes)
 
         if (!result) {
           return [true, null]
@@ -630,15 +642,15 @@ class Crypto {
   tree_hash_from_branch (branches, leaf, path) {
     try {
       if (!this.isNative) {
-        return this.crypto.tree_hash_from_branch(branches, leaf, path)
+        return moduleVars.crypto.tree_hash_from_branch(branches, leaf, path)
       } else {
-        const _branches = new this.crypto.VectorString()
+        const _branches = new moduleVars.crypto.VectorString()
 
         branches.forEach((branch) => {
           _branches.push_back(branch)
         })
 
-        const result = this.crypto.tree_hash_from_branch(_branches, leaf, path.toString())
+        const result = moduleVars.crypto.tree_hash_from_branch(_branches, leaf, path.toString())
 
         if (!result) {
           return [true, null]
@@ -661,9 +673,9 @@ class Crypto {
   underivePublicKey (derivation, outputIndex, outputKey) {
     try {
       if (!this.isNative) {
-        return this.crypto.underivePublicKey(derivation, outputIndex, outputKey)
+        return moduleVars.crypto.underivePublicKey(derivation, outputIndex, outputKey)
       } else {
-        const result = this.crypto.underivePublicKey(derivation, outputIndex, outputKey)
+        const result = moduleVars.crypto.underivePublicKey(derivation, outputIndex, outputKey)
 
         if (!result) {
           return [true, null]
@@ -686,9 +698,9 @@ class Crypto {
   cn_slow_hash_v0 (data) {
     try {
       if (!this.isNative) {
-        return this.crypto.cn_slow_hash_v0(data)
+        return moduleVars.crypto.cn_slow_hash_v0(data)
       } else {
-        const result = this.crypto.cn_slow_hash_v0(data)
+        const result = moduleVars.crypto.cn_slow_hash_v0(data)
 
         if (!result) {
           return [true, null]
@@ -709,9 +721,9 @@ class Crypto {
   cn_slow_hash_v1 (data) {
     try {
       if (!this.isNative) {
-        return this.crypto.cn_slow_hash_v1(data)
+        return moduleVars.crypto.cn_slow_hash_v1(data)
       } else {
-        const result = this.crypto.cn_slow_hash_v1(data)
+        const result = moduleVars.crypto.cn_slow_hash_v1(data)
 
         if (!result) {
           return [true, null]
@@ -732,9 +744,9 @@ class Crypto {
   cn_slow_hash_v2 (data) {
     try {
       if (!this.isNative) {
-        return this.crypto.cn_slow_hash_v2(data)
+        return moduleVars.crypto.cn_slow_hash_v2(data)
       } else {
-        const result = this.crypto.cn_slow_hash_v2(data)
+        const result = moduleVars.crypto.cn_slow_hash_v2(data)
 
         if (!result) {
           return [true, null]
@@ -755,9 +767,9 @@ class Crypto {
   cn_lite_slow_hash_v0 (data) {
     try {
       if (!this.isNative) {
-        return this.crypto.cn_lite_slow_hash_v0(data)
+        return moduleVars.crypto.cn_lite_slow_hash_v0(data)
       } else {
-        const result = this.crypto.cn_lite_slow_hash_v0(data)
+        const result = moduleVars.crypto.cn_lite_slow_hash_v0(data)
 
         if (!result) {
           return [true, null]
@@ -778,9 +790,9 @@ class Crypto {
   cn_lite_slow_hash_v1 (data) {
     try {
       if (!this.isNative) {
-        return this.crypto.cn_lite_slow_hash_v1(data)
+        return moduleVars.crypto.cn_lite_slow_hash_v1(data)
       } else {
-        const result = this.crypto.cn_lite_slow_hash_v1(data)
+        const result = moduleVars.crypto.cn_lite_slow_hash_v1(data)
 
         if (!result) {
           return [true, null]
@@ -801,9 +813,9 @@ class Crypto {
   cn_lite_slow_hash_v2 (data) {
     try {
       if (!this.isNative) {
-        return this.crypto.cn_lite_slow_hash_v2(data)
+        return moduleVars.crypto.cn_lite_slow_hash_v2(data)
       } else {
-        const result = this.crypto.cn_lite_slow_hash_v2(data)
+        const result = moduleVars.crypto.cn_lite_slow_hash_v2(data)
 
         if (!result) {
           return [true, null]
@@ -824,9 +836,9 @@ class Crypto {
   cn_dark_slow_hash_v0 (data) {
     try {
       if (!this.isNative) {
-        return this.crypto.cn_dark_slow_hash_v0(data)
+        return moduleVars.crypto.cn_dark_slow_hash_v0(data)
       } else {
-        const result = this.crypto.cn_dark_slow_hash_v0(data)
+        const result = moduleVars.crypto.cn_dark_slow_hash_v0(data)
 
         if (!result) {
           return [true, null]
@@ -847,9 +859,9 @@ class Crypto {
   cn_dark_slow_hash_v1 (data) {
     try {
       if (!this.isNative) {
-        return this.crypto.cn_dark_slow_hash_v1(data)
+        return moduleVars.crypto.cn_dark_slow_hash_v1(data)
       } else {
-        const result = this.crypto.cn_dark_slow_hash_v1(data)
+        const result = moduleVars.crypto.cn_dark_slow_hash_v1(data)
 
         if (!result) {
           return [true, null]
@@ -870,9 +882,9 @@ class Crypto {
   cn_dark_slow_hash_v2 (data) {
     try {
       if (!this.isNative) {
-        return this.crypto.cn_dark_slow_hash_v2(data)
+        return moduleVars.crypto.cn_dark_slow_hash_v2(data)
       } else {
-        const result = this.crypto.cn_dark_slow_hash_v2(data)
+        const result = moduleVars.crypto.cn_dark_slow_hash_v2(data)
 
         if (!result) {
           return [true, null]
@@ -893,9 +905,9 @@ class Crypto {
   cn_dark_lite_slow_hash_v0 (data) {
     try {
       if (!this.isNative) {
-        return this.crypto.cn_dark_lite_slow_hash_v0(data)
+        return moduleVars.crypto.cn_dark_lite_slow_hash_v0(data)
       } else {
-        const result = this.crypto.cn_dark_lite_slow_hash_v0(data)
+        const result = moduleVars.crypto.cn_dark_lite_slow_hash_v0(data)
 
         if (!result) {
           return [true, null]
@@ -916,9 +928,9 @@ class Crypto {
   cn_dark_lite_slow_hash_v1 (data) {
     try {
       if (!this.isNative) {
-        return this.crypto.cn_dark_lite_slow_hash_v1(data)
+        return moduleVars.crypto.cn_dark_lite_slow_hash_v1(data)
       } else {
-        const result = this.crypto.cn_dark_lite_slow_hash_v1(data)
+        const result = moduleVars.crypto.cn_dark_lite_slow_hash_v1(data)
 
         if (!result) {
           return [true, null]
@@ -939,9 +951,9 @@ class Crypto {
   cn_dark_lite_slow_hash_v2 (data) {
     try {
       if (!this.isNative) {
-        return this.crypto.cn_dark_lite_slow_hash_v2(data)
+        return moduleVars.crypto.cn_dark_lite_slow_hash_v2(data)
       } else {
-        const result = this.crypto.cn_dark_lite_slow_hash_v2(data)
+        const result = moduleVars.crypto.cn_dark_lite_slow_hash_v2(data)
 
         if (!result) {
           return [true, null]
@@ -962,9 +974,9 @@ class Crypto {
   cn_turtle_slow_hash_v0 (data) {
     try {
       if (!this.isNative) {
-        return this.crypto.cn_turtle_slow_hash_v0(data)
+        return moduleVars.crypto.cn_turtle_slow_hash_v0(data)
       } else {
-        const result = this.crypto.cn_turtle_slow_hash_v0(data)
+        const result = moduleVars.crypto.cn_turtle_slow_hash_v0(data)
 
         if (!result) {
           return [true, null]
@@ -985,9 +997,9 @@ class Crypto {
   cn_turtle_slow_hash_v1 (data) {
     try {
       if (!this.isNative) {
-        return this.crypto.cn_turtle_slow_hash_v1(data)
+        return moduleVars.crypto.cn_turtle_slow_hash_v1(data)
       } else {
-        const result = this.crypto.cn_turtle_slow_hash_v1(data)
+        const result = moduleVars.crypto.cn_turtle_slow_hash_v1(data)
 
         if (!result) {
           return [true, null]
@@ -1008,9 +1020,9 @@ class Crypto {
   cn_turtle_slow_hash_v2 (data) {
     try {
       if (!this.isNative) {
-        return this.crypto.cn_turtle_slow_hash_v2(data)
+        return moduleVars.crypto.cn_turtle_slow_hash_v2(data)
       } else {
-        const result = this.crypto.cn_turtle_slow_hash_v2(data)
+        const result = moduleVars.crypto.cn_turtle_slow_hash_v2(data)
 
         if (!result) {
           return [true, null]
@@ -1031,9 +1043,9 @@ class Crypto {
   cn_turtle_lite_slow_hash_v0 (data) {
     try {
       if (!this.isNative) {
-        return this.crypto.cn_turtle_lite_slow_hash_v0(data)
+        return moduleVars.crypto.cn_turtle_lite_slow_hash_v0(data)
       } else {
-        const result = this.crypto.cn_turtle_lite_slow_hash_v0(data)
+        const result = moduleVars.crypto.cn_turtle_lite_slow_hash_v0(data)
 
         if (!result) {
           return [true, null]
@@ -1054,9 +1066,9 @@ class Crypto {
   cn_turtle_lite_slow_hash_v1 (data) {
     try {
       if (!this.isNative) {
-        return this.crypto.cn_turtle_lite_slow_hash_v1(data)
+        return moduleVars.crypto.cn_turtle_lite_slow_hash_v1(data)
       } else {
-        const result = this.crypto.cn_turtle_lite_slow_hash_v1(data)
+        const result = moduleVars.crypto.cn_turtle_lite_slow_hash_v1(data)
 
         if (!result) {
           return [true, null]
@@ -1077,9 +1089,9 @@ class Crypto {
   cn_turtle_lite_slow_hash_v2 (data) {
     try {
       if (!this.isNative) {
-        return this.crypto.cn_turtle_lite_slow_hash_v2(data)
+        return moduleVars.crypto.cn_turtle_lite_slow_hash_v2(data)
       } else {
-        const result = this.crypto.cn_turtle_lite_slow_hash_v2(data)
+        const result = moduleVars.crypto.cn_turtle_lite_slow_hash_v2(data)
 
         if (!result) {
           return [true, null]
@@ -1101,9 +1113,9 @@ class Crypto {
   cn_soft_shell_slow_hash_v0 (data, height) {
     try {
       if (!this.isNative) {
-        return this.crypto.cn_soft_shell_slow_hash_v0(data, height)
+        return moduleVars.crypto.cn_soft_shell_slow_hash_v0(data, height)
       } else {
-        const result = this.crypto.cn_soft_shell_slow_hash_v0(data, height)
+        const result = moduleVars.crypto.cn_soft_shell_slow_hash_v0(data, height)
 
         if (!result) {
           return [true, null]
@@ -1125,9 +1137,9 @@ class Crypto {
   cn_soft_shell_slow_hash_v1 (data, height) {
     try {
       if (!this.isNative) {
-        return this.crypto.cn_soft_shell_slow_hash_v1(data, height)
+        return moduleVars.crypto.cn_soft_shell_slow_hash_v1(data, height)
       } else {
-        const result = this.crypto.cn_soft_shell_slow_hash_v1(data, height)
+        const result = moduleVars.crypto.cn_soft_shell_slow_hash_v1(data, height)
 
         if (!result) {
           return [true, null]
@@ -1149,9 +1161,9 @@ class Crypto {
   cn_soft_shell_slow_hash_v2 (data, height) {
     try {
       if (!this.isNative) {
-        return this.crypto.cn_soft_shell_slow_hash_v2(data, height)
+        return moduleVars.crypto.cn_soft_shell_slow_hash_v2(data, height)
       } else {
-        const result = this.crypto.cn_soft_shell_slow_hash_v2(data, height)
+        const result = moduleVars.crypto.cn_soft_shell_slow_hash_v2(data, height)
 
         if (!result) {
           return [true, null]
@@ -1172,9 +1184,9 @@ class Crypto {
   chukwa_slow_hash (data) {
     try {
       if (!this.isNative) {
-        return this.crypto.chukwa_slow_hash(data)
+        return moduleVars.crypto.chukwa_slow_hash(data)
       } else {
-        const result = this.crypto.chukwa_slow_hash(data)
+        const result = moduleVars.crypto.chukwa_slow_hash(data)
 
         if (!result) {
           return [true, null]
@@ -1188,70 +1200,87 @@ class Crypto {
   }
 }
 
-function loadNativeAddon () {
-  var Self = false
+function initialize () {
+  if (moduleVars.crypto === null) {
+    if (loadNativeAddon()) return true
+    if (loadBrowserWASM()) return true
+    if (loadWASMJS()) return true
+    if (loadNativeJS()) return true
 
-  try {
-    Self = require('turtlecoin-crypto')
-    if (Object.getOwnPropertyNames(Self).length === 0) {
-      throw new Error('Could not load')
-    }
-  } catch (e) {
-    Self = e
-    Self = false
+    return false
+  } else {
+    return true
   }
-
-  return Self
-}
-
-function loadNativeJS () {
-  var Self = false
-
-  try {
-    Self = require('./turtlecoin-crypto.js')()
-    if (Object.getOwnPropertyNames(Self).length === 0) {
-      throw new Error('Could not load')
-    }
-  } catch (e) {
-    Self = e
-    Self = false
-  }
-
-  return Self
 }
 
 function loadBrowserWASM () {
-  var Self = false
+  if (typeof window === 'undefined') return false
 
   try {
-    Self = window.TurtleCoinCrypto()
-    if (Object.getOwnPropertyNames(Self).length === 0) {
-      throw new Error('Could not load')
-    }
-  } catch (e) {
-    Self = e
-    Self = false
-  }
+    const Self = window.TurtleCoinCrypto()
 
-  return Self
+    if (Object.getOwnPropertyNames(Self).length === 0) throw new Error('Could not load')
+
+    if (typeof Self.cn_fast_hash === 'undefined') throw new Error('Could not find required method')
+
+    moduleVars.crypto = Self
+    moduleVars.type = types.WASM
+
+    return true
+  } catch (e) {
+    return false
+  }
+}
+
+function loadNativeAddon () {
+  try {
+    const Self = require('turtlecoin-crypto')
+
+    if (Object.getOwnPropertyNames(Self).length === 0) throw new Error('Could not load')
+
+    if (typeof Self.cn_fast_hash === 'undefined') throw new Error('Could not find required method')
+
+    moduleVars.crypto = Self
+    moduleVars.type = types.NODEADDON
+
+    return true
+  } catch (e) {
+    return false
+  }
+}
+
+function loadNativeJS () {
+  try {
+    const Self = require('./turtlecoin-crypto.js')()
+
+    if (Object.getOwnPropertyNames(Self).length === 0) throw new Error('Could not load')
+
+    if (typeof Self.cn_fast_hash === 'undefined') throw new Error('Could not find required method')
+
+    moduleVars.crypto = Self
+    moduleVars.type = types.JS
+
+    return true
+  } catch (e) {
+    return false
+  }
 }
 
 function loadWASMJS () {
   if (typeof window === 'undefined') return false
 
-  var Self = false
-
   try {
-    Self = require('./turtlecoin-crypto-wasm.js')()
-    if (Object.getOwnPropertyNames(Self).length === 0) {
-      throw new Error('Could not load')
-    }
-  } catch (e) {
-    Self = e
-    Self = false
-  }
+    const Self = require('./turtlecoin-crypto-wasm.js')()
 
-  return Self
+    if (Object.getOwnPropertyNames(Self).length === 0) throw new Error('Could not load')
+
+    moduleVars.crypto = Self
+    moduleVars.type = types.WASMJS
+
+    return true
+  } catch (e) {
+    return false
+  }
 }
 
 module.exports = Crypto
@@ -1265,13 +1294,13 @@ module.exports = Crypto
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Externals</h3><ul><li><a href="external-Crypto.html">Crypto</a></li></ul><h3>Classes</h3><ul><li><a href="Block.html">Block</a></li><li><a href="BlockTemplate.html">BlockTemplate</a></li><li><a href="Crypto.html">Crypto</a></li><li><a href="CryptoNote.html">CryptoNote</a></li><li><a href="LevinPacket.html">LevinPacket</a></li><li><a href="Transaction.html">Transaction</a></li></ul><h3><a href="global.html">Global</a></h3>
+    <h2><a href="index.html">Home</a></h2><h3>Externals</h3><ul><li><a href="external-Crypto.html">Crypto</a></li></ul><h3>Classes</h3><ul><li><a href="Block.html">Block</a></li><li><a href="BlockTemplate.html">BlockTemplate</a></li><li><a href="Crypto.html">Crypto</a></li><li><a href="CryptoNote.html">CryptoNote</a></li><li><a href="LevinPacket.html">LevinPacket</a></li><li><a href="Transaction.html">Transaction</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Mon Sep 23 2019 11:24:03 GMT-0400 (Eastern Daylight Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Thu Oct 31 2019 18:26:12 GMT-0400 (Eastern Daylight Time)
 </footer>
 
 <script> prettyPrint(); </script>
