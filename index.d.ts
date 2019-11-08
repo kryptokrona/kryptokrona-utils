@@ -189,7 +189,8 @@ export class CryptoNote {
         mixin: number,
         feeAmount: number,
         paymentId?: string,
-        unlockTime?: number): CreatedTransaction;
+        unlockTime?: number,
+        extra?: any): CreatedTransaction;
 
     /**
      * Creates a valid transaction to be submitted to the network for sending.
@@ -202,7 +203,8 @@ export class CryptoNote {
         mixin: number,
         feeAmount: number,
         paymentId?: string,
-        unlockTime?: number): Promise<CreatedTransaction>;
+        unlockTime?: number,
+        extra?: any): Promise<CreatedTransaction>;
 
     /**
      * Converts an amount in atomic units, to a human friendly representation.
