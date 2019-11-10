@@ -197,6 +197,31 @@ class Transaction {
   }
 
   /**
+   * The hexadecimal representation of the transaction extra data
+   * @type {string}
+   * @readonly
+   */
+  get extraData () {
+    var extraData = null
+
+    var extra = this.extra
+
+    if (!Array.isArray(extra)) {
+      extra = extraFromBlob(extra)
+    }
+
+    extra.forEach(tag => {
+      if (tag.tag === 2) {
+        tag.nonces.forEach(nonce => {
+          if (nonce.tag === 127) extraData = nonce.data
+        })
+      }
+    })
+
+    return extraData
+  }
+
+  /**
    * The transaction fee of the transaction
    * @type {number}
    * @readonly
@@ -240,6 +265,31 @@ class Transaction {
   }
 
   /**
+   * The hexadecimal representation of the transaction payment ID
+   * @type {string}
+   * @readonly
+   */
+  get paymentId () {
+    var paymentId = null
+
+    var extra = this.extra
+
+    if (!Array.isArray(extra)) {
+      extra = extraFromBlob(extra)
+    }
+
+    extra.forEach(tag => {
+      if (tag.tag === 2) {
+        tag.nonces.forEach(nonce => {
+          if (nonce.tag === 0) paymentId = nonce.paymentId
+        })
+      }
+    })
+
+    return paymentId
+  }
+
+  /**
    * The hexadecimal representation of the transaction prefix
    * @type {string}
    * @readonly
@@ -271,39 +321,75 @@ class Transaction {
   }
 
   /**
-   * Adds a transaction public key to the Transaction's extra information
-   * @param {string} publicKey - the public key of the transaction
-   * @returns {boolean} if succeeded
+   * The hexadecimal representation of the transction public key
+   * @type {string}
+   * @readonly
    */
-  addPublicKey (publicKey) {
-    /* This method only works if extra is an array of tags, if it's free form
-     data via a hexadecimal string, we cannot won't be touching the free form
-     string */
-    if (!Array.isArray(this.extra)) throw new Error('Transaction Extra must ben an array of tags')
+  get publicKey () {
+    var publicKey = null
 
-    if (!isHex64(publicKey)) throw new Error('Transaction Public Key must 64 hexadecimal characters')
+    var extra = this.extra
 
-    /* Delete any previous public key tags from
-     the current extra data */
-    const extra = []
-
-    this.extra.forEach((tag) => {
-      if (tag.tag !== 1) extra.push(tag)
-    })
-
-    this.extra = extra
-
-    /* Build our public key tag and add to extra */
-    const extraTag = {
-      tag: 1,
-      publicKey: publicKey
+    if (!Array.isArray(extra)) {
+      extra = extraFromBlob(extra)
     }
 
-    /* Add the new public key tag to the extra array */
-    this.extra.push(extraTag)
+    extra.forEach(tag => {
+      if (tag.tag === 1) {
+        publicKey = tag.publicKey
+      }
+    })
 
-    /* Also store it on the transaction keys property */
-    this.transactionKeys.publicKey = publicKey
+    return publicKey
+  }
+
+  /**
+   * Adds a arbitrary data to the Transaction's extra information
+   * @param {Buffer|string} data - the data to add
+   * @returns {boolean} if succeeded
+   */
+  addExtraData (data) {
+    if (!Array.isArray(this.extra)) throw new Error('Transaction Extra must ben an array of tags')
+
+    /* rebuild our extra tag without any current nonce
+       extra information and add ours at the end */
+    const extra = []
+    var found = false
+
+    const extraData = new Writer()
+    extraData.write(data)
+
+    this.extra.forEach((tag) => {
+      if (tag.tag !== 2) return extra.push(tag)
+
+      const nonceTags = []
+
+      tag.nonces.forEach((nonceTag) => {
+        if (nonceTag.tag !== 127) nonceTags.push(nonceTag)
+      })
+
+      nonceTags.push({
+        tag: 127,
+        data: extraData.blob
+      })
+
+      nonceTags.sort((a, b) => (a.tag > b.tag) ? 1 : -1)
+
+      extra.push({
+        tag: 2,
+        nonces: nonceTags
+      })
+
+      found = true
+    })
+
+    if (!found) {
+      extra.push({ tag: 2, nonces: [{ tag: 127, data: extraData.blob }] })
+    }
+
+    extra.sort((a, b) => (a.tag > b.tag) ? 1 : -1)
+
+    this.extra = extra
 
     return true
   }
@@ -315,14 +401,14 @@ class Transaction {
    */
   addPaymentId (paymentId) {
     /* This method only works if extra is an array of tags, if it's free form
-     data via a hexadecimal string, we cannot won't be touching the free form
-     string */
+       data via a hexadecimal string, we cannot won't be touching the free form
+       string */
     if (!Array.isArray(this.extra)) throw new Error('Transaction Extra must ben an array of tags')
 
     if (!isHex64(paymentId)) throw new Error('Payment ID must be 64 hexadecimal characters')
 
     /* rebuild our extra tag without any current nonce
-     payment id information and add ours at the end */
+       payment id information and add ours at the end */
     const extra = []
     var found = false
 
@@ -340,7 +426,12 @@ class Transaction {
         paymentId: paymentId
       })
 
-      extra.push(nonceTags)
+      nonceTags.sort((a, b) => (a.tag > b.tag) ? 1 : -1)
+
+      extra.push({
+        tag: 2,
+        nonces: nonceTags
+      })
 
       found = true
     })
@@ -349,7 +440,49 @@ class Transaction {
       extra.push({ tag: 2, nonces: [{ tag: 0, paymentId: paymentId }] })
     }
 
+    extra.sort((a, b) => (a.tag > b.tag) ? 1 : -1)
+
     this.extra = extra
+
+    return true
+  }
+
+  /**
+   * Adds a transaction public key to the Transaction's extra information
+   * @param {string} publicKey - the public key of the transaction
+   * @returns {boolean} if succeeded
+   */
+  addPublicKey (publicKey) {
+    /* This method only works if extra is an array of tags, if it's free form
+       data via a hexadecimal string, we cannot won't be touching the free form
+       string */
+    if (!Array.isArray(this.extra)) throw new Error('Transaction Extra must ben an array of tags')
+
+    if (!isHex64(publicKey)) throw new Error('Transaction Public Key must 64 hexadecimal characters')
+
+    /* Delete any previous public key tags from
+       the current extra data */
+    const extra = []
+
+    this.extra.forEach((tag) => {
+      if (tag.tag !== 1) extra.push(tag)
+    })
+
+    this.extra = extra
+
+    /* Build our public key tag and add to extra */
+    const extraTag = {
+      tag: 1,
+      publicKey: publicKey
+    }
+
+    /* Add the new public key tag to the extra array */
+    this.extra.push(extraTag)
+
+    extra.sort((a, b) => (a.tag > b.tag) ? 1 : -1)
+
+    /* Also store it on the transaction keys property */
+    this.transactionKeys.publicKey = publicKey
 
     return true
   }
@@ -527,7 +660,7 @@ function extraToBlob (extras) {
     extras.forEach((extra) => {
       /* Write out the tag */
       writer.writeVarint(extra.tag)
-      var data
+      var data, nonceData
 
       /* Figure out which tag we're working with */
       switch (extra.tag) {
@@ -545,6 +678,14 @@ function extraToBlob (extras) {
             switch (nonce.tag) {
               case 0:
                 data.writeHash(nonce.paymentId)
+                break
+              case 127:
+                /* Compose the extra nonce data for writing */
+                nonceData = new Writer()
+                nonceData.write(nonce.data)
+                /* Write out the length of the information and finally the data */
+                data.writeVarint(nonceData.length)
+                data.writeHex(nonceData.blob)
                 break
               default:
                 throw new Error('Unhandled transaction nonce data')
@@ -610,6 +751,9 @@ function extraFromBlob (blob) {
             case 0:
               nonceTag.paymentId = nonceReader.nextHash()
               break
+            case 127:
+              nonceTag.data = Buffer.from(nonceReader.nextBytes(nonceReader.nextVarint())).toString('hex')
+              break
             default:
               throw new Error('Unhandled transaction nonce data')
           }
@@ -658,7 +802,7 @@ module.exports = Transaction
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Thu Oct 31 2019 18:26:12 GMT-0400 (Eastern Daylight Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Nov 10 2019 12:35:38 GMT-0500 (Eastern Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>

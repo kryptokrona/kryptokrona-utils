@@ -567,6 +567,78 @@
 
         
             
+<h4 class="name" id="extraData"><span class="type-signature">(readonly) </span>extraData<span class="type-signature"> :string</span></h4>
+
+
+
+
+<div class="description">
+    The hexadecimal representation of the transaction extra data
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">string</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="transaction.js.html">transaction.js</a>, <a href="transaction.js.html#line176">line 176</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
 <h4 class="name" id="fee"><span class="type-signature">(readonly) </span>fee<span class="type-signature"> :number</span></h4>
 
 
@@ -621,7 +693,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="transaction.js.html">transaction.js</a>, <a href="transaction.js.html#line176">line 176</a>
+        <a href="transaction.js.html">transaction.js</a>, <a href="transaction.js.html#line201">line 201</a>
     </li></ul></dd>
     
 
@@ -693,7 +765,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="transaction.js.html">transaction.js</a>, <a href="transaction.js.html#line197">line 197</a>
+        <a href="transaction.js.html">transaction.js</a>, <a href="transaction.js.html#line222">line 222</a>
     </li></ul></dd>
     
 
@@ -927,6 +999,78 @@
 
         
             
+<h4 class="name" id="paymentId"><span class="type-signature">(readonly) </span>paymentId<span class="type-signature"> :string</span></h4>
+
+
+
+
+<div class="description">
+    The hexadecimal representation of the transaction payment ID
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">string</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="transaction.js.html">transaction.js</a>, <a href="transaction.js.html#line244">line 244</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
 <h4 class="name" id="prefix"><span class="type-signature">(readonly) </span>prefix<span class="type-signature"> :string</span></h4>
 
 
@@ -981,7 +1125,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="transaction.js.html">transaction.js</a>, <a href="transaction.js.html#line219">line 219</a>
+        <a href="transaction.js.html">transaction.js</a>, <a href="transaction.js.html#line269">line 269</a>
     </li></ul></dd>
     
 
@@ -1053,7 +1197,79 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="transaction.js.html">transaction.js</a>, <a href="transaction.js.html#line228">line 228</a>
+        <a href="transaction.js.html">transaction.js</a>, <a href="transaction.js.html#line278">line 278</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="publicKey"><span class="type-signature">(readonly) </span>publicKey<span class="type-signature"> :string</span></h4>
+
+
+
+
+<div class="description">
+    The hexadecimal representation of the transction public key
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">string</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="transaction.js.html">transaction.js</a>, <a href="transaction.js.html#line300">line 300</a>
     </li></ul></dd>
     
 
@@ -1307,6 +1523,168 @@
     
 
     
+    <h4 class="name" id="addExtraData"><span class="type-signature"></span>addExtraData<span class="signature">(data)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Adds a arbitrary data to the Transaction's extra information
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Buffer</span>
+|
+
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">the data to add</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="transaction.js.html">transaction.js</a>, <a href="transaction.js.html#line323">line 323</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    if succeeded
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
     <h4 class="name" id="addPaymentId"><span class="type-signature"></span>addPaymentId<span class="signature">(paymentId)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
     
 
@@ -1408,7 +1786,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="transaction.js.html">transaction.js</a>, <a href="transaction.js.html#line288">line 288</a>
+        <a href="transaction.js.html">transaction.js</a>, <a href="transaction.js.html#line374">line 374</a>
     </li></ul></dd>
     
 
@@ -1567,7 +1945,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="transaction.js.html">transaction.js</a>, <a href="transaction.js.html#line250">line 250</a>
+        <a href="transaction.js.html">transaction.js</a>, <a href="transaction.js.html#line427">line 427</a>
     </li></ul></dd>
     
 
@@ -2474,7 +2852,7 @@
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Thu Oct 31 2019 18:26:12 GMT-0400 (Eastern Daylight Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Nov 10 2019 12:35:38 GMT-0500 (Eastern Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>
