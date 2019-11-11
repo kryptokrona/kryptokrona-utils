@@ -281,6 +281,17 @@ export class CryptoNote {
         message: any,
         signerAddress: string,
         signature: string): boolean;
+
+    /**
+     * A method to create a deterministic subwallet from 
+     * a given private key.
+     */
+    public createSubWalletFromPrivateSpendKey(
+        privateSpendKey: string,
+        subWalletIndex?: number,
+        lang?: string,
+        addressPrefix?: number
+    ): Address;
 }
 
 export interface CryptoNoteOptions {
@@ -425,8 +436,8 @@ export interface Address {
     spend: Keys;
     view: Keys;
     address: string;
-    mnemonic: string;
-    seed: string;
+    mnemonic: string | null;
+    seed: string | null;
     subWalletIndex: number;
 }
 
