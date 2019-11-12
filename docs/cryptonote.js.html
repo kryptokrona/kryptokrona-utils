@@ -1361,19 +1361,17 @@ function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmo
           srcKeys.push(out.key)
         })
 
-        const sigPromise = Promise.resolve(generateRingSignature(
-          txPrefixHash, txInput.keyImage, srcKeys, txInput.input.privateEphemeral, txInput.realOutputIndex
-        )).then((sigs) => {
-          tx.signatures.push(sigs)
-        })
-
-        sigPromises.push(sigPromise)
+        sigPromises.push(Promise.resolve(generateRingSignatures(
+          txPrefixHash, txInput.keyImage, srcKeys, txInput.input.privateEphemeral, txInput.realOutputIndex, _async
+        )))
       }
 
       /* Wait for all the sigs to get created and added, then return the tx */
-      return Promise.all(sigPromises).then(() => {
-        return tx
-      })
+      return Promise.all(sigPromises)
+        .then((sigs) => {
+          tx.signatures = sigs
+          return tx
+        })
     })
   } else {
     transactionOutputs.outputs.forEach((output) => {
@@ -1390,7 +1388,7 @@ function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmo
         srcKeys.push(out.key)
       })
 
-      const sigs = generateRingSignature(txPrefixHash, txInput.keyImage, srcKeys, txInput.input.privateEphemeral, txInput.realOutputIndex)
+      const sigs = generateRingSignatures(txPrefixHash, txInput.keyImage, srcKeys, txInput.input.privateEphemeral, txInput.realOutputIndex, _async)
       tx.signatures.push(sigs)
     }
 
@@ -1598,7 +1596,63 @@ function generateKeys (seed) {
   }
 }
 
-function generateRingSignature (transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex) {
+function checkRingSignatures (transactionPrefixHash, keyImage, inputKeys, signatures) {
+  if (!isHex64(transactionPrefixHash)) {
+    throw new Error('Invalid transaction prefix hash format')
+  }
+
+  if (!isHex64(keyImage)) {
+    throw new Error('Invalid Key Image format')
+  }
+
+  if (!Array.isArray(inputKeys)) {
+    throw new Error('inputKeys must be an array')
+  }
+
+  if (!Array.isArray(signatures)) {
+    throw new Error('signatures must be an array')
+  }
+
+  if (userCryptoFunctions.checkRingSignatures) {
+    return userCryptoFunctions.checkRingSignatures(transactionPrefixHash, keyImage, inputKeys, signatures)
+  } else {
+    return TurtleCoinCrypto.checkRingSignatures(transactionPrefixHash, keyImage, inputKeys, signatures)
+  }
+}
+
+function generateRingSignatures (transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex, _async) {
+  var signatures
+
+  if (_async) {
+    return Promise.resolve(generateRingSignaturesPrimitive(transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex))
+      .then(sigs => {
+        signatures = sigs
+
+        return Promise.resolve(checkRingSignatures(transactionPrefixHash, keyImage, inputKeys, sigs))
+      })
+      .then(valid => {
+        if (valid) return signatures
+
+        throw new Error('Could not generate ring signatures')
+      })
+  } else {
+    signatures = generateRingSignaturesPrimitive(transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex)
+
+    const validSigs = checkRingSignatures(transactionPrefixHash, keyImage, inputKeys, signatures)
+
+    if (!validSigs) {
+      throw new Error('Could not verify generated ring signatures')
+    }
+
+    return signatures
+  }
+}
+
+function generateRingSignaturesPrimitive (transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex) {
+  if (!isHex64(transactionPrefixHash)) {
+    throw new Error('Invalid transaction prefix hash format')
+  }
+
   if (!isHex64(keyImage)) {
     throw new Error('Invalid Key Image format')
   }
@@ -1607,39 +1661,23 @@ function generateRingSignature (transactionPrefixHash, keyImage, inputKeys, priv
     throw new Error('Invalid secret key format')
   }
 
-  if (!isHex64(transactionPrefixHash)) {
-    throw new Error('Invalid transaction prefix hash format')
+  if (!Array.isArray(inputKeys)) {
+    throw new Error('inputKeys must be an array')
   }
 
   if (realIndex >= inputKeys.length || realIndex &lt; 0) {
     throw new Error('Invalid realIndex supplied')
   }
 
-  var signatures
-
   if (userCryptoFunctions.generateRingSignatures) {
-    signatures = userCryptoFunctions.generateRingSignatures(transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex)
+    return userCryptoFunctions.generateRingSignatures(transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex)
   } else {
     const [err, sigs] = TurtleCoinCrypto.generateRingSignatures(transactionPrefixHash, keyImage, inputKeys, privateKey, realIndex)
 
-    if (err) return new Error('Could not generate ring signatures')
+    if (err) throw new Error('Could not generate ring signatures')
 
-    signatures = sigs
+    return sigs
   }
-
-  var validSigs = false
-
-  if (userCryptoFunctions.checkRingSignatures) {
-    validSigs = userCryptoFunctions.checkRingSignatures(transactionPrefixHash, keyImage, inputKeys, signatures)
-  } else {
-    validSigs = TurtleCoinCrypto.checkRingSignatures(transactionPrefixHash, keyImage, inputKeys, signatures)
-  }
-
-  if (!validSigs) {
-    return new Error('Could not verify generated ring signatures')
-  }
-
-  return signatures
 }
 
 function generateSignature (digestHash, publicKey, privateKey) {
@@ -1857,7 +1895,7 @@ module.exports = CryptoNote
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Nov 10 2019 12:35:38 GMT-0500 (Eastern Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Mon Nov 11 2019 19:02:06 GMT-0500 (Eastern Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>
