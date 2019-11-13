@@ -303,6 +303,11 @@ export interface CryptoNoteOptions {
      * The default fee to use on a transaction when not specified.
      */
     defaultNetworkFee?: number;
+    
+    /*
+     * The max output size in atomic units to create in transactions
+     */
+    maximumOutputAmount?: number;
 
     /**
      * The major block number where merged mining was activated
@@ -357,12 +362,34 @@ export interface CryptoNoteOptions {
                               inputKeys: string[],
                               privateKey: string,
                               realIndex: number) => string[];
+    
+    /**
+     * A replacement function for the JS/C++ checkRingSignatures.
+     */
+    checkRingSignatures?: (transactionPrefixHash: string,
+                           keyImage: string,
+                           publicKeys: string[],
+                           signatures: string[]) => boolean;
 
     /**
      * A replacement function for the JS/C++ generateKeyDerivation.
      */
     generateKeyDerivation?: (transactionPublicKey: string,
                              privateViewKey: string) => string;
+    
+    /**
+     * A replacement function for the JS/C++ checkSignature.
+     */
+    checkSignature?: (digestHash: string,
+                      publicKey: string,
+                      signature: string) => boolean;
+    
+    /**
+     * A replacement function for the JS/C++ generateSignature.
+     */
+    generateSignature?: (digestHash: string,
+                         publicKey: string,
+                         privateKey: string) => [boolean, string];
 }
 
 export interface OutputToScan {
