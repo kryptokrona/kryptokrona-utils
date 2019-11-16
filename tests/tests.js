@@ -234,6 +234,22 @@ describe('SubWallets', () => {
     assert(baseWallet.spend.privateKey, subWallets[0].spend.privateKey)
   })
 
+  it('SubWallets #1 is correct', () => {
+    assert(subWallets[1].spend.privateKey === 'c55cbe4fd1c49dca5958fa1c7b9212c2dbf3fd5bfec84de741d434056e298600')
+  })
+
+  it('SubWallets #2 is correct', () => {
+    assert(subWallets[2].spend.privateKey === '9813c40428ed9b380a2f72bac1374a9d3852a974b0527e003cbc93afab764d01')
+  })
+
+  it('SubWallets #64 is correct', () => {
+    assert(subWallets[3].spend.privateKey === '29c2afed13271e2bb3321c2483356fd8798f2709af4de3906b6627ec71727108')
+  })
+
+  it('SubWallets #65 is correct', () => {
+    assert(subWallets[4].spend.privateKey === '0c6b5fff72260832558e35c38e690072503211af065056862288dc7fd992350a')
+  })
+
   it('Subwallet #0 does not match any other subwallets', () => {
     for (var i = 1; i < subWallets.length; i++) {
       assert(subWallets[0].spend.privateKey !== subWallets[i].spend.privateKey)
