@@ -112,6 +112,14 @@ const CURRENT_TX_VERSION = 1
  */
 
 /**
+ * A user-defined generate deterministic spend keys method
+ * @function external:Crypto.GenerateDeterministicSubwalletKeys
+ * @param {string} basePrivateSpendKey - the base wallet private spend key
+ * @param {number} walletIndex - the subwallet index number
+ * @returns {CryptoNote.KeyPair} - the subwallet private and public spend keys
+ */
+
+/**
  * A user-defined generate key derivation method
  * @function external:Crypto.GenerateKeyDerivation
  * @param {string} transactionPublicKey - the transaction public key
@@ -179,6 +187,7 @@ class CryptoNote {
    * @property {external:Crypto.CNFastHash} [cnFastHash] - A user-defined CryptoNight Fast hash method
    * @property {external:Crypto.DerivePublicKey} [derivePublicKey] - A user-defined derive public key method
    * @property {external:Crypto.DeriveSecretKey} [deriveSecretKey] - A user-defined derive secret key method
+   * @property {external:Crypto.GenerateDeterministicSubwalletKeys} [generateDeterministicSubwalletKeys] - A user-defined generate deterministic subwallet keys method
    * @property {external:Crypto.GenerateKeyDerivation} [generateKeyDerivation] - A user-defined generate key derivation method
    * @property {external:Crypto.GenerateKeyImage} [generateKeyImage] - A user-defined generate key image method
    * @property {external:Crypto.GenerateRingSignatures} [generateRingSignatures] - A user-defined generate ring signatures method
@@ -226,6 +235,7 @@ class CryptoNote {
    * @property {string} address - The Base58 encoded wallet address
    * @property {string} mnemonic - The wallet mnemonic phrase
    * @property {string} seed - The wallet seed
+   * @property {number} subWalletIndex - the subwallet index number
    */
 
   /**
@@ -338,6 +348,10 @@ class CryptoNote {
 
       if (typeof config.checkRingSignatures === 'function') {
         userCryptoFunctions.checkRingSignatures = config.checkRingSignatures
+      }
+
+      if (typeof config.generateDeterministicSubwalletKeys === 'function') {
+        userCryptoFunctions.generateDeterministicSubwalletKeys = config.generateDeterministicSubwalletKeys
       }
 
       if (typeof config.generateKeyDerivation === 'function') {
@@ -492,6 +506,8 @@ class CryptoNote {
     /* Put the seed in there for good measure */
     keys.seed = seed
 
+    keys.subWalletIndex = 0
+
     return keys
   }
 
@@ -528,6 +544,51 @@ class CryptoNote {
        to it, feed it through a poor very simple PBKDF2 implementation
        to create a seed using the supplied entropy */
     return scReduce32(simpleKdf(entropy + rand32(), iterations))
+  }
+
+  /**
+   * Creates a new deterministic subwallet using the supplied values
+   * @param {string} privateSpendKey - the seed/privateSpendKey of the primary wallet
+   * @param {number} subWalletIndex - the subwallet index number
+   * @param {string} [lang=english] - the language of the wallet (only used if index == 0)
+   * @param {number} [addressPrefix=3914525] - decimal representation of the CryptoNote address prefix
+   * @returns {Wallet} The generated subwallet
+   */
+  createSubWalletFromPrivateSpendKey (privateSpendKey, subWalletIndex, lang, addressPrefix) {
+    lang = lang || 'english'
+    addressPrefix = addressPrefix || this.config.addressPrefix
+
+    if (!isHex64(privateSpendKey)) throw new Error('You must supply a valid private spend key')
+    subWalletIndex = parseInt(subWalletIndex) || 0
+    subWalletIndex = Math.abs(subWalletIndex)
+
+    if (subWalletIndex === 0) {
+      return this.createAddressFromSeed(privateSpendKey, lang, addressPrefix)
+    }
+
+    const keys = {
+      spend: {},
+      view: {},
+      address: null,
+      mnemonic: null,
+      seed: null,
+      subWalletIndex: subWalletIndex
+    }
+
+    /* First, we hash the private spend key to get
+       the common private view key "seed" */
+    const view = cnFastHash(privateSpendKey)
+
+    /* Then we generate the view keys as normal */
+    keys.view = generateKeys(view)
+
+    keys.spend = generateDeterministicSubwalletKeys(privateSpendKey, subWalletIndex)
+
+    /* Once we have our keys, then we can encode the public keys
+       out of our view and spend pairs to create our public address */
+    keys.address = this.encodeAddress(keys.view.publicKey, keys.spend.publicKey, false, addressPrefix)
+
+    return keys
   }
 
   /**
@@ -1078,6 +1139,15 @@ class CryptoNote {
   }
 
   /**
+   * Value to scalar method
+   * @param {string} value - the 64-character hexadecimal value to reduce
+   * @returns {string} the resulting scalar
+   */
+  scReduce32 (value) {
+    return scReduce32(value)
+  }
+
+  /**
    * Signs an arbitrary message from the specified signer with their private spend key
    * @param {string|Object} message - the message to sign
    * @param {string} signerAddress - the signer's wallet address
@@ -1541,6 +1611,29 @@ function encodeVarint (val) {
   return buf.toString('hex')
 }
 
+function generateDeterministicSubwalletKeys (privateKey, walletIndex) {
+  if (!isHex64(privateKey)) {
+    throw new Error('Invalid secret key format')
+  }
+
+  if (isNaN(walletIndex) || walletIndex &lt; 0) {
+    throw new Error('walletIndex must be a valid number')
+  }
+
+  if (userCryptoFunctions.generateDeterministicSubwalletKeys) {
+    return userCryptoFunctions.generateDeterministicSubwalletKeys(privateKey, walletIndex)
+  }
+
+  const [err, keys] = TurtleCoinCrypto.generateDeterministicSubwalletKeys(privateKey, walletIndex)
+
+  if (err) throw new Error('Could not generate deterministic subwallet keys from supplied private key')
+
+  return {
+    privateKey: keys.secretKey || keys.SecretKey || keys.privateKay,
+    publicKey: keys.PublicKey || keys.publicKey
+  }
+}
+
 function generateKeyDerivation (transactionPublicKey, privateViewKey) {
   if (!isHex64(transactionPublicKey)) {
     throw new Error('Invalid public key format')
@@ -1895,7 +1988,7 @@ module.exports = CryptoNote
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Mon Nov 11 2019 19:02:06 GMT-0500 (Eastern Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Nov 24 2019 19:00:10 GMT-0500 (Eastern Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>
