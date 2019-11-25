@@ -176,6 +176,7 @@ class Transaction {
 
   set blob (hexData) {
     this._fromBlob(hexData)
+    this.readOnly = true
   }
 
   /**
@@ -193,7 +194,8 @@ class Transaction {
    * @readonly
    */
   get extraBlob () {
-    return extraToBlob(this.extra).toString('hex')
+    if (!this.readOnly) return extraToBlob(this.extra).toString('hex')
+    return this.rawExtra.toString('hex')
   }
 
   /**
@@ -219,6 +221,15 @@ class Transaction {
     })
 
     return extraData
+  }
+
+  /**
+   * The size of the transaction extra field in bytes
+   * @type {number}
+   * @readonly
+   */
+  get extraSize () {
+    return this.extraBlob.length / 2
   }
 
   /**
@@ -344,11 +355,21 @@ class Transaction {
   }
 
   /**
+   * The size of the transaction in bytes
+   * @type {number}
+   * @readonly
+   */
+  get size () {
+    return this.blob.length / 2
+  }
+
+  /**
    * Adds a arbitrary data to the Transaction's extra information
    * @param {Buffer|string} data - the data to add
    * @returns {boolean} if succeeded
    */
   addExtraData (data) {
+    if (this.readOnly) throw new Error('Transaction is read only')
     if (!Array.isArray(this.extra)) throw new Error('Transaction Extra must ben an array of tags')
 
     /* rebuild our extra tag without any current nonce
@@ -400,6 +421,7 @@ class Transaction {
    * @returns {boolean} if succeeded
    */
   addPaymentId (paymentId) {
+    if (this.readOnly) throw new Error('Transaction is read only')
     /* This method only works if extra is an array of tags, if it's free form
        data via a hexadecimal string, we cannot won't be touching the free form
        string */
@@ -453,6 +475,7 @@ class Transaction {
    * @returns {boolean} if succeeded
    */
   addPublicKey (publicKey) {
+    if (this.readOnly) throw new Error('Transaction is read only')
     /* This method only works if extra is an array of tags, if it's free form
        data via a hexadecimal string, we cannot won't be touching the free form
        string */
@@ -553,13 +576,12 @@ class Transaction {
     /* Handle the tx extra */
     const extraSize = reader.nextVarint()
     const extraBlob = reader.nextBytes(extraSize)
+
+    this.rawExtra = extraBlob
+
     this.extra = extraFromBlob(extraBlob)
 
-    this.extra.forEach((field) => {
-      if (field.tag === 1) {
-        this.transactionKeys.publicKey = field.publicKey
-      }
-    })
+    this.transactionKeys.publicKey = this.publicKey
 
     /* If there are bytes remaining and they are divisible by 64,
      then we have signatures remaining at the end */
@@ -631,9 +653,14 @@ class Transaction {
       }
     })
 
-    const extra = extraToBlob(this.extra)
-    writer.writeVarint(extra.length)
-    writer.writeBytes(extra)
+    if (!this.readOnly) {
+      const extra = extraToBlob(this.extra)
+      writer.writeVarint(extra.length)
+      writer.writeBytes(extra)
+    } else {
+      writer.writeVarint(this.rawExtra.length)
+      writer.writeBytes(this.rawExtra)
+    }
 
     if (!headerOnly &amp;&amp; this.signatures.length !== 0) {
       if (this.inputs.length !== this.signatures.length) {
@@ -725,6 +752,9 @@ function extraFromBlob (blob) {
   /* We're going to shadow this later */
   var length
 
+  /* Track what fields we've seen thus far */
+  const seen = {}
+
   /* While there's still data to read, we need to loop
      through it until we're done */
   while (reader.currentOffset &lt; blob.length) {
@@ -737,38 +767,51 @@ function extraFromBlob (blob) {
       case 0: // Padding?
         break
       case 1: // Transaction Public Key
-        tag.publicKey = reader.nextHash()
+        if (!seen.publicKey) {
+          tag.publicKey = reader.nextHash()
+          seen.publicKey = true
+        }
         break
       case 2: // Extra Nonce
-        length = reader.nextVarint()
-        tag.nonces = []
-        nonceReader = new Reader(reader.nextBytes(length))
+        if (!seen.nonce) {
+          length = reader.nextVarint()
+          tag.nonces = []
+          nonceReader = new Reader(reader.nextBytes(length))
 
-        while (nonceReader.unreadBytes > 0) {
-          const nonceTag = { tag: nonceReader.nextVarint() }
+          while (nonceReader.unreadBytes > 0) {
+            const nonceTag = { tag: nonceReader.nextVarint() }
 
-          switch (nonceTag.tag) {
-            case 0:
-              nonceTag.paymentId = nonceReader.nextHash()
-              break
-            case 127:
-              nonceTag.data = Buffer.from(nonceReader.nextBytes(nonceReader.nextVarint())).toString('hex')
-              break
-            default:
-              throw new Error('Unhandled transaction nonce data')
+            switch (nonceTag.tag) {
+              case 0:
+                if (!seen.paymentId) {
+                  nonceTag.paymentId = nonceReader.nextHash()
+                  seen.paymentId = true
+                }
+                break
+              case 127:
+                if (!seen.extraData) {
+                  nonceTag.data = Buffer.from(nonceReader.nextBytes(nonceReader.nextVarint())).toString('hex')
+                  seen.extraData = true
+                }
+                break
+            }
+
+            if (Object.keys(nonceTag).length > 1) tag.nonces.push(nonceTag)
           }
-
-          tag.nonces.push(nonceTag)
+          seen.nonce = true
         }
         break
       case 3: // Merged Mining Tag
-        length = reader.nextVarint()
-        tag.depth = reader.nextVarint()
-        tag.merkleRoot = reader.nextHash()
+        if (!seen.mergedMining) {
+          length = reader.nextVarint()
+          tag.depth = reader.nextVarint()
+          tag.merkleRoot = reader.nextHash()
+          seen.mergedMining = true
+        }
         break
     }
 
-    result.push(tag)
+    if (Object.keys(tag).length > 1) result.push(tag)
   }
 
   /* We have what we need so we'll kick it back */
@@ -802,7 +845,7 @@ module.exports = Transaction
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Nov 24 2019 19:00:10 GMT-0500 (Eastern Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Mon Nov 25 2019 14:21:55 GMT-0500 (Eastern Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>

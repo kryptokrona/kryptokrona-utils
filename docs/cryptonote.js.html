@@ -600,11 +600,20 @@ class CryptoNote {
    * @param {number} feeAmount - The transaction fee to use
    * @param {string} [paymentId=""] - The payment ID to use with the transaction
    * @param {number} [unlockTime=0] - The unlock time for the transaction
-   * @param {Buffer|Object|string} [extra] - extra data to include in the transaction
+   * @param {Buffer|Object|string} [extraData] - extra data to include in the transaction
    * @returns {boolean|CryptoNote.GeneratedTransaction} A newly generated transaction
    */
-  createTransaction (newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime, extra) {
-    const tx = this.createTransactionStructure(newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime, false, extra)
+  createTransaction (newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime, extraData) {
+    const tx = this.createTransactionStructure(
+      newOutputs,
+      ourOutputs,
+      randomOuts,
+      mixin,
+      feeAmount,
+      paymentId,
+      unlockTime,
+      false,
+      extraData)
 
     return {
       transaction: tx,
@@ -623,19 +632,20 @@ class CryptoNote {
    * @param {number} feeAmount - The transaction fee to use
    * @param {string} [paymentId=""] - The payment ID to use with the transaction
    * @param {number} [unlockTime=0] - The unlock time for the transaction
-   * @param {Buffer|Object|string} [extra] - extra data to include in the transaction
+   * @param {Buffer|Object|string} [extraData] - extra data to include in the transaction
    * @returns {boolean|CryptoNote.GeneratedTransaction} A newly generated transaction
    */
-  createTransactionAsync (newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime, extra) {
+  createTransactionAsync (newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime, extraData) {
     return this.createTransactionStructure(
-      newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime, true, extra
-    ).then((tx) => {
-      return {
-        transaction: tx,
-        rawTransaction: tx.blob,
-        hash: tx.hash
-      }
-    })
+      newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime, true, extraData
+    )
+      .then(tx => {
+        return {
+          transaction: tx,
+          rawTransaction: tx.blob,
+          hash: tx.hash
+        }
+      })
   }
 
   /**
@@ -648,11 +658,23 @@ class CryptoNote {
    * @param {string} [paymentId=""] - The payment ID to use with the transaction
    * @param {number} [unlockTime=0] - The unlock time for the transaction
    * @param {boolean} [_async=false] - Whether we are calling this method asynchronously or not
-   * @param {Buffer|Object|string} [extra] - extra data to include in the transaction
+   * @param {Buffer|Object|string} [extraData] - extra data to include in the transaction
    * @returns {boolean|CryptoNote.Transaction} A newly generated transaction
    */
-  createTransactionStructure (newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime, _async, extra) {
-    return createTransaction(newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime, _async, this.config.maximumOutputAmount, extra)
+  createTransactionStructure (newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime, _async, extraData) {
+    return createTransaction(
+      newOutputs,
+      ourOutputs,
+      randomOuts,
+      mixin,
+      feeAmount,
+      paymentId,
+      unlockTime,
+      _async,
+      this.config.maximumOutputAmount,
+      this.config.maximumOutputsPerInput,
+      this.config.maximumExtraSize,
+      extraData)
   }
 
   /**
@@ -1298,7 +1320,7 @@ function cnFastHash (input) {
   return hash
 }
 
-function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, _async, maximumOutputAmount, extra) {
+function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, _async, maximumOutputAmount, maximumOutputsPerInput, maximumExtraSize, extra) {
   unlockTime = unlockTime || 0
   randomOutputs = randomOutputs || []
 
@@ -1371,6 +1393,10 @@ function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmo
   /* Prepare our transaction outputs using the helper function */
   const transactionOutputs = prepareTransactionOutputs(newOutputs, _async)
 
+  if (transactionOutputs.length > transactionInputs.length * maximumOutputsPerInput) {
+    throw new Error('Tried to create a transaction with more outputs than permitted for the number of inputs supplied')
+  }
+
   /* Start constructing our actual transaction */
   const tx = new Transaction()
   tx.version = CURRENT_TX_VERSION
@@ -1410,6 +1436,8 @@ function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmo
 
   /* Add the transaction public key to the transaction */
   tx.addPublicKey(transactionOutputs.transactionKeys.publicKey)
+
+  if (tx.extraSize > maximumExtraSize) throw new Error('Transaction extra exceeds limit of ' + maximumExtraSize + ' bytes')
 
   if (_async) {
     /* Use Promise.resolve so even if the result isn't a promise, it still
@@ -1988,7 +2016,7 @@ module.exports = CryptoNote
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Nov 24 2019 19:00:10 GMT-0500 (Eastern Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Mon Nov 25 2019 14:21:55 GMT-0500 (Eastern Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>
