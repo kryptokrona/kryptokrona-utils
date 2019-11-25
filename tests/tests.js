@@ -481,6 +481,47 @@ describe('Transactions', () => {
       }
     })
 
+    it('fail to generate a transaction with too much extra data', () => {
+      const madeOutputs = cnUtil.createTransactionOutputs('TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX', 90)
+      const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94'
+      const walletPrivateViewKey = '6968a0b8f744ec4b8cea5ec124a1b4bd1626a2e6f31e999f8adbab52c4dfa909'
+      const walletPrivateSpendKey = 'd9d555a892a85f64916cae1a168bd3f7f400b6471c7b12b438b599601298210b'
+      const walletPublicSpendKey = '854a637b2863af9e8e8216eb2382f3d16616b3ac3e53d0976fbd6f8da6c56418'
+
+      const fakeInput = {
+        index: 2,
+        key: 'bb55bef919d1c9f74b5b52a8a6995a1dc4af4c0bb8824f5dc889012bc748173d',
+        amount: 100,
+        globalIndex: 1595598
+      }
+
+      const madeInput = cnUtil.isOurTransactionOutput(txPublicKey, fakeInput, walletPrivateViewKey, walletPublicSpendKey, walletPrivateSpendKey)
+
+      const randomOutputs = [[
+        {
+          globalIndex: 53984,
+          key: 'a5add8e36ca2473734fc7019730593888ae8c320753215976aac105816ba4848'
+        },
+        {
+          globalIndex: 403047,
+          key: '273dd5b63e84e6d7f12cf05eab092a7556708d8aac836c8748c1f0df3f0ff7fa'
+        },
+        {
+          globalIndex: 1533859,
+          key: '147121ea91715ee21af16513bc058d4ac445accfbe5cedc377c897fb04f4fecc'
+        }
+      ]]
+
+      const message = { msg: '001100010010011110100001101101110011', paradoxResolution: true, random: '5a4f86e32ab8533a7073eff7e321394a8751ab2b2f6e3219733eb5ccdb37974e8e67e9b95a285d3fffff862e6c1fbe281212d4bea1594f05824471f98ea76e51622c79c0f88ac8e3ffdfa9225a72973eabe0db8d5ce93034f67d7f334bfe74771e6b59e1d90b6539cc53482fe34a8de0ce7eb2875329ec7069b73a8cfe87dd33eeeffd38aa84c96d2e5878e0b17410c81c581a2c88c09a908953c2ef442efe26708ed0fdd7612f23b0002421193e4cceb6838e1b9fb2da8776ff3cbd414fcec5c8fe7bbbd9d011326317bc063a8fda6b4116622cca752732ec0574f2010caff279d369d0de930c9ad14e9f87b0697429d2ebedfe5bc4b909d5e31319eacfd24998739315efdfca2d06dee1297c51130d989f904583f80f92ce5b167a435b43d1a5ab3730a9fa55020c2374dbf2fa4e89b3e0e911acd86591c3129050cda4651292a38628be548e27f74f0453146ebff3479ab6031a8eeb4c83e027f935972b993a52df953ffdb14530a561fc4b05eb3c0af2cf913730815ec1b1ee79f4acbdea46b220e9571080ccbe684ea777611c743bdb4848b26d04ab877f1293f160bc1811ab5077a63c0838550e7fe3584f2ac5a11f87952580f522ac8bb44b8f96c3f0bb71b0ca8eeba64eb761ae9f6c671117a1391a5ad56a43f3f6483a9c4438c6f8cb53163754296469c40b5764e258240c0f8ce1f8b91b1a0f3a60a5794b55bf04c68aa616ea59cfbda4a79929af254c1b581ce65592a4814830dd72c125e6d834298fc96348b5be20129f15b61f8bb38c8f6766a097b03a4fa010eb26a7a3844f6813e97b413eb1dd3d36192b6f147fc7cded87ed3fa0c75d3551d9a86e92f92f5b0b5cb87d46c8fe7ff84ef73ceafb8ada54f08718333c4afa948f982649178b6832345f6368d42f4828739925b4b0b75930279157fb91498d7f37153402f48527e9eebc87e6cd5638da4af41be019df3592da344bb0bfa1919f54bcc25764c3f521cbb15f3e6cee84f1a9004884a5828ea7c5518a365c23535a604471a33da3b906c360b7b63b722cbbc4fc9f42891e157257390db6dd5c3176442eb087fd38fd69c1fa14ff40189ff036c2d85e5e19963d82f877a1b419b7627eedd1d7fdad07aa001bd31e71aa07329a4814b8c39a1ef741baffaa60c67095a2eeea9b5c9ec34dc13aa7748f7f5ac42793861f59ac2ce612341a6807256e8154734b98b15ee9d814c777e788f9008ed009b98550c472016836235517a4d13195af3aef51f277993fee9e0cde6fa843903e78b151d7298cf04f59350db1203423a455b3c20d571b7a2c0251fe345781b2d365e5fccae4ae3a0e25e6e3d15f00eef15ac8095ad0c1c0cda119b4bb19dd67b717619564143f08d106dd22686b37b0c4f29f6b70572996170755ed16157a13ce1468ee15a127cf6d19caa176aa47f67f4f13ad3e' }
+
+      try {
+        cnUtil.createTransaction(madeOutputs, [madeInput], randomOutputs, 3, 10, '', 0, message)
+        assert(false)
+      } catch (e) {
+
+      }
+    })
+
     it('fail to generate a transaction when output too large', () => {
       const madeOutputs = cnUtil.createTransactionOutputs('TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX', 90)
       const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94'
