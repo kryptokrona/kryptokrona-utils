@@ -6,5 +6,8 @@
   "mmMiningBlockVersion": 2,
   "maximumOutputAmount": 100000000000,
   "maximumOutputsPerInput": 10,
-  "maximumExtraSize": 1024
+  "maximumExtraSize": 1024,
+  "activateFeePerByteTransactions": true,
+  "feePerByte": 1.953125,
+  "feePerByteChunkSize": 256
 }

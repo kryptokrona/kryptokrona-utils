@@ -411,7 +411,7 @@ describe('Transactions', () => {
       const fakeInput = {
         index: 2,
         key: 'bb55bef919d1c9f74b5b52a8a6995a1dc4af4c0bb8824f5dc889012bc748173d',
-        amount: 100,
+        amount: 1090,
         globalIndex: 1595598
       }
 
@@ -433,13 +433,13 @@ describe('Transactions', () => {
       ]]
 
       try {
-        cnUtil.createTransaction(madeOutputs, [madeInput], randomOutputs, 3, 10, '', 0)
+        cnUtil.createTransaction(madeOutputs, [madeInput], randomOutputs, 3, 1000, '', 0)
       } catch (e) {
         assert(e === false)
       }
     })
 
-    it('generate a transaction - async', (done) => {
+    it('generate a transaction - async', () => {
       const madeOutputs = cnUtil.createTransactionOutputs('TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX', 90)
       const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94'
       const walletPrivateViewKey = '6968a0b8f744ec4b8cea5ec124a1b4bd1626a2e6f31e999f8adbab52c4dfa909'
@@ -449,7 +449,7 @@ describe('Transactions', () => {
       const fakeInput = {
         index: 2,
         key: 'bb55bef919d1c9f74b5b52a8a6995a1dc4af4c0bb8824f5dc889012bc748173d',
-        amount: 100,
+        amount: 1090,
         globalIndex: 1595598
       }
 
@@ -470,8 +470,7 @@ describe('Transactions', () => {
         }
       ]]
 
-      cnUtil.createTransactionAsync(madeOutputs, [madeInput], randomOutputs, 3, 10, '', 0)
-        .then(tx => { done() })
+      return cnUtil.createTransactionAsync(madeOutputs, [madeInput], randomOutputs, 3, 1000, '', 0)
     })
 
     it('generate a transaction with arbitrary data payload', () => {
@@ -484,7 +483,7 @@ describe('Transactions', () => {
       const fakeInput = {
         index: 2,
         key: 'bb55bef919d1c9f74b5b52a8a6995a1dc4af4c0bb8824f5dc889012bc748173d',
-        amount: 100,
+        amount: 1090,
         globalIndex: 1595598
       }
 
@@ -508,7 +507,7 @@ describe('Transactions', () => {
       const message = { msg: '001100010010011110100001101101110011', paradoxResolution: true }
 
       try {
-        const tx = cnUtil.createTransaction(madeOutputs, [madeInput], randomOutputs, 3, 10, '', 0, message)
+        const tx = cnUtil.createTransaction(madeOutputs, [madeInput], randomOutputs, 3, 1000, '', 0, message)
 
         const data = JSON.parse(Buffer.from(tx.transaction.extraData, 'hex').toString())
 
