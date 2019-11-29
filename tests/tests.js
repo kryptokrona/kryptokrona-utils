@@ -14,7 +14,9 @@ const cnUtil = new TurtleCoinUtils(require('../config.json'))
 
 console.log('Using Crypto: %s', TurtleCoinCrypto.type)
 
-describe('Cryptography', () => {
+describe('Cryptography', function () {
+  this.timeout(10000)
+
   it('Generate Random Keys', () => {
     const [err, keys] = TurtleCoinCrypto.generateKeys()
 
@@ -600,7 +602,9 @@ describe('Transactions', () => {
   })
 })
 
-describe('Blocks', () => {
+describe('Blocks', function () {
+  this.timeout(10000)
+
   const Block = require('../').Block
   const BlockTemplate = require('../').BlockTemplate
 

@@ -1,0 +1,27 @@
+name: CI Build Tests
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: ['8', '10', '11', '12', '13']
+    name: ${{ matrix.os }} - Node ${{ matrix.node }} Test
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-node@v1
+      name: Set up Node
+      with:
+        node-version: ${{ matrix.node }}
+    - name: Install Dependencies (skip c++ crypto module)
+      run: npm install --no-optional
+    - name: Execute Unit Tests (javascript crypto module)
+      run: npm test
+    - name: Install Dependencies (include c++ crypto module)
+      run: npm install
+    - name: Execute Unit Tests (c++ crypto module)
+      run: npm test
+
