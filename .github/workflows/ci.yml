@@ -16,6 +16,9 @@ jobs:
       name: Set up Node
       with:
         node-version: ${{ matrix.node }}
+    - name: Install Windows Node.js Build Tools
+      if: matrix.os == 'windows-latest'
+      run: npm install -g windows-build-tools --vs2015
     - name: Install Dependencies (skip c++ crypto module)
       run: npm install --no-optional
     - name: Execute Unit Tests (javascript crypto module)
