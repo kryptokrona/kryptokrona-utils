@@ -601,7 +601,7 @@ class CryptoNote {
    * @param {string} [paymentId=""] - The payment ID to use with the transaction
    * @param {number} [unlockTime=0] - The unlock time for the transaction
    * @param {Buffer|Object|string} [extraData] - extra data to include in the transaction
-   * @returns {boolean|CryptoNote.GeneratedTransaction} A newly generated transaction
+   * @returns {CryptoNote.GeneratedTransaction} A newly generated transaction
    */
   createTransaction (newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime, extraData) {
     const tx = this.createTransactionStructure(
@@ -633,7 +633,7 @@ class CryptoNote {
    * @param {string} [paymentId=""] - The payment ID to use with the transaction
    * @param {number} [unlockTime=0] - The unlock time for the transaction
    * @param {Buffer|Object|string} [extraData] - extra data to include in the transaction
-   * @returns {boolean|CryptoNote.GeneratedTransaction} A newly generated transaction
+   * @returns {Promise&lt;CryptoNote.GeneratedTransaction>} A newly generated transaction
    */
   createTransactionAsync (newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime, extraData) {
     return this.createTransactionStructure(
@@ -659,7 +659,7 @@ class CryptoNote {
    * @param {number} [unlockTime=0] - The unlock time for the transaction
    * @param {boolean} [_async=false] - Whether we are calling this method asynchronously or not
    * @param {Buffer|Object|string} [extraData] - extra data to include in the transaction
-   * @returns {boolean|CryptoNote.Transaction} A newly generated transaction
+   * @returns {Transaction} A newly generated transaction
    */
   createTransactionStructure (newOutputs, ourOutputs, randomOuts, mixin, feeAmount, paymentId, unlockTime, _async, extraData) {
     return createTransaction(
@@ -1320,7 +1320,10 @@ function cnFastHash (input) {
   return hash
 }
 
-function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, _async, maximumOutputAmount, maximumOutputsPerInput, maximumExtraSize, extra) {
+/* This method performs basic validation of data and creates the basic
+   structure of a transaction to prepare for additional steps (ie. generating
+   signatures for the transaction */
+function createTransactionStructure (newOutputs, ourOutputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extra, maximumOutputAmount, maximumOutputsPerInput, maximumExtraSize, _async) {
   unlockTime = unlockTime || 0
   randomOutputs = randomOutputs || []
 
@@ -1442,51 +1445,59 @@ function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmo
   if (_async) {
     /* Use Promise.resolve so even if the result isn't a promise, it still
        works */
-    return Promise.resolve(transactionOutputs.outputs).then((outputs) => {
-      outputs.forEach((output) => {
-        tx.outputs.push(output)
-      })
-
-      const txPrefixHash = tx.prefixHash
-
-      const sigPromises = []
-
-      for (i = 0; i &lt; transactionInputs.length; i++) {
-        const txInput = transactionInputs[i]
-
-        const srcKeys = []
-        txInput.outputs.forEach((out) => {
-          srcKeys.push(out.key)
-        })
-
-        sigPromises.push(Promise.resolve(generateRingSignatures(
-          txPrefixHash, txInput.keyImage, srcKeys, txInput.input.privateEphemeral, txInput.realOutputIndex, _async
-        )))
-      }
-
-      /* Wait for all the sigs to get created and added, then return the tx */
-      return Promise.all(sigPromises)
-        .then((sigs) => {
-          tx.signatures = sigs
-          return tx
-        })
-    })
+    return Promise.resolve(transactionOutputs.outputs)
+      .then(outputs => { outputs.forEach(output => { tx.outputs.push(output) }) })
+      .then(() => { return [tx, transactionInputs] })
   } else {
-    transactionOutputs.outputs.forEach((output) => {
-      tx.outputs.push(output)
-    })
+    transactionOutputs.outputs.forEach(output => { tx.outputs.push(output) })
+
+    return [tx, transactionInputs]
+  }
+}
+
+/* This method creates a transaction based upon the supplied information, then
+   signs the transaction using the supplied keys */
+function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, _async, maximumOutputAmount, maximumOutputsPerInput, maximumExtraSize, extra) {
+  if (_async) {
+    return Promise.resolve(createTransactionStructure(
+      newOutputs, ourOutputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extra, maximumOutputAmount, maximumOutputsPerInput, maximumExtraSize, _async
+    ))
+      .then(result => {
+        const [tx, transactionInputs] = result
+
+        const txPrefixHash = tx.prefixHash
+
+        const sigPromises = []
+
+        for (var i = 0; i &lt; transactionInputs.length; i++) {
+          const txInput = transactionInputs[i]
+
+          const srcKeys = []
+
+          txInput.outputs.forEach(out => { srcKeys.push(out.key) })
+
+          sigPromises.push(Promise.resolve(generateRingSignatures(
+            txPrefixHash, txInput.keyImage, srcKeys, txInput.input.privateEphemeral, txInput.realOutputIndex, _async
+          )))
+        }
+
+        return Promise.all(sigPromises)
+          .then(sigs => { tx.signatures = sigs })
+          .then(() => { return tx })
+      })
+  } else {
+    const [tx, transactionInputs] = createTransactionStructure(newOutputs, ourOutputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extra, maximumOutputAmount, maximumOutputsPerInput, maximumExtraSize, _async)
 
     const txPrefixHash = tx.prefixHash
 
-    for (i = 0; i &lt; transactionInputs.length; i++) {
+    for (var i = 0; i &lt; transactionInputs.length; i++) {
       const txInput = transactionInputs[i]
 
       const srcKeys = []
-      txInput.outputs.forEach((out) => {
-        srcKeys.push(out.key)
-      })
+      txInput.outputs.forEach(out => { srcKeys.push(out.key) })
 
       const sigs = generateRingSignatures(txPrefixHash, txInput.keyImage, srcKeys, txInput.input.privateEphemeral, txInput.realOutputIndex, _async)
+
       tx.signatures.push(sigs)
     }
 
@@ -2016,7 +2027,7 @@ module.exports = CryptoNote
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Mon Nov 25 2019 14:21:55 GMT-0500 (Eastern Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Tue Dec 10 2019 08:05:07 GMT-0500 (Eastern Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>

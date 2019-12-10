@@ -73,6 +73,14 @@ class Transaction {
    */
 
   /**
+   * Transaction Merged Mining Tag Structure
+   * @memberof Transaction
+   * @typedef {Object} TransactionExtraMergedMining
+   * @property {number} depth - the depth of the merkle root
+   * @property {string} merkleRoot - the merkle root hash
+   */
+
+  /**
    * Transaction Extra Tag Structure. What properties exist depend on the type
    * @memberof Transaction
    * @typedef {Object} TransactionExtraTag
@@ -135,12 +143,29 @@ class Transaction {
      */
     this.ignoredField = false
 
-    /* this property is largely ignored. It is nothing but a
-     storage mechanism for backwards compatibility */
+    /**
+     * Transaction Keypair
+     * @memberof Transaction
+     * @typedef {Object} KeyPair
+     * @property {string} [privateKey] - a private key
+     * @property {string} [publicKey] - a public key
+     */
+
+    /**
+     * Transaction one time keys - used for legacy purposes and convenience
+     * Note: setting these will not cause the actual transaction data to be
+     *   update with the publicKey provided
+     * @type {Transaction.KeyPair}
+     */
     this.transactionKeys = {
       privateKey: null,
       publicKey: null
     }
+
+    /* This variable is designed to hold cached values
+       that would otherwise be computationally expensive
+       to run each time we need to use them */
+    this.cached = {}
 
     /* If we were supplied with hex data as part of our
      constructor, try to load it */
@@ -175,6 +200,9 @@ class Transaction {
   }
 
   set blob (hexData) {
+    /* Clear any cached values because we changed something */
+    this.cached = {}
+
     this._fromBlob(hexData)
     this.readOnly = true
   }
@@ -259,20 +287,53 @@ class Transaction {
    * @readonly
    */
   get hash () {
-    const [err, hash] = TurtleCoinCrypto.cn_fast_hash(this.blob)
+    if (this.cached.blob &amp;&amp; this.cached.blob === this.blob &amp;&amp; this.cached.hash) {
+      return this.cached.hash
+    }
+
+    this.cached.blob = this.blob
+
+    const [err, hash] = TurtleCoinCrypto.cn_fast_hash(this.cached.blob)
 
     /* Version 2 transactions are actualy double hashed to get the hash */
     if (this.version >= 2) {
       const [err, hash2] = TurtleCoinCrypto.cn_fast_hash(hash + TransactionVersion2Suffix)
 
-      if (!err) return hash2
+      if (err) return false
 
-      return false
+      this.cached.hash = hash2
+
+      return hash2
     }
 
-    if (!err) return hash
+    if (err) return false
 
-    return false
+    this.cached.hash = hash
+
+    return hash
+  }
+
+  /**
+   * The merged mining tag
+   * @type {TransactionExtraMergedMining}
+   * @readonly
+   */
+  get mergedMining () {
+    var mergedMining = null
+
+    var extra = this.extra
+
+    if (!Array.isArray(extra)) {
+      extra = extraFromBlob(extra)
+    }
+
+    extra.forEach(tag => {
+      if (tag.tag === 3) {
+        mergedMining = { depth: tag.depth, merkleRoot: tag.merkleRoot }
+      }
+    })
+
+    return mergedMining
   }
 
   /**
@@ -315,20 +376,30 @@ class Transaction {
    * @readonly
    */
   get prefixHash () {
-    const [err, hash] = TurtleCoinCrypto.cn_fast_hash(this.prefix)
+    if (this.cached.prefix &amp;&amp; this.cached.prefix === this.prefix &amp;&amp; this.cached.prefixHash) {
+      return this.cached.prefixHash
+    }
+
+    this.cached.prefix = this.prefix
+
+    const [err, hash] = TurtleCoinCrypto.cn_fast_hash(this.cached.prefix)
 
     /* Version 2 transactions are actualy double hashed to get the hash */
     if (this.version >= 2) {
       const [err, hash2] = TurtleCoinCrypto.cn_fast_hash(hash + TransactionVersion2Suffix)
 
-      if (!err) return hash2
+      if (err) return false
 
-      return false
+      this.cached.prefixHash = hash2
+
+      return hash2
     }
 
-    if (!err) return hash
+    if (err) return false
 
-    return false
+    this.cached.prefixHash = hash
+
+    return hash
   }
 
   /**
@@ -361,6 +432,26 @@ class Transaction {
    */
   get size () {
     return this.blob.length / 2
+  }
+
+  /**
+   * Returns a stripped version of this transaction that does not contain
+   * signatures or unknown extra data
+   * @type {Transaction}
+   * @readonly
+   */
+  get stripped () {
+    const tempTransaction = new Transaction()
+    tempTransaction.version = this.version
+    tempTransaction.unlockTime = this.unlockTime
+    tempTransaction.inputs = this.inputs.slice(0)
+    tempTransaction.outputs = this.outputs.slice(0)
+    if (this.publicKey) tempTransaction.addPublicKey(this.publicKey)
+    if (this.paymentId) tempTransaction.addPaymentId(this.paymentId)
+    if (this.extraData) tempTransaction.addExtraData(this.extraData)
+    if (this.mergedMining) tempTransaction.addMergedMining(this.mergedMining.depth, this.mergedMining.merkleRoot)
+
+    return tempTransaction
   }
 
   /**
@@ -416,6 +507,46 @@ class Transaction {
   }
 
   /**
+   * Adds a Merged Mining tag to the Transaction's extra information
+   * @param {number} depth - the merkle root hash depth
+   * @param {string} merkleRoot - the merkle root hash
+   * @returns {boolean} if succeeded
+   */
+  addMergedMining (depth, merkleRoot) {
+    if (this.readOnly) throw new Error('Transaction is read only')
+    /* This method only works if extra is an array of tags, if it's free form
+       data via a hexadecimal string, we cannot won't be touching the free form
+       string */
+    if (!Array.isArray(this.extra)) throw new Error('Transaction Extra must ben an array of tags')
+    if (isNaN(depth)) throw new Error('Merged Mining depth must be a number')
+    if (!isHex64(merkleRoot)) throw new Error('Merged Mining merkle root hash must be 64 hexadecimal characters')
+
+    /* Delete any previous public key tags from
+       the current extra data */
+    const extra = []
+
+    this.extra.forEach((tag) => {
+      if (tag.tag !== 3) extra.push(tag)
+    })
+
+    this.extra = extra
+
+    /* Build our public key tag and add to extra */
+    const extraTag = {
+      tag: 3,
+      depth: depth,
+      merkleRoot: merkleRoot
+    }
+
+    /* Add the new public key tag to the extra array */
+    this.extra.push(extraTag)
+
+    extra.sort((a, b) => (a.tag > b.tag) ? 1 : -1)
+
+    return true
+  }
+
+  /**
    * Adds a payment ID to the Transaction's extra information
    * @param {string} paymentId - the payment ID for the transaction
    * @returns {boolean} if succeeded
@@ -426,7 +557,6 @@ class Transaction {
        data via a hexadecimal string, we cannot won't be touching the free form
        string */
     if (!Array.isArray(this.extra)) throw new Error('Transaction Extra must ben an array of tags')
-
     if (!isHex64(paymentId)) throw new Error('Payment ID must be 64 hexadecimal characters')
 
     /* rebuild our extra tag without any current nonce
@@ -480,7 +610,6 @@ class Transaction {
        data via a hexadecimal string, we cannot won't be touching the free form
        string */
     if (!Array.isArray(this.extra)) throw new Error('Transaction Extra must ben an array of tags')
-
     if (!isHex64(publicKey)) throw new Error('Transaction Public Key must 64 hexadecimal characters')
 
     /* Delete any previous public key tags from
@@ -586,15 +715,10 @@ class Transaction {
     /* If there are bytes remaining and they are divisible by 64,
      then we have signatures remaining at the end */
     if (reader.unreadBytes > 0 &amp;&amp; reader.unreadBytes % 64 === 0) {
-    /* Calculate the number of mixins we expect */
-      const mixins = reader.unreadBytes / 64 / this.inputs.length
-
-      if (mixins % 1 !== 0) throw new Error('Unstructured data found at the end of transaction blob')
-
       /* Loop through our inputs */
       for (i = 0; i &lt; this.inputs.length; i++) {
         const signatures = []
-        for (j = 0; j &lt; mixins; j++) {
+        for (j = 0; j &lt; this.inputs[i].keyOffsets.length; j++) {
           signatures.push(reader.nextBytes(64).toString('hex'))
         }
         this.signatures.push(signatures)
@@ -741,6 +865,13 @@ function extraToBlob (extras) {
   return writer.buffer
 }
 
+/* Parsing the TX_EXTRA field is generally a mess because
+   people can put basically anything they want in the field
+   and the network will accept it; however, meaningful data
+   must be pulled from the field for public key, payment id,
+   and other known structured data. In short, whenever we
+   encounter garbage data that does not follow known structures
+   we skip those bytes and keep reading */
 function extraFromBlob (blob) {
   /* We were passed a Buffer and we're going to set up
      a new reader for it to make life easier */
@@ -760,6 +891,17 @@ function extraFromBlob (blob) {
   while (reader.currentOffset &lt; blob.length) {
     var nonceReader
 
+    /* We need to peek at the next varint to determine
+       if it is actually a varint, if not, then we will
+       skip it because we don't want to throw an exception
+       in reading garbage data that is not a varint */
+    try {
+      reader.nextVarint(true) // peek
+    } catch (e) {
+      reader.skip(1)
+      continue
+    }
+
     /* Get the TX extra tag */
     const tag = { tag: reader.nextVarint() }
 
@@ -767,30 +909,60 @@ function extraFromBlob (blob) {
       case 0: // Padding?
         break
       case 1: // Transaction Public Key
-        if (!seen.publicKey) {
+        if (!seen.publicKey &amp;&amp; reader.unreadBytes >= 32) {
           tag.publicKey = reader.nextHash()
           seen.publicKey = true
         }
         break
       case 2: // Extra Nonce
-        if (!seen.nonce) {
+        if (!seen.nonce &amp;&amp; reader.unreadBytes >= 1) {
+          /* Check that the next bytes are actually a
+             varint and if they are not, then skip them
+             as this is not a valid nonce subfield */
+          try {
+            reader.nextVarint(true)
+          } catch (e) {
+            reader.skip(1)
+            continue
+          }
+
           length = reader.nextVarint()
           tag.nonces = []
           nonceReader = new Reader(reader.nextBytes(length))
 
           while (nonceReader.unreadBytes > 0) {
+            /* Check to make sure that the next bytes are
+               actually a varint before we try to read them
+               and if they are not, then skip them */
+            try {
+              nonceReader.nextVarint(true)
+            } catch (e) {
+              nonceReader.skip(1)
+              continue
+            }
+
             const nonceTag = { tag: nonceReader.nextVarint() }
 
             switch (nonceTag.tag) {
               case 0:
-                if (!seen.paymentId) {
+                if (!seen.paymentId &amp;&amp; nonceReader.unreadBytes >= 32) {
                   nonceTag.paymentId = nonceReader.nextHash()
                   seen.paymentId = true
                 }
                 break
               case 127:
-                if (!seen.extraData) {
-                  nonceTag.data = Buffer.from(nonceReader.nextBytes(nonceReader.nextVarint())).toString('hex')
+                if (!seen.extraData &amp;&amp; nonceReader.unreadBytes >= 1) {
+                  /* Check to make sure that the next bytes are actually
+                     a varint before we try to read them */
+                  try {
+                    nonceReader.nextVarint(true)
+                  } catch (e) {
+                    nonceReader.skip()
+                    continue
+                  }
+
+                  var extraDataLength = nonceReader.nextVarint()
+                  nonceTag.data = Buffer.from(nonceReader.nextBytes(extraDataLength)).toString('hex')
                   seen.extraData = true
                 }
                 break
@@ -802,8 +974,25 @@ function extraFromBlob (blob) {
         }
         break
       case 3: // Merged Mining Tag
-        if (!seen.mergedMining) {
+        if (!seen.mergedMining &amp;&amp; reader.unreadBytes >= 34) {
+          /* Check to make sure that the next bytes are actually
+             a varint before we try to read them. Also done below */
+          try {
+            reader.nextVarint(true)
+          } catch (e) {
+            reader.skip(1)
+            continue
+          }
+
           length = reader.nextVarint()
+
+          try {
+            reader.nextVarint(true)
+          } catch (e) {
+            reader.skip(1)
+            continue
+          }
+
           tag.depth = reader.nextVarint()
           tag.merkleRoot = reader.nextHash()
           seen.mergedMining = true
@@ -845,7 +1034,7 @@ module.exports = Transaction
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Mon Nov 25 2019 14:21:55 GMT-0500 (Eastern Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Tue Dec 10 2019 08:05:07 GMT-0500 (Eastern Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>
