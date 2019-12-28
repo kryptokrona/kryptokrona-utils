@@ -5,7 +5,7 @@
   "defaultNetworkFee": 10,
   "mmMiningBlockVersion": 2,
   "maximumOutputAmount": 100000000000,
-  "maximumOutputsPerInput": 10,
+  "maximumOutputsPerTransaction": 90,
   "maximumExtraSize": 1024,
   "activateFeePerByteTransactions": true,
   "feePerByte": 1.953125,
