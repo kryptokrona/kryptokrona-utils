@@ -181,7 +181,12 @@ class CryptoNote {
    * @property {number} [keccakIterations=1] - The number of KDF iterations to perform for KDF operations
    * @property {number} [defaultNetworkFee=10] - The default network fee for transactions in atomic units
    * @property {number} [mmMiningBlockVersion=2] - The block version at which merged mining was enabled
-   * @property {number} [maximumOutputAmount] - The maximum amount that a single output can be in atomic units
+   * @property {number} [maximumOutputAmount=100000000000] - The maximum amount that a single output can be in atomic units
+   * @property {number} [maximumOutputsPerTransaction=90] - the maximum number of outputs per transaction permitted
+   * @property {number} [maximumExtraSize=1024] - the maximum amount of extra data that is supported in a transaction
+   * @property {boolean} [activateFeePerByteTransactions=true] - activate logic that checks to make sure that a transaction has enough of a fee for the network rules
+   * @property {number} [feePerByte=1.953125] - the network fee per byte of the transaction
+   * @property {number} [feePerByteChunkSize=256] - the network fee per byte chunking size
    * @property {external:Crypto.CheckRingSignatures} [checkRingSignatures] - A user-defined check ring signatures method
    * @property {external:Crypto.CheckSignature} [checkSignature] - A user-defined check signature method
    * @property {external:Crypto.CNFastHash} [cnFastHash] - A user-defined CryptoNight Fast hash method
@@ -293,78 +298,17 @@ class CryptoNote {
   constructor (config) {
     this.config = require('../config.json')
 
-    if (config) {
-      if (config.coinUnitPlaces) {
-        this.config.coinUnitPlaces = config.coinUnitPlaces
-      }
-
-      if (config.addressPrefix) {
-        this.config.addressPrefix = config.addressPrefix
-      }
-
-      if (config.keccakIterations) {
-        this.config.keccakIterations = config.keccakIterations
-      }
-
-      if (config.defaultNetworkFee) {
-        this.config.defaultNetworkFee = config.defaultNetworkFee
-      }
-
-      if (config.maximumOutputAmount) {
-        this.config.maximumOutputAmount = config.maximumOutputAmount
-      }
-
-      /* The checks below are for detecting custom caller
-         cryptographic functions and loading them into the
-         stack so that they can be used later throughout the
-         module and it's underlying functions */
-      if (typeof config.underivePublicKey === 'function') {
-        userCryptoFunctions.underivePublicKey = config.underivePublicKey
-      }
-
-      if (typeof config.derivePublicKey === 'function') {
-        userCryptoFunctions.derivePublicKey = config.derivePublicKey
-      }
-
-      if (typeof config.deriveSecretKey === 'function') {
-        userCryptoFunctions.deriveSecretKey = config.deriveSecretKey
-      }
-
-      if (typeof config.generateKeyImage === 'function') {
-        userCryptoFunctions.generateKeyImage = config.generateKeyImage
-      }
-
-      if (typeof config.secretKeyToPublicKey === 'function') {
-        userCryptoFunctions.secretKeyToPublicKey = config.secretKeyToPublicKey
-      }
-
-      if (typeof config.cnFastHash === 'function') {
-        userCryptoFunctions.cnFastHash = config.cnFastHash
-      }
-
-      if (typeof config.generateRingSignatures === 'function') {
-        userCryptoFunctions.generateRingSignatures = config.generateRingSignatures
-      }
-
-      if (typeof config.checkRingSignatures === 'function') {
-        userCryptoFunctions.checkRingSignatures = config.checkRingSignatures
-      }
-
-      if (typeof config.generateDeterministicSubwalletKeys === 'function') {
-        userCryptoFunctions.generateDeterministicSubwalletKeys = config.generateDeterministicSubwalletKeys
-      }
-
-      if (typeof config.generateKeyDerivation === 'function') {
-        userCryptoFunctions.generateKeyDerivation = config.generateKeyDerivation
-      }
-
-      if (typeof config.generateSignature === 'function') {
-        userCryptoFunctions.generateSignature = config.generateSignature
-      }
-
-      if (typeof config.checkSignature === 'function') {
-        userCryptoFunctions.checkSignature = config.checkSignature
-      }
+    if (config &amp;&amp; typeof config === 'object') {
+      Object.keys(config).forEach(key => {
+        /* If the supplied object key is a function, then it is most
+           likely a user supplied cryptographic primitive function */
+        if (typeof config[key] === 'function') {
+          userCryptoFunctions[key] = config[key]
+        } else {
+          /* Else it's part of our normal configuration */
+          this.config[key] = config[key]
+        }
+      })
     }
   }
 
@@ -672,8 +616,11 @@ class CryptoNote {
       unlockTime,
       _async,
       this.config.maximumOutputAmount,
-      this.config.maximumOutputsPerInput,
+      this.config.maximumOutputsPerTransaction,
       this.config.maximumExtraSize,
+      this.config.activateFeePerByteTransactions,
+      this.config.feePerByte,
+      this.config.feePerByteChunkSize,
       extraData)
   }
 
@@ -1304,6 +1251,11 @@ function bin2hex (bin) {
   return result.join('')
 }
 
+function calculateMinimumTxFee (txSize, feePerByte, feePerByteChunkSize) {
+  const chunks = Math.ceil(txSize / feePerByteChunkSize)
+  return chunks * feePerByteChunkSize * feePerByte
+}
+
 function cnFastHash (input) {
   if (input.length % 2 !== 0 || !isHex(input)) {
     throw new Error('Invalid input: ' + input)
@@ -1323,7 +1275,7 @@ function cnFastHash (input) {
 /* This method performs basic validation of data and creates the basic
    structure of a transaction to prepare for additional steps (ie. generating
    signatures for the transaction */
-function createTransactionStructure (newOutputs, ourOutputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extra, maximumOutputAmount, maximumOutputsPerInput, maximumExtraSize, _async) {
+function createTransactionStructure (newOutputs, ourOutputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extra, maximumOutputAmount, maximumOutputsPerTransaction, maximumExtraSize, _async) {
   unlockTime = unlockTime || 0
   randomOutputs = randomOutputs || []
 
@@ -1396,7 +1348,7 @@ function createTransactionStructure (newOutputs, ourOutputs, randomOutputs, mixi
   /* Prepare our transaction outputs using the helper function */
   const transactionOutputs = prepareTransactionOutputs(newOutputs, _async)
 
-  if (transactionOutputs.length > transactionInputs.length * maximumOutputsPerInput) {
+  if (transactionOutputs.outputs.length > maximumOutputsPerTransaction) {
     throw new Error('Tried to create a transaction with more outputs than permitted for the number of inputs supplied')
   }
 
@@ -1457,10 +1409,26 @@ function createTransactionStructure (newOutputs, ourOutputs, randomOutputs, mixi
 
 /* This method creates a transaction based upon the supplied information, then
    signs the transaction using the supplied keys */
-function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, _async, maximumOutputAmount, maximumOutputsPerInput, maximumExtraSize, extra) {
+function createTransaction (
+  newOutputs,
+  ourOutputs,
+  randomOutputs,
+  mixin,
+  feeAmount,
+  paymentId,
+  unlockTime,
+  _async,
+  maximumOutputAmount,
+  maximumOutputsPerTransaction,
+  maximumExtraSize,
+  activateFeePerByteTransactions,
+  feePerByte,
+  feePerByteChunkSize,
+  extra
+) {
   if (_async) {
     return Promise.resolve(createTransactionStructure(
-      newOutputs, ourOutputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extra, maximumOutputAmount, maximumOutputsPerInput, maximumExtraSize, _async
+      newOutputs, ourOutputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extra, maximumOutputAmount, maximumOutputsPerTransaction, maximumExtraSize, _async
     ))
       .then(result => {
         const [tx, transactionInputs] = result
@@ -1483,10 +1451,14 @@ function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmo
 
         return Promise.all(sigPromises)
           .then(sigs => { tx.signatures = sigs })
+          .then(() => {
+            const minimumFee = calculateMinimumTxFee(tx.size, feePerByte, feePerByteChunkSize)
+            if (activateFeePerByteTransactions &amp;&amp; feeAmount &lt; minimumFee) throw new Error('Transaction fee [' + tx.fee + '] is not enough for network transmission: ' + minimumFee)
+          })
           .then(() => { return tx })
       })
   } else {
-    const [tx, transactionInputs] = createTransactionStructure(newOutputs, ourOutputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extra, maximumOutputAmount, maximumOutputsPerInput, maximumExtraSize, _async)
+    const [tx, transactionInputs] = createTransactionStructure(newOutputs, ourOutputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extra, maximumOutputAmount, maximumOutputsPerTransaction, maximumExtraSize, _async)
 
     const txPrefixHash = tx.prefixHash
 
@@ -1500,6 +1472,9 @@ function createTransaction (newOutputs, ourOutputs, randomOutputs, mixin, feeAmo
 
       tx.signatures.push(sigs)
     }
+
+    const minimumFee = calculateMinimumTxFee(tx.size, feePerByte, feePerByteChunkSize)
+    if (activateFeePerByteTransactions &amp;&amp; feeAmount &lt; minimumFee) throw new Error('Transaction fee [' + tx.fee + '] is not enough for network transmission: ' + minimumFee)
 
     return tx
   }
@@ -2021,13 +1996,13 @@ module.exports = CryptoNote
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Externals</h3><ul><li><a href="external-Crypto.html">Crypto</a></li></ul><h3>Classes</h3><ul><li><a href="Block.html">Block</a></li><li><a href="BlockTemplate.html">BlockTemplate</a></li><li><a href="Crypto.html">Crypto</a></li><li><a href="CryptoNote.html">CryptoNote</a></li><li><a href="LevinPacket.html">LevinPacket</a></li><li><a href="Transaction.html">Transaction</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Externals</h3><ul><li><a href="external-Crypto.html">Crypto</a></li></ul><h3>Classes</h3><ul><li><a href="Block.html">Block</a></li><li><a href="BlockTemplate.html">BlockTemplate</a></li><li><a href="Crypto.html">Crypto</a></li><li><a href="CryptoNote.html">CryptoNote</a></li><li><a href="LevinPacket.html">LevinPacket</a></li><li><a href="LevinPayload.html">LevinPayload</a></li><li><a href="Transaction.html">Transaction</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sat Dec 21 2019 17:34:32 GMT-0500 (Eastern Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sat Dec 28 2019 12:39:41 GMT-0500 (Eastern Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>

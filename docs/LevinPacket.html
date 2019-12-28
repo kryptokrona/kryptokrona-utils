@@ -28,7 +28,7 @@
 
 <header>
     
-        <h2><span class="attribs"><span class="type-signature"></span></span>LevinPacket<span class="signature">(hexData<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h2>
+        <h2><span class="attribs"><span class="type-signature"></span></span>LevinPacket<span class="signature">(data<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h2>
         
     
 </header>
@@ -41,7 +41,7 @@
     
 
     
-    <h4 class="name" id="LevinPacket"><span class="type-signature"></span>new LevinPacket<span class="signature">(hexData<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="LevinPacket"><span class="type-signature"></span>new LevinPacket<span class="signature">(data<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
     
 
     
@@ -87,13 +87,16 @@
 
         <tr>
             
-                <td class="name"><code>hexData</code></td>
+                <td class="name"><code>data</code></td>
             
 
             <td class="type">
             
                 
 <span class="param-type">string</span>
+|
+
+<span class="param-type">number</span>
 
 
             
@@ -113,7 +116,7 @@
 
             
 
-            <td class="description last">the hexadecimal representation of an existing Levin Packet</td>
+            <td class="description last">the hexadecimal representation of an existing Levin Packet or the command number for a new packet</td>
         </tr>
 
     
@@ -154,7 +157,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="levinpacket.js.html">levinpacket.js</a>, <a href="levinpacket.js.html#line21">line 21</a>
+        <a href="levinpacket.js.html">levinpacket.js</a>, <a href="levinpacket.js.html#line26">line 26</a>
     </li></ul></dd>
     
 
@@ -258,7 +261,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="levinpacket.js.html">levinpacket.js</a>, <a href="levinpacket.js.html#line92">line 92</a>
+        <a href="levinpacket.js.html">levinpacket.js</a>, <a href="levinpacket.js.html#line205">line 205</a>
     </li></ul></dd>
     
 
@@ -330,7 +333,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="levinpacket.js.html">levinpacket.js</a>, <a href="levinpacket.js.html#line101">line 101</a>
+        <a href="levinpacket.js.html">levinpacket.js</a>, <a href="levinpacket.js.html#line214">line 214</a>
     </li></ul></dd>
     
 
@@ -407,7 +410,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="levinpacket.js.html">levinpacket.js</a>, <a href="levinpacket.js.html#line43">line 43</a>
+        <a href="levinpacket.js.html">levinpacket.js</a>, <a href="levinpacket.js.html#line48">line 48</a>
     </li></ul></dd>
     
 
@@ -484,7 +487,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="levinpacket.js.html">levinpacket.js</a>, <a href="levinpacket.js.html#line57">line 57</a>
+        <a href="levinpacket.js.html">levinpacket.js</a>, <a href="levinpacket.js.html#line62">line 62</a>
     </li></ul></dd>
     
 
@@ -502,7 +505,7 @@
 
         
             
-<h4 class="name" id="payload"><span class="type-signature"></span>payload<span class="type-signature"> :Buffer</span></h4>
+<h4 class="name" id="payload"><span class="type-signature"></span>payload<span class="type-signature"> :<a href="LevinPayload.html">LevinPayload</a></span></h4>
 
 
 
@@ -517,7 +520,7 @@
     <ul>
         <li>
             
-<span class="param-type">Buffer</span>
+<span class="param-type"><a href="LevinPayload.html">LevinPayload</a></span>
 
 
         </li>
@@ -556,7 +559,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="levinpacket.js.html">levinpacket.js</a>, <a href="levinpacket.js.html#line70">line 70</a>
+        <a href="levinpacket.js.html">levinpacket.js</a>, <a href="levinpacket.js.html#line75">line 75</a>
     </li></ul></dd>
     
 
@@ -628,7 +631,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="levinpacket.js.html">levinpacket.js</a>, <a href="levinpacket.js.html#line119">line 119</a>
+        <a href="levinpacket.js.html">levinpacket.js</a>, <a href="levinpacket.js.html#line238">line 238</a>
     </li></ul></dd>
     
 
@@ -705,7 +708,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="levinpacket.js.html">levinpacket.js</a>, <a href="levinpacket.js.html#line64">line 64</a>
+        <a href="levinpacket.js.html">levinpacket.js</a>, <a href="levinpacket.js.html#line69">line 69</a>
     </li></ul></dd>
     
 
@@ -782,7 +785,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="levinpacket.js.html">levinpacket.js</a>, <a href="levinpacket.js.html#line50">line 50</a>
+        <a href="levinpacket.js.html">levinpacket.js</a>, <a href="levinpacket.js.html#line55">line 55</a>
     </li></ul></dd>
     
 
@@ -859,7 +862,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="levinpacket.js.html">levinpacket.js</a>, <a href="levinpacket.js.html#line36">line 36</a>
+        <a href="levinpacket.js.html">levinpacket.js</a>, <a href="levinpacket.js.html#line41">line 41</a>
     </li></ul></dd>
     
 
@@ -936,7 +939,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="levinpacket.js.html">levinpacket.js</a>, <a href="levinpacket.js.html#line29">line 29</a>
+        <a href="levinpacket.js.html">levinpacket.js</a>, <a href="levinpacket.js.html#line34">line 34</a>
     </li></ul></dd>
     
 
@@ -970,13 +973,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Externals</h3><ul><li><a href="external-Crypto.html">Crypto</a></li></ul><h3>Classes</h3><ul><li><a href="Block.html">Block</a></li><li><a href="BlockTemplate.html">BlockTemplate</a></li><li><a href="Crypto.html">Crypto</a></li><li><a href="CryptoNote.html">CryptoNote</a></li><li><a href="LevinPacket.html">LevinPacket</a></li><li><a href="Transaction.html">Transaction</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Externals</h3><ul><li><a href="external-Crypto.html">Crypto</a></li></ul><h3>Classes</h3><ul><li><a href="Block.html">Block</a></li><li><a href="BlockTemplate.html">BlockTemplate</a></li><li><a href="Crypto.html">Crypto</a></li><li><a href="CryptoNote.html">CryptoNote</a></li><li><a href="LevinPacket.html">LevinPacket</a></li><li><a href="LevinPayload.html">LevinPayload</a></li><li><a href="Transaction.html">Transaction</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sat Dec 21 2019 17:34:32 GMT-0500 (Eastern Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sat Dec 28 2019 12:39:41 GMT-0500 (Eastern Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>
