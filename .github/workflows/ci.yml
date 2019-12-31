@@ -20,6 +20,7 @@ jobs:
       name: Set up Node
       with:
         node-version: ${{ matrix.node }}
+        registry-url: 'https://registry.npmjs.org'
     - name: Install Dependencies (skip c++ crypto module)
       run: npm install --no-optional
     - name: Execute Unit Tests (javascript crypto module)
