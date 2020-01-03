@@ -1,6 +1,6 @@
 {
   "name": "turtlecoin-utils",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "description": "A Node.js collection of utilities useful for TurtleCoin developers",
   "main": "index.js",
   "types": "index.d.ts",
@@ -52,7 +52,7 @@
   "devDependencies": {
     "mocha": "^6.2.2",
     "standard": "^12.0.1",
-    "webpack": "^4.41.2",
+    "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10"
   }
 }
