@@ -9,6 +9,7 @@ const Crypto = require('../').Crypto
 const describe = require('mocha').describe
 const it = require('mocha').it
 const LevinPacket = require('../').LevinPacket
+const Transaction = require('../').Transaction
 const TurtleCoinCrypto = new Crypto()
 const TurtleCoinUtils = require('../').CryptoNote
 const cnUtil = new TurtleCoinUtils(require('../config.json'))
@@ -403,7 +404,7 @@ describe('Transactions', function () {
     })
   })
 
-  describe('Transaction Creation', () => {
+  describe('Creation', () => {
     it('generate a transaction', () => {
       const madeOutputs = cnUtil.createTransactionOutputs('TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX', 90)
       const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94'
@@ -518,6 +519,30 @@ describe('Transactions', function () {
       } catch (e) {
         assert(e === false)
       }
+    })
+
+    it('generate a transaction with close input keys', () => {
+      const expectedPrefix = '01000102904e04c9c8940101013f86a1c38f2f1b712b8ed1c0b9db5108d37469cee287b345c301e0d6298ad1011c0501027c58ce140c54108f92d088f345e2693f04e01d76221913af7ee5863d4ec88502090227b5375a8ec6037a2d2901b654e345c1134c11baf3c85fa29014b0dc9fecaaf15a0215140ab1db83d1cfbdfd240a869aa3e16e2b78913bea0b09cb469129e85a2f42900302ecda72c450d12342baf6e44dffdad2e99004e42cdc9cded7e88a3dcea9fc63eec03e0255b88b9cc6649a5bbee45bfeeaaad6e90150fe1951ead6486c1c044a90590cee2101980aaff7df61f7c8e52c8cec71c3c558b86a4f753886e44ed489e15c5c1e04a3'
+
+      const tx = new Transaction()
+
+      tx.inputs = [{
+        type: '02',
+        amount: 10000,
+        keyImage: '86a1c38f2f1b712b8ed1c0b9db5108d37469cee287b345c301e0d6298ad1011c',
+        keyOffsets: ['2434121', '1', '1', '63']
+      }]
+
+      tx.outputs = [
+        { amount: 1, key: '7c58ce140c54108f92d088f345e2693f04e01d76221913af7ee5863d4ec88502', type: '02' },
+        { amount: 9, key: '27b5375a8ec6037a2d2901b654e345c1134c11baf3c85fa29014b0dc9fecaaf1', type: '02' },
+        { amount: 90, key: '15140ab1db83d1cfbdfd240a869aa3e16e2b78913bea0b09cb469129e85a2f42', type: '02' },
+        { amount: 400, key: 'ecda72c450d12342baf6e44dffdad2e99004e42cdc9cded7e88a3dcea9fc63ee', type: '02' },
+        { amount: 8000, key: '55b88b9cc6649a5bbee45bfeeaaad6e90150fe1951ead6486c1c044a90590cee', type: '02' }]
+
+      tx.addPublicKey('980aaff7df61f7c8e52c8cec71c3c558b86a4f753886e44ed489e15c5c1e04a3')
+
+      assert(tx.prefix === expectedPrefix)
     })
 
     it('fail to generate a transaction when network fee is incorrect', () => {
@@ -683,6 +708,16 @@ describe('Transactions', function () {
       } catch (e) {
         assert(e)
       }
+    })
+  })
+
+  describe('Parsing', () => {
+    it('Parse a transaction with a max unlock time', () => {
+      const raw = '01feffffffffffffffff010102e80705a101b3094bee0afe0ecfbb15ec01455949cfb1969da686948ed1babb761b45b053f8db505bcce50645035a02144da66c147cb413b99504fecf2d23a23b605ca98327043208d1d0658dc7fc8e6402038e86bd155a518d9810c7b9c568ce665a4078df99b826007aac3bf43dd94edaa00602488c123065769f6017340d93f349f084afa805695034e4da6cb640b9fdfeda9544022100cad826dac837aa45954bd48e66173f0cf6ff653e42055855b88ccb34d074324a011c4fadf9225eed74d3953e388c74c227803336d2f0f0939b153617c0c86deff7692d63c7db269107e3b6842d9a31b5dbe4a7ebc3ab4ede9318c8089df0d9a7069d84f5bc9e15826c3e30cbf6386bbfe4936afd1967f41011e14f0a662207550ebf4dd5d7100e6100bdfdd4503d456dbc7a70593eeeb941e41cc0618e55c43505d2cb5619eb83c1e22a309143a826dcaeac84d8a8648d4ba86d1976d05c7384029c894d3b4ece9c9c6dfd5c699c38e3f90dc010ee1fd57930a9f38e744ade500ad7ca6418cdcf55ec0570f8cd22fe40a04a19ae55ccbdb0833fc41e2d62f06802fd65a556b2a187c2c115a0acf8b1b934c1efb9ec383f5de33f8b981803e45d09f63cb1c7dfa239e15df9c122b636899d93641e1e1a61ad8d8ceb5759a8dcad03dd7e0e459aa6d623ab9052b29e228bacd3bb89cdbdc82bd3a8b99615cdc4f309df7e33650eab865674672d381d38774351dc1e9db66492d4c1863ca30b0e8105'
+
+      const tx = new Transaction(raw)
+
+      assert(raw === tx.blob)
     })
   })
 })
