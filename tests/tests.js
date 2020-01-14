@@ -477,6 +477,55 @@ describe('Transactions', function () {
       return cnUtil.createTransactionAsync(madeOutputs, [madeInput], randomOutputs, 3, 1000, '', 0)
     })
 
+    it('generate a fusion transaction', () => {
+      const madeOutputs = cnUtil.createTransactionOutputs('TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX', 13080)
+      const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94'
+      const walletPrivateViewKey = '6968a0b8f744ec4b8cea5ec124a1b4bd1626a2e6f31e999f8adbab52c4dfa909'
+      const walletPrivateSpendKey = 'd9d555a892a85f64916cae1a168bd3f7f400b6471c7b12b438b599601298210b'
+      const walletPublicSpendKey = '854a637b2863af9e8e8216eb2382f3d16616b3ac3e53d0976fbd6f8da6c56418'
+
+      const fakeInput = {
+        index: 2,
+        key: 'bb55bef919d1c9f74b5b52a8a6995a1dc4af4c0bb8824f5dc889012bc748173d',
+        amount: 1090,
+        globalIndex: 1595598
+      }
+
+      const madeInput = cnUtil.isOurTransactionOutput(txPublicKey, fakeInput, walletPrivateViewKey, walletPublicSpendKey, walletPrivateSpendKey)
+
+      const inputs = []
+      for (var i = 0; i < 12; i++) {
+        inputs.push(madeInput)
+      }
+
+      const randomOutput = [
+        {
+          globalIndex: 53984,
+          key: 'a5add8e36ca2473734fc7019730593888ae8c320753215976aac105816ba4848'
+        },
+        {
+          globalIndex: 403047,
+          key: '273dd5b63e84e6d7f12cf05eab092a7556708d8aac836c8748c1f0df3f0ff7fa'
+        },
+        {
+          globalIndex: 1533859,
+          key: '147121ea91715ee21af16513bc058d4ac445accfbe5cedc377c897fb04f4fecc'
+        }
+      ]
+
+      const randomOutputs = []
+      for (i = 0; i < 12; i++) {
+        randomOutputs.push(randomOutput)
+      }
+
+      try {
+        cnUtil.createTransaction(madeOutputs, inputs, randomOutputs, 3, 0, '', 0)
+      } catch (e) {
+        console.warn(e.toString())
+        assert(e === false)
+      }
+    })
+
     it('generate a transaction with arbitrary data payload', () => {
       const madeOutputs = cnUtil.createTransactionOutputs('TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX', 90)
       const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94'
@@ -543,6 +592,104 @@ describe('Transactions', function () {
       tx.addPublicKey('980aaff7df61f7c8e52c8cec71c3c558b86a4f753886e44ed489e15c5c1e04a3')
 
       assert(tx.prefix === expectedPrefix)
+    })
+
+    it('fail to generate a fusion transaction when not enough inputs are used', () => {
+      const madeOutputs = cnUtil.createTransactionOutputs('TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX', 13080)
+      const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94'
+      const walletPrivateViewKey = '6968a0b8f744ec4b8cea5ec124a1b4bd1626a2e6f31e999f8adbab52c4dfa909'
+      const walletPrivateSpendKey = 'd9d555a892a85f64916cae1a168bd3f7f400b6471c7b12b438b599601298210b'
+      const walletPublicSpendKey = '854a637b2863af9e8e8216eb2382f3d16616b3ac3e53d0976fbd6f8da6c56418'
+
+      const fakeInput = {
+        index: 2,
+        key: 'bb55bef919d1c9f74b5b52a8a6995a1dc4af4c0bb8824f5dc889012bc748173d',
+        amount: 1090,
+        globalIndex: 1595598
+      }
+
+      const madeInput = cnUtil.isOurTransactionOutput(txPublicKey, fakeInput, walletPrivateViewKey, walletPublicSpendKey, walletPrivateSpendKey)
+
+      const inputs = []
+      for (var i = 0; i < 6; i++) {
+        inputs.push(madeInput)
+      }
+
+      const randomOutput = [
+        {
+          globalIndex: 53984,
+          key: 'a5add8e36ca2473734fc7019730593888ae8c320753215976aac105816ba4848'
+        },
+        {
+          globalIndex: 403047,
+          key: '273dd5b63e84e6d7f12cf05eab092a7556708d8aac836c8748c1f0df3f0ff7fa'
+        },
+        {
+          globalIndex: 1533859,
+          key: '147121ea91715ee21af16513bc058d4ac445accfbe5cedc377c897fb04f4fecc'
+        }
+      ]
+
+      const randomOutputs = []
+      for (i = 0; i < 6; i++) {
+        randomOutputs.push(randomOutput)
+      }
+
+      try {
+        cnUtil.createTransaction(madeOutputs, inputs, randomOutputs, 3, 0, '', 0)
+        assert(false)
+      } catch (e) {
+
+      }
+    })
+
+    it('fail to generate a fusion transaction when not enough outputs are created', () => {
+      const madeOutputs = cnUtil.createTransactionOutputs('TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX', 12000)
+      const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94'
+      const walletPrivateViewKey = '6968a0b8f744ec4b8cea5ec124a1b4bd1626a2e6f31e999f8adbab52c4dfa909'
+      const walletPrivateSpendKey = 'd9d555a892a85f64916cae1a168bd3f7f400b6471c7b12b438b599601298210b'
+      const walletPublicSpendKey = '854a637b2863af9e8e8216eb2382f3d16616b3ac3e53d0976fbd6f8da6c56418'
+
+      const fakeInput = {
+        index: 2,
+        key: 'bb55bef919d1c9f74b5b52a8a6995a1dc4af4c0bb8824f5dc889012bc748173d',
+        amount: 1000,
+        globalIndex: 1595598
+      }
+
+      const madeInput = cnUtil.isOurTransactionOutput(txPublicKey, fakeInput, walletPrivateViewKey, walletPublicSpendKey, walletPrivateSpendKey)
+
+      const inputs = []
+      for (var i = 0; i < 12; i++) {
+        inputs.push(madeInput)
+      }
+
+      const randomOutput = [
+        {
+          globalIndex: 53984,
+          key: 'a5add8e36ca2473734fc7019730593888ae8c320753215976aac105816ba4848'
+        },
+        {
+          globalIndex: 403047,
+          key: '273dd5b63e84e6d7f12cf05eab092a7556708d8aac836c8748c1f0df3f0ff7fa'
+        },
+        {
+          globalIndex: 1533859,
+          key: '147121ea91715ee21af16513bc058d4ac445accfbe5cedc377c897fb04f4fecc'
+        }
+      ]
+
+      const randomOutputs = []
+      for (i = 0; i < 12; i++) {
+        randomOutputs.push(randomOutput)
+      }
+
+      try {
+        cnUtil.createTransaction(madeOutputs, inputs, randomOutputs, 3, 0, '', 0)
+        assert(false)
+      } catch (e) {
+
+      }
     })
 
     it('fail to generate a transaction when network fee is incorrect', () => {

@@ -3,6 +3,8 @@
   "addressPrefix": 3914525,
   "keccakIterations": 1,
   "defaultNetworkFee": 10,
+  "fusionMinInputCount": 12,
+  "fusionMinInOutCountRatio": 4,
   "mmMiningBlockVersion": 2,
   "maximumOutputAmount": 100000000000,
   "maximumOutputsPerTransaction": 90,
