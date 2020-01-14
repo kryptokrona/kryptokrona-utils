@@ -1,6 +1,6 @@
 {
   "name": "turtlecoin-utils",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "description": "A Node.js collection of utilities useful for TurtleCoin developers",
   "main": "index.js",
   "types": "index.d.ts",
