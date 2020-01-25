@@ -4,19 +4,17 @@
   "description": "A Node.js collection of utilities useful for TurtleCoin developers",
   "main": "index.js",
   "types": "index.d.ts",
-  "files": [
-    "config.json",
-    "index.d.ts",
-    "dist/TurtleCoinUtils.js",
-    "lib/*"
-  ],
   "engines": {
     "node": ">=8"
   },
   "scripts": {
-    "test": "standard && mocha tests/tests.js",
-    "build-docs": "jsdoc -c jsdoc.json",
-    "prepare": "webpack"
+    "build": "./node_modules/.bin/tsc",
+    "docs": "./node_modules/.bin/typedoc && touch docs/.nojekyll",
+    "install": "npm run build",
+    "prepublishOnly": "npm test && npm run docs",
+    "style": "./node_modules/.bin/tslint -c tslint.json src/mnemonics.ts",
+    "test": "npm run style && npm run build && npm run test-mocha",
+    "test-mocha": "./node_modules/.bin/mocha"
   },
   "keywords": [
     "TurtleCoin",
@@ -26,32 +24,32 @@
     "type": "git",
     "url": "git+https://github.com/turtlecoin/turtlecoin-utils.git"
   },
+  "homepage": "https://utils.turtlecoin.dev",
+  "bugs": {
+    "url": "https://github.com/turtlecoin/turtlecoin-utils/issues"
+  },
   "author": "Brandon Lehmann <brandonlehmann@gmail.com>",
   "contributors": [
     "zpalmtree <22151537+zpalmtree@users.noreply.github.com>"
   ],
   "license": "GPL-3.0",
-  "optionalDependencies": {
-    "turtlecoin-crypto": "^3.1.3"
-  },
   "dependencies": {
     "crc": "^3.8.0",
     "get-random-values": "^1.2.0",
     "numeral": "^2.0.6",
     "secure-random-string": "^1.1.0",
+    "turtlecoin-base58": "0.0.4",
+    "turtlecoin-crypto": "^4.0.5",
+    "turtlecoin-mnemonics": "0.0.4",
+    "turtlecoin-serialization-helper": "0.0.1",
+    "typescript": "^3.7.5",
     "varint": "^5.0.0"
   },
-  "standard": {
-    "ignore": [
-      "lib/turtlecoin-crypto/turtlecoin-crypto.js",
-      "lib/turtlecoin-crypto/turtlecoin-crypto-wasm.js",
-      "dist/*",
-      "docs/*"
-    ]
-  },
   "devDependencies": {
+    "@types/node": "^13.5.0",
     "mocha": "^6.2.2",
-    "standard": "^12.0.1",
+    "tslint": "^6.0.0",
+    "typedoc": "^0.16.8",
     "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10"
   }
