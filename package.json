@@ -1,20 +1,25 @@
 {
   "name": "turtlecoin-utils",
-  "version": "1.0.20",
+  "version": "2.0.0",
   "description": "A Node.js collection of utilities useful for TurtleCoin developers",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "engines": {
-    "node": ">=8"
+    "node": ">=10"
   },
   "scripts": {
     "build": "./node_modules/.bin/tsc",
     "docs": "./node_modules/.bin/typedoc && touch docs/.nojekyll",
+    "docs-server": "./node_modules/.bin/http-server docs",
+    "host-docs": "npm run docs && npm run docs-server",
     "install": "npm run build",
     "prepublishOnly": "npm test && npm run docs",
-    "style": "./node_modules/.bin/tslint -c tslint.json src/mnemonics.ts",
-    "test": "npm run style && npm run build && npm run test-mocha",
-    "test-mocha": "./node_modules/.bin/mocha"
+    "style": "./node_modules/.bin/tslint -c tslint.json src/*.ts src/Types/*.ts",
+    "fix-style": "./node_modules/.bin/tslint -c tslint.json --fix src/*.ts src/Types/*.ts",
+    "test": "npm run style && npm run build && npm run test-node && npm run test-js",
+    "mocha": "./node_modules/.bin/mocha",
+    "test-node": "npm run mocha",
+    "test-js": "env FORCE_JS=1 npm run mocha"
   },
   "keywords": [
     "TurtleCoin",
@@ -34,22 +39,25 @@
   ],
   "license": "GPL-3.0",
   "dependencies": {
-    "crc": "^3.8.0",
+    "@types/aes-js": "^3.1.0",
+    "aes-js": "^3.1.2",
+    "big-integer": "^1.6.48",
     "get-random-values": "^1.2.0",
     "numeral": "^2.0.6",
     "secure-random-string": "^1.1.0",
-    "turtlecoin-base58": "0.0.4",
-    "turtlecoin-crypto": "^4.0.5",
-    "turtlecoin-mnemonics": "0.0.4",
-    "turtlecoin-serialization-helper": "0.0.1",
-    "typescript": "^3.7.5",
-    "varint": "^5.0.0"
+    "turtlecoin-base58": "^0.0.4",
+    "turtlecoin-crypto": "^4.0.6",
+    "turtlecoin-mnemonics": "^0.0.4",
+    "turtlecoin-serialization-helper": "0.0.5",
+    "typescript": "^3.7.5"
   },
   "devDependencies": {
-    "@types/node": "^13.5.0",
+    "@types/node": "^13.5.3",
+    "@types/numeral": "0.0.26",
+    "http-server": "^0.12.1",
     "mocha": "^6.2.2",
     "tslint": "^6.0.0",
-    "typedoc": "^0.16.8",
+    "typedoc": "^0.16.9",
     "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10"
   }
