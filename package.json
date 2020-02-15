@@ -42,13 +42,13 @@
     "@types/aes-js": "^3.1.0",
     "aes-js": "^3.1.2",
     "big-integer": "^1.6.48",
+    "bytestream-helper": "0.0.6",
     "get-random-values": "^1.2.0",
     "numeral": "^2.0.6",
     "secure-random-string": "^1.1.0",
     "turtlecoin-base58": "^0.0.4",
     "turtlecoin-crypto": "^4.0.6",
     "turtlecoin-mnemonics": "^0.0.4",
-    "turtlecoin-serialization-helper": "0.0.5",
     "typescript": "^3.7.5"
   },
   "devDependencies": {

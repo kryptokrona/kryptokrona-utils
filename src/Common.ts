@@ -2,7 +2,7 @@
 //
 // Please see the included LICENSE file for more information.
 
-import {Writer} from 'turtlecoin-serialization-helper';
+import {Writer} from 'bytestream-helper';
 import {BigInteger} from './Types';
 
 /** @ignore */

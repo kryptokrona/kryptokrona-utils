@@ -8,7 +8,7 @@ import {Common} from './Common';
 import * as ConfigInterface from './Config';
 import {ED25519, TurtleCoinCrypto} from './Types';
 import {Mnemonics} from 'turtlecoin-mnemonics';
-import {Reader, Writer} from 'turtlecoin-serialization-helper';
+import {Reader, Writer} from 'bytestream-helper';
 import Config = ConfigInterface.Interfaces.Config;
 
 /** @ignore */

@@ -6,7 +6,7 @@ import {Address} from './Address';
 import {AddressPrefix} from './AddressPrefix';
 import {ED25519, Interfaces as TransactionInterfaces, MultisigInterfaces, TurtleCoinCrypto} from './Types';
 import {Counter, ModeOfOperation, utils as AESUtils} from 'aes-js';
-import {Reader, Writer} from 'turtlecoin-serialization-helper';
+import {Reader, Writer} from 'bytestream-helper';
 import {Base58} from 'turtlecoin-base58';
 
 /** @ignore */

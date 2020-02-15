@@ -12,7 +12,7 @@ import {
     TransactionOutputs,
     TurtleCoinCrypto,
 } from './Types';
-import {Reader, Writer} from 'turtlecoin-serialization-helper';
+import {Reader, Writer} from 'bytestream-helper';
 
 /** @ignore */
 const TransactionVersion2Suffix = 'bc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a0000000000000000000000000000000000000000000000000000000000000000';

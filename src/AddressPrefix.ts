@@ -4,7 +4,7 @@
 
 import {Base58} from 'turtlecoin-base58';
 import * as ConfigInterface from './Config';
-import {Reader, Writer} from 'turtlecoin-serialization-helper';
+import {Reader, Writer} from 'bytestream-helper';
 import Config = ConfigInterface.Interfaces.Config;
 
 /** @ignore */

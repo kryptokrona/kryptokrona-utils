@@ -4,7 +4,7 @@
 
 import {Block} from './Block';
 import {Transaction} from './Transaction';
-import {Reader} from 'turtlecoin-serialization-helper';
+import {Reader} from 'bytestream-helper';
 import {BigInteger, ExtraTag} from './Types';
 
 /** @ignore */
