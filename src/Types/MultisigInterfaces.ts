@@ -32,14 +32,13 @@ export namespace MultisigInterfaces {
          */
         transactionPrefixHash: string;
         /**
-         * The real output index in the list of prepared ring signatures for
-         * which this partial signing key should be used
+         * The transaction signature index (which signature set this applies to)
          */
-        realOutputIndex: number;
+        index: number;
         /**
          * The partial signing key
          */
-        partialSigningKey: number;
+        partialSigningKey: string;
     }
 
     /** @ignore */

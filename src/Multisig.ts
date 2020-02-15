@@ -4,7 +4,8 @@
 
 import {Address} from './Address';
 import {ED25519} from './Types/ED25519';
-import {TurtleCoinCrypto} from './Types';
+import {Interfaces, MultisigInterfaces, TransactionInputs, TurtleCoinCrypto} from './Types';
+import {Transaction} from './Transaction';
 /** @ignore */
 import KeyPair = ED25519.KeyPair;
 
@@ -67,8 +68,9 @@ export class Multisig {
         const keys: string[] = this.m_participant_keys;
 
         this.m_multisig_keys.forEach((key) => {
-            if (key.publicKey.length !== 0
-                && keys.indexOf(key.publicKey) === -1) {
+            if (key.publicKey.length !== 0 &&
+                keys.indexOf(key.publicKey) === -1
+            ) {
                 keys.push(key.publicKey);
             }
         });
@@ -213,7 +215,8 @@ export class Multisig {
         multisig_private_keys: string[],
         sharedPrivateViewKey: string,
         threshold: number,
-        participants: number): Multisig {
+        participants: number,
+    ): Multisig {
         if (!isValidThreshold(threshold, participants)) {
             throw new Error('Threshold does not require a majority of participants');
         }
@@ -263,6 +266,23 @@ export class Multisig {
         return isValidThreshold(threshold, participants);
     }
 
+    /**
+     * Restores a key image from partial key images
+     * @param publicEphemeral the key image public emphermal
+     * @param derivation the key input derivation
+     * @param outputIndex the key input output index
+     * @param partialKeyImages the partial key images
+     * @returns the restored key image
+     */
+    public static async restoreKeyImage(
+        publicEphemeral: string,
+        derivation: string,
+        outputIndex: number,
+        partialKeyImages: string[],
+    ): Promise<string> {
+        return TurtleCoinCrypto.restoreKeyImage(publicEphemeral, derivation, outputIndex, partialKeyImages);
+    }
+
     private m_wallet_multisig_keys: KeyPair[] = [];
     private m_multisig_keys: KeyPair[] = [];
     private m_participant_keys: string[] = [];
@@ -278,7 +298,10 @@ export class Multisig {
      * @param publicSpendKeys the participant spend key(s)
      * @param [privateViewKey] the private view key of the participant
      */
-    public addParticipant(publicSpendKeys: string[] | string, privateViewKey?: string) {
+    public async addParticipant(
+        publicSpendKeys: string[] | string,
+        privateViewKey?: string,
+    ): Promise<void> {
         if (privateViewKey && !TurtleCoinCrypto.checkScalar(privateViewKey)) {
             throw new Error('Private view key is not a valid private key');
         }
@@ -309,6 +332,133 @@ export class Multisig {
 
         this.m_currentParticipants++;
     }
+
+    /**
+     * Generates the partial key images for the given public ephemeral
+     * @param transactionHash the transaction hash containing the output used
+     * @param publicEphemeral the public ephemeral of the output
+     * @param outputIndex the index of the output in the transaction
+     * @returns the partial key images
+     */
+    public async generatePartialKeyImages(
+        transactionHash: string,
+        publicEphemeral: string,
+        outputIndex: number,
+    ): Promise<MultisigInterfaces.PartialKeyImage[]> {
+        const promises = [];
+
+        for (const multisigKey of this.m_multisig_keys) {
+            promises.push(TurtleCoinCrypto.generateKeyImage(publicEphemeral, multisigKey.privateKey));
+        }
+
+        const results = await Promise.all(promises);
+
+        const partialKeyImages: MultisigInterfaces.PartialKeyImage[] = [];
+
+        for (const result of results) {
+            partialKeyImages.push({
+                transactionHash,
+                outputIndex,
+                partialKeyImage: result,
+            });
+        }
+
+        return partialKeyImages;
+    }
+
+    /**
+     * Generates the partial signing keys for the given prepared transaction
+     * @param tx the prepared transaction
+     * @returns the partial signing keys
+     */
+    public async generatePartialSigningKeys(
+        tx: Interfaces.PreparedTransaction,
+    ): Promise<MultisigInterfaces.PartialSigningKey[]> {
+        const promises = [];
+
+        for (let i = 0; i < tx.transaction.signatures.length; i++) {
+            const realOutputIndex = getRealOutputIndex(tx, i);
+
+            for (const multisigKey of this.m_multisig_keys) {
+                promises.push(
+                    generatePartialSigningKey(
+                        tx.transaction.signatures[i][realOutputIndex], i, multisigKey.privateKey));
+            }
+        }
+
+        const results = await Promise.all(promises);
+
+        const partialSigningKeys: MultisigInterfaces.PartialSigningKey[] = [];
+
+        for (const result of results) {
+            partialSigningKeys.push({
+                transactionPrefixHash: tx.transaction.prefixHash,
+                index: result.index,
+                partialSigningKey: result.key,
+            });
+        }
+
+        return partialSigningKeys;
+    }
+
+    /**
+     * Restores the ring signatures of a prepared transaction using the supplied partial signing keys
+     * @param tx the prepared transaction
+     * @param partialSigningKeys the partial signing keys required for the signature scheme
+     * @returns the completed transaction
+     */
+    public async completeTransaction(
+        tx: Interfaces.PreparedTransaction,
+        partialSigningKeys: MultisigInterfaces.PartialSigningKey[],
+    ): Promise<Transaction> {
+        const promises = [];
+
+        for (let i = 0; i < tx.transaction.signatures.length; i++) {
+            const preparedRingSignature = getPreparedRingSignature(tx.signatureMeta, i);
+            const ringPartialKeys = getPartialSigningKeys(partialSigningKeys, i);
+
+            for (const partialKey of ringPartialKeys) {
+                promises.push(restoreRingSignatures(
+                    preparedRingSignature.input.derivation,
+                    preparedRingSignature.input.outputIndex,
+                    ringPartialKeys,
+                    preparedRingSignature.realOutputIndex,
+                    preparedRingSignature.key,
+                    tx.transaction.signatures[i],
+                    i,
+                ));
+            }
+        }
+
+        const results = await Promise.all(promises);
+
+        for (const result of results) {
+            tx.transaction.signatures[result.index] = result.sigs;
+        }
+
+        const prefixHash = tx.transaction.prefixHash;
+
+        const checkPromises = [];
+
+        for (let i = 0; i < tx.transaction.inputs.length; i++) {
+            checkPromises.push(checkRingSignatures(
+                prefixHash,
+                (tx.transaction.inputs[i] as TransactionInputs.KeyInput).keyImage,
+                getInputKeys(tx.signatureMeta, i),
+                tx.transaction.signatures[i],
+            ));
+        }
+
+        const validSigs = await Promise.all(checkPromises);
+
+        for (const valid of validSigs) {
+            if (!valid) {
+                throw new Error('Could not complete ring signatures');
+            }
+        }
+
+        return tx.transaction;
+    }
 }
 
 /** @ignore */
@@ -317,7 +467,10 @@ function isValidThreshold(threshold: number, participants: number): boolean {
 }
 
 /** @ignore */
-function required_keys(threshold: number, participants: number): number {
+function required_keys(
+    threshold: number,
+    participants: number,
+): number {
     let result = participants;
 
     const rounds = Multisig.exchangeRoundsRequired(threshold, participants);
@@ -329,4 +482,119 @@ function required_keys(threshold: number, participants: number): number {
     }
 
     return result;
+}
+
+/** @ignore */
+async function generatePartialSigningKey(
+    preparedSignature: string,
+    index: number,
+    privateSpendKey: string,
+): Promise<{ key: string, index: number }> {
+    const key = await TurtleCoinCrypto.generatePartialSigningKey(preparedSignature, privateSpendKey);
+
+    return {
+        key,
+        index,
+    };
+}
+
+/** @ignore */
+function getRealOutputIndex(
+    tx: Interfaces.PreparedTransaction,
+    index: number,
+): number {
+    for (const sigs of tx.signatureMeta) {
+        if (sigs.index === index) {
+            return sigs.realOutputIndex;
+        }
+    }
+
+    throw new Error('Could not find the real output index in the prepared ring signatures');
+}
+
+/** @ignore */
+function getPartialSigningKeys(
+    partialSigningKeys: MultisigInterfaces.PartialSigningKey[],
+    index: number,
+): MultisigInterfaces.PartialSigningKey[] {
+    const results: MultisigInterfaces.PartialSigningKey[] = [];
+
+    for (const partialSigningKey of partialSigningKeys) {
+        if (partialSigningKey.index === index) {
+            results.push(partialSigningKey);
+        }
+    }
+
+    return results;
+}
+
+/** @ignore */
+function getPreparedRingSignature(
+    preparedRingSignatures: Interfaces.PreparedRingSignature[],
+    index: number,
+): Interfaces.PreparedRingSignature {
+    for (const preparedRingSignature of preparedRingSignatures) {
+        if (preparedRingSignature.index === index) {
+            return preparedRingSignature;
+        }
+    }
+
+    throw new Error('Prepared ring signature not found at specified index');
+}
+
+/** @ignore */
+async function restoreRingSignatures(
+    derivation: string,
+    outputIndex: number,
+    partialSigningKeys: MultisigInterfaces.PartialSigningKey[],
+    realOutputIndex: number,
+    key: string,
+    signatures: string[],
+    index: number,
+): Promise<{ sigs: string[], index: number }> {
+    const keys: string[] = [];
+
+    for (const partialSigningKey of partialSigningKeys) {
+        if (partialSigningKey.index !== index) {
+            throw new Error('invalid partial signing key supplied');
+        }
+        keys.push(partialSigningKey.partialSigningKey);
+    }
+
+    const sigs = await TurtleCoinCrypto.restoreRingSignatures(
+        derivation,
+        outputIndex,
+        keys,
+        realOutputIndex,
+        key,
+        signatures,
+    );
+
+    return {
+        sigs,
+        index,
+    };
+}
+
+/** @ignore */
+function getInputKeys(preparedSignatures: Interfaces.PreparedRingSignature[], index: number): string[] {
+    for (const meta of preparedSignatures) {
+        if (meta.index === index) {
+            if (meta.inputKeys) {
+                return meta.inputKeys;
+            }
+        }
+    }
+
+    throw new Error('Could not locate input keys in the prepared signatures');
+}
+
+/** @ignore */
+async function checkRingSignatures(
+    hash: string,
+    keyImage: string,
+    publicKeys: string[],
+    signatures: string[],
+): Promise<boolean> {
+    return TurtleCoinCrypto.checkRingSignatures(hash, keyImage, publicKeys, signatures);
 }

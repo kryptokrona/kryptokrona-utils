@@ -4,7 +4,7 @@
 
 import {Address} from './Address';
 import {AddressPrefix} from './AddressPrefix';
-import {ED25519, MultisigInterfaces, TurtleCoinCrypto, Interfaces as TransactionInterfaces} from './Types';
+import {ED25519, Interfaces as TransactionInterfaces, MultisigInterfaces, TurtleCoinCrypto} from './Types';
 import {Counter, ModeOfOperation, utils as AESUtils} from 'aes-js';
 import {Reader, Writer} from 'turtlecoin-serialization-helper';
 import {Base58} from 'turtlecoin-base58';
