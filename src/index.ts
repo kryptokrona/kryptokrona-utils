@@ -9,6 +9,7 @@ export {BlockTemplate} from './BlockTemplate';
 export {Crypto} from 'turtlecoin-crypto';
 export {CryptoNote} from './CryptoNote';
 export {LevinPacket, LevinProtocol} from './LevinPacket';
+export {LevinPayloads} from './Types/LevinPayloads';
 export {Multisig} from './Multisig';
 export {MultisigMessage} from './MultisigMessage';
 export {ParentBlock} from './ParentBlock';
