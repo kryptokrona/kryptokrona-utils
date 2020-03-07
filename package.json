@@ -1,7 +1,7 @@
 {
-  "name": "turtlecoin-utils",
-  "version": "1.0.20",
-  "description": "A Node.js collection of utilities useful for TurtleCoin developers",
+  "name": "kryptokrona-utils",
+  "version": "1.0.",
+  "description": "A Node.js collection of utilities useful for Kryptokrona developers",
   "main": "index.js",
   "types": "index.d.ts",
   "files": [
@@ -19,7 +19,7 @@
     "prepare": "webpack"
   },
   "keywords": [
-    "TurtleCoin",
+    "Kryptokrona",
     "Utilities"
   ],
   "repository": {
@@ -28,7 +28,8 @@
   },
   "author": "Brandon Lehmann <brandonlehmann@gmail.com>",
   "contributors": [
-    "zpalmtree <22151537+zpalmtree@users.noreply.github.com>"
+    "zpalmtree <22151537+zpalmtree@users.noreply.github.com>",
+    "ulviux <ulviux@kryptokrona.se>"
   ],
   "license": "GPL-3.0",
   "optionalDependencies": {
