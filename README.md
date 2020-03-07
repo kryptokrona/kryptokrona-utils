@@ -10,7 +10,7 @@
 #### Development Build Status
 [![Build Status](https://github.com/turtlecoin/turtlecoin-utils/workflows/CI%20Build%20Tests/badge.svg?branch=development)](https://github.com/turtlecoin/turtlecoin-utils/actions)
 
-This package contains code that wraps [turtlecoin-crypto](https://github.com/turtlecoin/turtlecoin-crypto) primitives into an easier to use interface. This includes the ability to easily discover funds for a wallet, create transactions, sign transactions (ring signatures), create new wallets, verify addresses, and handful of other useful methods. These methods can then be wrapped into a Javascript-based wallet such as [turtlecoin-wallet-backend-js](https://github.com/turtlecoin/turtlecoin-wallet-backend-js).
+This package contains code that wraps [turtlecoin-crypto](https://github.com/turtlecoin/turtlecoin-crypto) primitives into an easier to use interface. This includes the ability to easily discover funds for a wallet, create transactions, sign transactions (ring signatures), create new wallets, verify addresses, and handful of other useful methods. These methods can then be wrapped into a Javascript-based wallet such as [kryptokrona-wallet-backend-js](https://github.com/kryptokrona/kryptokrona-wallet-backend-js).
 
 If you experience any issues with this library, the best way to address such situations is to submit a Pull Request to resolve the issue you are running into.
 
