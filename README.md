@@ -26,7 +26,7 @@ npm install kryptokrona-utils
 
 ```javascript
 const KryptokronaUtils= require('kryptokrona-utils').CryptoNote
-const coinUtils = new TurtleCoinUtils()
+const coinUtils = new KryptokronaUtils()
 ```
 
 ### TypeScript
@@ -43,10 +43,10 @@ You can find TypeScript type definitions [here](index.d.ts)
 When packing for the browser with a tool like [webpack](https://webpack.js.org/) we advise that you use the ready `event` of the webpacked module to determine when the Cryptographic methods are available.
 
 ```html
-<script src="TurtleCoinUtils.js"></script>
+<script src="KryptokronaUtils.js"></script>
 <script>
   TurtleCoinUtils.on('ready', () => {
-    const coinUtils = new TurtleCoinUtils.CryptoNote()
+    const coinUtils = new KryptokronaUtils.CryptoNote()
   })
 </script>
 ```
