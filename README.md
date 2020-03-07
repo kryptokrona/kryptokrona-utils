@@ -1,4 +1,4 @@
-![image](https://user-images.githubusercontent.com/34389545/35821974-62e0e25c-0a70-11e8-87dd-2cfffeb6ed47.png)
+![image](https://camo.githubusercontent.com/d344c9e18b69f96502f3bf61b0dedc1ca9603af3/68747470733a2f2f6b727970746f6b726f6e612e73652f77702d636f6e74656e742f75706c6f6164732f323031392f30372f786b722d6c6f676f2d626c61636b2d746578742e706e67)
 
 # Kryptokrona Javascript Utilities
 
@@ -27,14 +27,14 @@ npm install kryptokrona-utils
 ### JavaScript
 
 ```javascript
-const TurtleCoinUtils = require('turtlecoin-utils').CryptoNote
+const KryptokronaUtils= require('kryptokrona-utils').CryptoNote
 const coinUtils = new TurtleCoinUtils()
 ```
 
 ### TypeScript
 
 ```typescript
-import { CryptoNote } from 'turtlecoin-utils'
+import { CryptoNote } from 'kryptokrona-utils'
 const coinUtils = new CryptoNote()
 ```
 
