@@ -1,6 +1,6 @@
 ![image](https://user-images.githubusercontent.com/34389545/35821974-62e0e25c-0a70-11e8-87dd-2cfffeb6ed47.png)
 
-# TurtleCoin Javascript Utilities
+# Kryptokrona Javascript Utilities
 
 [![NPM](https://nodei.co/npm/turtlecoin-utils.png?downloads=true&stars=true)](https://nodei.co/npm/turtlecoin-utils/)
 
@@ -19,7 +19,7 @@ If you experience any issues with this library, the best way to address such sit
 ## Installation
 
 ```bash
-npm install turtlecoin-utils
+npm install kryptokrona-utils
 ```
 
 ## Initialization

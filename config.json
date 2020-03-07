@@ -1,6 +1,6 @@
 {
   "coinUnitPlaces": 2,
-  "addressPrefix": 3914525,
+  "addressPrefix": 2239254,
   "keccakIterations": 1,
   "defaultNetworkFee": 10,
   "fusionMinInputCount": 12,
