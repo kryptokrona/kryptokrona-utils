@@ -1,6 +1,6 @@
 {
   "name": "kryptokrona-utils",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "A Node.js collection of utilities useful for Kryptokrona developers",
   "main": "index.js",
   "types": "index.d.ts",
