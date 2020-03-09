@@ -2,7 +2,7 @@
   "coinUnitPlaces": 2,
   "addressPrefix": 2239254,
   "keccakIterations": 1,
-  "defaultNetworkFee": 0.1,
+  "defaultNetworkFee": 10,
   "fusionMinInputCount": 12,
   "fusionMinInOutCountRatio": 4,
   "mmMiningBlockVersion": 2,
