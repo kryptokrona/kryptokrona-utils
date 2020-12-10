@@ -7,8 +7,8 @@ exports.Config = void 0;
 /** @ignore */
 exports.Config = {
     activateParentBlockVersion: 2,
-    coinUnitPlaces: 2,
-    addressPrefix: 3914525,
+    coinUnitPlaces: 5,
+    addressPrefix: 2239254,
     keccakIterations: 1,
     defaultNetworkFee: 10,
     fusionMinInputCount: 12,

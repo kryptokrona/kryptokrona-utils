@@ -23,7 +23,7 @@ class AddressPrefix {
      * @param [base58] the Base58 representation of the address prefix
      */
     constructor(decimal, base58) {
-        this.m_decimal = Config_1.Config.addressPrefix || 3914525;
+        this.m_decimal = Config_1.Config.addressPrefix || 2239254;
         if (decimal) {
             this.m_decimal = decimal;
         }
