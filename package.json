@@ -47,7 +47,7 @@
     "node-fetch": "^2.6.1",
     "numeral": "^2.0.6",
     "semver": "^7.3.2",
-    "turtlecoin-crypto": "^6.0.2"
+    "kryptokrona-crypto": "^1.0.0"
   },
   "devDependencies": {
     "@ledgerhq/hw-transport": "^5.30.0",
