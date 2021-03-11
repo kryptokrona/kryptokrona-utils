@@ -1,4 +1,4 @@
-import { Crypto } from 'turtlecoin-crypto';
+import { Crypto } from 'kryptokrona-crypto';
 import * as BigInteger from 'big-integer';
 /** @ignore */
 declare const TurtleCoinCrypto: Crypto;
