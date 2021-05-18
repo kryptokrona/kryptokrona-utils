@@ -10,7 +10,7 @@ export declare enum PortableStorageConstants {
     VERSION = 1
 }
 export * from './Types/PortableStorageValue';
-export { ICryptoConfig } from 'turtlecoin-crypto';
+export { ICryptoConfig } from 'kryptokrona-crypto';
 export * from './Types/IExtraNonce';
 export * from './Types/IExtraTag';
 export * from './Types/ITransactionInput';

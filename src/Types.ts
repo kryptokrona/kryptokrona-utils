@@ -19,7 +19,7 @@ export enum PortableStorageConstants {
 
 export * from './Types/PortableStorageValue';
 
-export { ICryptoConfig } from 'turtlecoin-crypto';
+export { ICryptoConfig } from 'kryptokrona-crypto';
 
 export * from './Types/IExtraNonce';
 
