@@ -1,6 +1,6 @@
 {
   "name": "kryptokrona-utils",
-  "version": "1.3.4",
+  "version": "1.3.5",
   "description": "A Typescript/CommonJS collection of utilities useful for Kryptokrona developers",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -44,10 +44,11 @@
     "aes-js": "^3.1.2",
     "big-integer": "^1.6.48",
     "get-random-values": "^1.2.2",
+    "kryptokrona-crypto": "^1.0.1",
     "node-fetch": "^2.6.1",
     "numeral": "^2.0.6",
-    "semver": "^7.3.2",
-    "kryptokrona-crypto": "^1.0.0"
+    "package-lock.json": "^1.0.0",
+    "semver": "^7.3.2"
   },
   "devDependencies": {
     "@ledgerhq/hw-transport": "^5.30.0",
