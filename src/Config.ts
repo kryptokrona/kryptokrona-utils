@@ -59,7 +59,7 @@ export const Config: ICoinRunningConfig = {
     mmMiningBlockVersion: 2,
     maximumOutputAmount: 100000000000,
     maximumOutputsPerTransaction: 90,
-    maximumExtraSize: 1024,
+    maximumExtraSize: 16000,
     activateFeePerByteTransactions: true,
     feePerByte: 1.953125,
     feePerByteChunkSize: 256,
