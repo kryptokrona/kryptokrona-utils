@@ -44,9 +44,10 @@
     "aes-js": "^3.1.2",
     "big-integer": "^1.6.48",
     "get-random-values": "^1.2.2",
-    "kryptokrona-crypto": "^1.0.0",
+    "kryptokrona-crypto": "^1.0.1",
     "node-fetch": "^2.6.1",
     "numeral": "^2.0.6",
+    "package-lock.json": "^1.0.0",
     "semver": "^7.3.2"
   },
   "devDependencies": {

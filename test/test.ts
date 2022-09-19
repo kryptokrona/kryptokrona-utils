@@ -219,8 +219,7 @@ describe('Wallets', async function () {
         'exotic', 'cube', 'hexagon', 'ionic', 'joyous',
         'cage', 'abnormal', 'hull', 'jigsaw', 'lied'
     ].join(' ');
-    const testAddress = 'TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB' +
-        '6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX';
+    const testAddress = 'SEKReYzDA8eSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzN8tx5J';
 
     describe('Mnemonics', async () => {
         it('address from mnemonic phrase has matching seed', async () => {
@@ -477,7 +476,7 @@ describe('Transactions', async function () {
         it('Amount: 1234567', async () => {
             const amount = 1234567;
             const transfers = await cnUtil.generateTransactionOutputs(
-                'TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX',
+                'SEKReYzDA8eSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzN8tx5J',
                 amount);
             assert(transfers.length === 7);
         });
@@ -485,7 +484,7 @@ describe('Transactions', async function () {
         it('Amount: 101010', async () => {
             const amount = 101010;
             const transfers = await cnUtil.generateTransactionOutputs(
-                'TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX',
+                'SEKReYzDA8eSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzN8tx5J',
                 amount);
             assert(transfers.length === 3);
         });
@@ -493,7 +492,7 @@ describe('Transactions', async function () {
         it('Amount: 500000000000', async () => {
             const amount = 500000000000;
             const transfers = await cnUtil.generateTransactionOutputs(
-                'TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX',
+                'SEKReYzDA8eSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzN8tx5J',
                 amount);
             assert(transfers.length === 5);
         });
@@ -501,7 +500,7 @@ describe('Transactions', async function () {
         it('Amount: 555555555555', async () => {
             const amount = 955555555555;
             const transfers = await cnUtil.generateTransactionOutputs(
-                'TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX',
+                'SEKReYzDA8eSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzN8tx5J',
                 amount);
             assert(transfers.length === 20);
         });
@@ -609,7 +608,7 @@ describe('Transactions', async function () {
     describe('Creation', async () => {
         it('generate a transaction', async function () {
             const madeOutputs = await cnUtil.generateTransactionOutputs(
-                'TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX',
+                'SEKReYzDA8eSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzN8tx5J',
                 90);
             const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94';
             const walletPrivateViewKey = '6968a0b8f744ec4b8cea5ec124a1b4bd1626a2e6f31e999f8adbab52c4dfa909';
@@ -646,7 +645,7 @@ describe('Transactions', async function () {
 
         it('generate a fusion transaction', async function () {
             const madeOutputs = await cnUtil.generateTransactionOutputs(
-                'TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX',
+                'SEKReYzDA8eSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzN8tx5J',
                 13080);
             const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94';
             const walletPrivateViewKey = '6968a0b8f744ec4b8cea5ec124a1b4bd1626a2e6f31e999f8adbab52c4dfa909';
@@ -693,7 +692,7 @@ describe('Transactions', async function () {
 
         it('generate a transaction with arbitrary data payload', async function () {
             const madeOutputs = await cnUtil.generateTransactionOutputs(
-                'TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX',
+                'SEKReYzDA8eSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzN8tx5J',
                 90);
             const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94';
             const walletPrivateViewKey = '6968a0b8f744ec4b8cea5ec124a1b4bd1626a2e6f31e999f8adbab52c4dfa909';
@@ -765,7 +764,7 @@ describe('Transactions', async function () {
         it('generate a transaction using payment Id', async function () {
             const paymentId = '1886db9573ae180e27f39cced773bdf83aa3a55f1168d89e82bf337bb5373506';
             const madeOutputs = await cnUtil.generateTransactionOutputs(
-                'TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX',
+                'SEKReYzDA8eSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzN8tx5J',
                 90);
             const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94';
             const walletPrivateViewKey = '6968a0b8f744ec4b8cea5ec124a1b4bd1626a2e6f31e999f8adbab52c4dfa909';
@@ -807,8 +806,7 @@ describe('Transactions', async function () {
         it('generate a transaction using integrated address', async function () {
             const paymentId = '1886db9573ae180e27f39cced773bdf83aa3a55f1168d89e82bf337bb5373506';
             const madeOutputs = await cnUtil.generateTransactionOutputs(
-                'TRTLuxjc5auCRCJ9dUVPzt9EVTdT8GwogAaXBVFiTzbUC5sTZZaueftBubfuHB6C2BCQpKNjQDAdB9ZhsjZMndwc9Zn' +
-                'DBrCj846SpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzPs6LiD',
+                'SEKReTvpKxHHnr9yK2iDuv9EVTh4XHYokAbjnrxqqDytHTXbKUhnxt2HG3CQimtD9ZHmFqtB11ECM9ZhsoBaEoXU9ZnDBrCj846SpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzLgJPPC',
                 90);
             const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94';
             const walletPrivateViewKey = '6968a0b8f744ec4b8cea5ec124a1b4bd1626a2e6f31e999f8adbab52c4dfa909';
@@ -850,8 +848,7 @@ describe('Transactions', async function () {
         it('generate a transaction using integrated address and matching payment ID', async function () {
             const paymentId = '1886db9573ae180e27f39cced773bdf83aa3a55f1168d89e82bf337bb5373506';
             const madeOutputs = await cnUtil.generateTransactionOutputs(
-                'TRTLuxjc5auCRCJ9dUVPzt9EVTdT8GwogAaXBVFiTzbUC5sTZZaueftBubfuHB6C2BCQpKNjQDAdB9ZhsjZMndwc9Zn' +
-                'DBrCj846SpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzPs6LiD',
+                'SEKReTvpKxHHnr9yK2iDuv9EVTh4XHYokAbjnrxqqDytHTXbKUhnxt2HG3CQimtD9ZHmFqtB11ECM9ZhsoBaEoXU9ZnDBrCj846SpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzLgJPPC',
                 90);
             const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94';
             const walletPrivateViewKey = '6968a0b8f744ec4b8cea5ec124a1b4bd1626a2e6f31e999f8adbab52c4dfa909';
@@ -892,7 +889,7 @@ describe('Transactions', async function () {
 
         it('fail to generate a fusion transaction when not enough inputs are used', async function () {
             const madeOutputs = await cnUtil.generateTransactionOutputs(
-                'TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX',
+                'SEKReYzDA8eSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzN8tx5J',
                 13080);
             const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94';
             const walletPrivateViewKey = '6968a0b8f744ec4b8cea5ec124a1b4bd1626a2e6f31e999f8adbab52c4dfa909';
@@ -945,7 +942,7 @@ describe('Transactions', async function () {
 
         it('fail to generate a fusion transaction when not enough outputs are created', async function () {
             const madeOutputs = await cnUtil.generateTransactionOutputs(
-                'TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX',
+                'SEKReYzDA8eSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzN8tx5J',
                 12000);
             const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94';
             const walletPrivateViewKey = '6968a0b8f744ec4b8cea5ec124a1b4bd1626a2e6f31e999f8adbab52c4dfa909';
@@ -998,7 +995,7 @@ describe('Transactions', async function () {
 
         it('fail to generate a transaction when network fee is incorrect', async function () {
             const madeOutputs = await cnUtil.generateTransactionOutputs(
-                'TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX',
+                'SEKReYzDA8eSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzN8tx5J',
                 90);
             const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94';
             const walletPrivateViewKey = '6968a0b8f744ec4b8cea5ec124a1b4bd1626a2e6f31e999f8adbab52c4dfa909';
@@ -1044,8 +1041,7 @@ describe('Transactions', async function () {
 
             for (let i = 0; i < 100; i++) {
                 const outputs = await cnUtil.generateTransactionOutputs(
-                    'TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB' +
-                    '6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX',
+                    'SEKReYzDA8eSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzN8tx5J',
                     90);
 
                 for (const output of outputs) {
@@ -1094,7 +1090,7 @@ describe('Transactions', async function () {
 
         it('fail to generate a transaction with too much extra data', async function () {
             const madeOutputs = await cnUtil.generateTransactionOutputs(
-                'TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX',
+                'SEKReYzDA8eSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzN8tx5J',
                 90);
             const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94';
             const walletPrivateViewKey = '6968a0b8f744ec4b8cea5ec124a1b4bd1626a2e6f31e999f8adbab52c4dfa909';
@@ -1175,7 +1171,7 @@ describe('Transactions', async function () {
 
         it('fail to generate a transaction when output too large', async function () {
             const madeOutputs = await cnUtil.generateTransactionOutputs(
-                'TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX',
+                'SEKReYzDA8eSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzN8tx5J',
                 90);
             const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94';
             const walletPrivateViewKey = '6968a0b8f744ec4b8cea5ec124a1b4bd1626a2e6f31e999f8adbab52c4dfa909';
@@ -1218,10 +1214,7 @@ describe('Transactions', async function () {
             async function () {
                 const paymentId = '1886db9573ae180e27f39cced773bdf83aa3a55f1168d89e82bf337bb5373505';
                 const madeOutputs = await cnUtil.generateTransactionOutputs(
-                    'TRTLuxjc5auCRCJ9dUVPzt9EVTdT8GwogAaXBVFiTzbUC5sTZ' +
-                'ZaueftBubfuHB6C2BCQpKNjQDAdB9ZhsjZMndwc9ZnDBrCj846SpRsZW' +
-                'xkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3' +
-                'Avwz7W89J4doLuigLjUzPs6LiD',
+                    'SEKReTvpKxHHnr9yK2iDuv9EVTh4XHYokAbjnrxqqDytHTXbKUhnxt2HG3CQimtD9ZHmFqtB11ECM9ZhsoBaEoXU9ZnDBrCj846SpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzLgJPPC',
                     90);
                 const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94';
                 const walletPrivateViewKey = '6968a0b8f744ec4b8cea5ec124a1b4bd1626a2e6f31e999f8adbab52c4dfa909';
@@ -1260,16 +1253,10 @@ describe('Transactions', async function () {
 
         it('fail to generate transaction using two destinations with differing payment IDs', async function () {
             const madeOutputs = await cnUtil.generateTransactionOutputs(
-                'TRTLuxjc5auCRCJ9dUVPzt9EVTdT8GwogAaXBVFiTzbUC5sTZ' +
-                'ZaueftBubfuHB6C2BCQpKNjQDAdB9ZhsjZMndwc9ZnDBrCj846SpRsZW' +
-                'xkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3' +
-                'Avwz7W89J4doLuigLjUzPs6LiD',
+                'SEKReTvpKxHHnr9yK2iDuv9EVTh4XHYokAbjnrxqqDytHTXbKUhnxt2HG3CQimtD9ZHmFqtB11ECM9ZhsoBaEoXU9ZnDBrCj846SpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzLgJPPC',
                 90);
             const madeOutputs2 = await cnUtil.generateTransactionOutputs(
-                'TRTLuxp8RkjA5TMvFWhSoz94bwe9fHbFpCb1f669XiNc95D7s' +
-                '7CShfW9unmPq2M3nS9jbdbx37dnH9unntNPGVmqA5LbzVL4HQrSpRsZW' +
-                'xkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3' +
-                'Avwz7W89J4doLuigLjUzPembYH',
+                'SEKReV9wn2gAQSq4aw8NLUAS9Hoa474Gd9ZdTkF87NdyHGAAg5UKtDN9Q9w8vRnFpqHFtpt2Nfz6ZHG3DoXFgLi8Aa2Sqyh2XfLSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzRdt4NT',
                 90);
             const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94';
             const walletPrivateViewKey = '6968a0b8f744ec4b8cea5ec124a1b4bd1626a2e6f31e999f8adbab52c4dfa909';
@@ -1310,7 +1297,7 @@ describe('Transactions', async function () {
     describe('Prepared Transactions', async () => {
         it('prepare a transaction', async function () {
             const madeOutputs = await cnUtil.generateTransactionOutputs(
-                'TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX',
+                'SEKReYzDA8eSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzN8tx5J',
                 90);
             const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94';
             const walletPrivateViewKey = '6968a0b8f744ec4b8cea5ec124a1b4bd1626a2e6f31e999f8adbab52c4dfa909';
@@ -1347,7 +1334,7 @@ describe('Transactions', async function () {
 
         it('prepare a transaction - precomputed K', async function () {
             const madeOutputs = await cnUtil.generateTransactionOutputs(
-                'TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX',
+                'SEKReYzDA8eSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzN8tx5J',
                 90);
             const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94';
             const walletPrivateViewKey = '6968a0b8f744ec4b8cea5ec124a1b4bd1626a2e6f31e999f8adbab52c4dfa909';
@@ -1396,7 +1383,7 @@ describe('Transactions', async function () {
 
         it('complete a transaction', async function () {
             const madeOutputs = await cnUtil.generateTransactionOutputs(
-                'TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX',
+                'SEKReYzDA8eSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzN8tx5J',
                 90);
             const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94';
             const walletPrivateViewKey = '6968a0b8f744ec4b8cea5ec124a1b4bd1626a2e6f31e999f8adbab52c4dfa909';
@@ -1436,7 +1423,7 @@ describe('Transactions', async function () {
 
         it('complete a transaction - precomputed K', async function () {
             const madeOutputs = await cnUtil.generateTransactionOutputs(
-                'TRTLv3nzumGSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzQjvRqX',
+                'SEKReYzDA8eSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzN8tx5J',
                 90);
             const txPublicKey = '3b0cc2b066812e6b9fcc42a797dc3c723a7344b604fd4be0b22e06254ff57f94';
             const walletPrivateViewKey = '6968a0b8f744ec4b8cea5ec124a1b4bd1626a2e6f31e999f8adbab52c4dfa909';
@@ -2007,7 +1994,7 @@ describe('TurtleCoind < 1.0.0', function () {
 
     let is_explorer = false;
 
-    const server = new LegacyTurtleCoind('seed.turtlenode.io');
+    const server = new LegacyTurtleCoind('gota.kryptokrona.se');
 
     before('check()', async function () {
         try {
@@ -2092,8 +2079,7 @@ describe('TurtleCoind < 1.0.0', function () {
     });
 
     it('blockTemplate()', async () => {
-        const wallet = 'TRTLv1pacKFJk9QgSmzk2LJWn14JGmTKzReFLz1RgY3K9Ryn77' +
-            '83RDT2TretzfYdck5GMCGzXTuwKfePWQYViNs4avKpnUbrwfQ';
+        const wallet = 'SEKReYzDA8eSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzN8tx5J';
         const reserve = 8;
         const template = await server.blockTemplate(wallet, reserve);
         assert(template.difficulty > 0);
@@ -2257,7 +2243,7 @@ describe('TurtleCoind >= 1.0.0', function () {
 
     let is_explorer = false;
 
-    const server = new TurtleCoind('localhost');
+    const server = new TurtleCoind('seed.turtlenode.io');
 
     before('check()', async function () {
         try {
@@ -2336,8 +2322,7 @@ describe('TurtleCoind >= 1.0.0', function () {
     });
 
     it('blockTemplate()', async () => {
-        const wallet = 'TRTLv1pacKFJk9QgSmzk2LJWn14JGmTKzReFLz1RgY3K9Ryn77' +
-            '83RDT2TretzfYdck5GMCGzXTuwKfePWQYViNs4avKpnUbrwfQ';
+        const wallet = 'SEKReYzDA8eSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzN8tx5J';
         const reserve = 8;
         const template = await server.blockTemplate(wallet, reserve);
         assert(template.difficulty > 0);
@@ -2548,14 +2533,11 @@ describe('WalletAPI', async function () {
         });
 
         it('createIntegratedAddress()', async () => {
-            const address = 'TRTLuwuGiuyWSkTTKQy8jGj4Dfr5typGJFoaHKzKGdu79S79x1Mk5biMnWUFXRtr9K' +
-                'FmDAQxUuh9j3WretzXaZzGVPyzRQSM8Wu';
+            const address = 'SEKReYzDA8eSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzN8tx5J';
             const paymentId = '1DE6276D400098659A6B065D6422959FB15C83A260D32E59095987E91FF01B05';
             const response = await server.createIntegratedAddress(address, paymentId);
 
-            const expected = 'TRTLuxjg8MT9Q9z9a1oMTmAa6thQCcjQV94iS9Cmu3tVAZzKnMkf5iAAQDKkcBhon' +
-                'A9QgkMdUZe6tAQN9gQUkhqh9EsSQLNDoX9WSkTTKQy8jGj4Dfr5typGJFoaHKzKGdu79S79x1Mk5biMn' +
-                'WUFXRtr9KFmDAQxUuh9j3WretzXaZzGVPyzRUXFtwc';
+            const expected = 'SEKReTvtNiq9Q9z9a1oMTmAa6thQCcjQV94iS9Cmu3tVAZzKnMkf5iAAQDKkcBhonA9QgkMdUZe6tAQN9gQUkhqh9EsSQSFwzNSSpRsZWxkcbDhiVEfy9rAgX3X9b7z8XQAy9gwjB6cwr6BJ3P52a6TQUSfA4eXf3Avwz7W89J4doLuigLjUzMwXk5B';
 
             assert(response === expected);
         });
@@ -2601,7 +2583,7 @@ describe('WalletAPI', async function () {
 
         it('newDestination()', () => {
             const dst = server.newDestination(
-                'TRTLuwuGiuyWSkTTKQy8jGj4Dfr5typGJFoaHKzKGdu79S79x1Mk5biMnWUFXRtr9KFmDAQxUuh9j3WretzXaZzGVPyzRQSM8Wu',
+                'SEKReWQFA2m8PQtU6fQbjz3nEFgKLxGABF3G8kZNBcUjVpangdKwD7MT7SmXiQWGJNLhbA6h99tEoXz7zNYJazDmRSygnmRgNRU',
                 1.15
             );
             assert(dst.amount === 115);
@@ -2669,15 +2651,13 @@ describe('WalletAPI', async function () {
         });
 
         it('validateAddress()', async () => {
-            const address = 'TRTLuxQ2jXVeGrQNKFgAvGc4GifYEcrLC8UWEebLMjfNDt7JXZhAyzChdAthLTZHWYPKRgeimfJqzHBmv' +
-                'hwUzYgPAHML6SRXjoz';
+            const address = 'SEKReWQFA2m8PQtU6fQbjz3nEFgKLxGABF3G8kZNBcUjVpangdKwD7MT7SmXiQWGJNLhbA6h99tEoXz7zNYJazDmRSygnmRgNRU';
             const response = await server.validateAddress(address);
             assert(response.actualAddress === address);
         });
 
         it('fail validateAddress()', async () => {
-            const address = 'TRTLuxQ2jXVeGrQNKFgAvGc4GifYEcrLC8UWEebLMjfNDt7JXZhAyzChdAthLTZHWYPKRgeimfJqzHBmv' +
-                'hwUzYgPAHML6SRXjoq';
+            const address = 'SEKReWQFA2m8PQtU6fQbjz3nEFgKLxGABF3G8kZNBcUjVpangdKwD7MT7SmXiQWGJNLhbA6h99tEoXz7zNYJazDmRSygnmRgNRv';
 
             /* We expect this test to fail as this address is invalid */
             await server.validateAddress(address)
@@ -2760,8 +2740,7 @@ describe('WalletAPI', async function () {
                     randomFilename(),
                     password,
                     '84271126f661ae8cdb06de981d69fd7fc7b14aaa9af53766440836b5c52da900',
-                    'TRTLuxQ2jXVeGrQNKFgAvGc4GifYEcrLC8UWEebLMjfNDt7JXZhAyzChdAthLTZH' +
-                    'WYPKRgeimfJqzHBmvhwUzYgPAHML6SRXjoz'
+                    'SEKReWnThg8hdAthLTZHWYPKRgeimfJqzHBmvhwUzYgPAHML6T8upxZBfR8FNbHKdfPLVaUXRJkjhPt9R2whzZmJKsjmmKWueaa'
                 );
             });
 
