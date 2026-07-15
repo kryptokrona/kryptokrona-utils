@@ -1,6 +1,6 @@
 {
   "name": "kryptokrona-utils",
-  "version": "1.3.6",
+  "version": "1.3.9",
   "description": "A Typescript/CommonJS collection of utilities useful for Kryptokrona developers",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,6 +13,7 @@
   },
   "scripts": {
     "build": "./node_modules/.bin/tsc",
+    "test": "./node_modules/.bin/mocha --require ts-node/register --timeout 120000 test/test.ts",
     "docs": "./node_modules/.bin/typedoc && touch docs/.nojekyll && git restore docs/CNAME"
   },
   "keywords": [
@@ -36,6 +37,7 @@
     "@ledgerhq/hw-transport-node-hid": "^5.22.0"
   },
   "dependencies": {
+    "@ledgerhq/hw-transport": "^5.30.0",
     "@turtlecoin/base58": "0.0.10",
     "@turtlecoin/bytestream": "0.0.14",
     "@turtlecoin/mnemonics": "0.0.10",
@@ -44,14 +46,13 @@
     "aes-js": "^3.1.2",
     "big-integer": "^1.6.48",
     "get-random-values": "^1.2.2",
-    "kryptokrona-crypto": "^1.0.1",
+    "kryptokrona-crypto": "^1.0.2",
     "node-fetch": "^2.6.1",
     "numeral": "^2.0.6",
     "package-lock.json": "^1.0.0",
     "semver": "^7.3.2"
   },
   "devDependencies": {
-    "@ledgerhq/hw-transport": "^5.30.0",
     "@types/aes-js": "^3.1.1",
     "@types/ledgerhq__hw-transport": "^4.21.3",
     "@types/ledgerhq__hw-transport-node-hid": "^4.22.2",

@@ -34,6 +34,38 @@ export class Address {
     }
 
     /**
+     * The same address (same keys) encoded under the ALTERNATE prefix
+     * (default <-> alternate). Both forms decode to the same wallet; this lets a
+     * wallet present the form a third-party service expects during a prefix
+     * transition.
+     * @returns the Base58 encoded address using the other prefix
+     */
+    public async alternateAddress (): Promise<string> {
+        const otherDecimal = (this.m_prefix.decimal === Config.addressPrefix)
+            ? Config.addressPrefixAlt
+            : Config.addressPrefix;
+
+        const writer = new Writer();
+
+        writer.hex(new AddressPrefix(otherDecimal).hex);
+
+        if (this.m_paymentId) {
+            writer.hex(this.m_paymentId);
+        }
+
+        writer.hash(this.m_keys.spend.publicKey);
+
+        writer.hash(this.m_keys.view.publicKey);
+
+        const checksum = (await TurtleCoinCrypto.cn_fast_hash(writer.blob))
+            .slice(0, 8);
+
+        writer.hex(checksum);
+
+        return Base58.encode(writer.blob);
+    }
+
+    /**
      * The address index number [0=primary]
      */
     public get subwalletIndex (): number {
@@ -119,11 +151,18 @@ export class Address {
 
         const reader = new Reader(decodedAddress);
 
-        const decodedPrefix = reader.bytes(prefix.size).toString('hex');
+        /* Accept either the expected prefix or the alternate prefix -- both
+         * encode the same keys, so an address in either form is valid. The two
+         * prefixes can be different byte-lengths, so read whichever prefix is
+         * actually embedded in the address rather than assuming a fixed size. */
+        const embeddedPrefix = AddressPrefix.from(address);
 
-        if (decodedPrefix !== prefix.hex) {
+        if (embeddedPrefix.decimal !== prefix.decimal &&
+            embeddedPrefix.decimal !== Config.addressPrefixAlt) {
             throw new Error('Invalid address prefix');
         }
+
+        const decodedPrefix = reader.bytes(embeddedPrefix.size).toString('hex');
 
         let paymentId = '';
 
@@ -144,6 +183,10 @@ export class Address {
         }
 
         const result = new Address();
+
+        /* Preserve the prefix the address was actually encoded with, so it round
+         * trips (an address parsed from the alternate prefix re-encodes to it). */
+        result.m_prefix = embeddedPrefix;
 
         result.m_paymentId = paymentId;
 

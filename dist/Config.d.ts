@@ -3,6 +3,7 @@ export interface ICoinConfig {
     activateParentBlockVersion?: number;
     coinUnitPlaces?: number;
     addressPrefix?: number;
+    addressPrefixAlt?: number;
     keccakIterations?: number;
     defaultNetworkFee?: number;
     fusionMinInputCount?: number;
@@ -25,6 +26,7 @@ export interface ICoinRunningConfig extends ICoinConfig {
     activateParentBlockVersion: number;
     coinUnitPlaces: number;
     addressPrefix: number;
+    addressPrefixAlt: number;
     keccakIterations: number;
     defaultNetworkFee: number;
     fusionMinInputCount: number;
