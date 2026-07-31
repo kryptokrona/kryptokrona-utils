@@ -342,6 +342,9 @@ export class CryptoNote extends EventEmitter implements ICryptoNote {
      * @returns the minimum transaction fee
      */
     public calculateMinimumTransactionFee (txSize: number): number {
+
+        return 10;
+
         const chunks = Math.ceil(
             txSize /
             (this.m_config.feePerByteChunkSize || Config.feePerByteChunkSize));

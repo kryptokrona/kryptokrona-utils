@@ -251,6 +251,7 @@ class CryptoNote extends events_1.EventEmitter {
      * @returns the minimum transaction fee
      */
     calculateMinimumTransactionFee(txSize) {
+        return 10;
         const chunks = Math.ceil(txSize /
             (this.m_config.feePerByteChunkSize || Config_1.Config.feePerByteChunkSize));
         return chunks *

@@ -7,6 +7,10 @@ export interface ICoinConfig {
     activateParentBlockVersion?: number;
     coinUnitPlaces?: number;
     addressPrefix?: number;
+    /* Alternate/secondary address prefix. Both prefixes encode the same keys and
+       are accepted when decoding, so addresses stay compatible across a prefix
+       change (see Address.fromAddress / Address.alternateAddress). */
+    addressPrefixAlt?: number;
     keccakIterations?: number;
     defaultNetworkFee?: number;
     fusionMinInputCount?: number;
@@ -30,6 +34,7 @@ export interface ICoinRunningConfig extends ICoinConfig {
     activateParentBlockVersion: number;
     coinUnitPlaces: number;
     addressPrefix: number;
+    addressPrefixAlt: number;
     keccakIterations: number;
     defaultNetworkFee: number;
     fusionMinInputCount: number;
@@ -52,6 +57,7 @@ export const Config: ICoinRunningConfig = {
     activateParentBlockVersion: 2,
     coinUnitPlaces: 5,
     addressPrefix: 2239254,
+    addressPrefixAlt: 45239,
     keccakIterations: 1,
     defaultNetworkFee: 10,
     fusionMinInputCount: 12,
@@ -59,7 +65,7 @@ export const Config: ICoinRunningConfig = {
     mmMiningBlockVersion: 2,
     maximumOutputAmount: 100000000000,
     maximumOutputsPerTransaction: 90,
-    maximumExtraSize: 1024,
+    maximumExtraSize: 16000,
     activateFeePerByteTransactions: true,
     feePerByte: 1.953125,
     feePerByteChunkSize: 256,

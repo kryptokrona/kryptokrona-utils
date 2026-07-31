@@ -271,6 +271,40 @@ describe('Wallets', async function () {
         });
     });
 
+    describe('Address Prefix Compatibility', async () => {
+        let sekr: Address;
+
+        before('Parse the default-prefix (SEKR) address', async () => {
+            sekr = await Address.fromAddress(testAddress);
+        });
+
+        it('default address uses the SEKR prefix', async () => {
+            assert((await sekr.address()).startsWith('SEKR'));
+        });
+
+        it('alternate address uses the Xkr prefix', async () => {
+            assert((await sekr.alternateAddress()).startsWith('Xkr'));
+        });
+
+        it('the alternate (Xkr) address decodes to the same keys', async () => {
+            const fromAlt = await Address.fromAddress(await sekr.alternateAddress());
+            assert(fromAlt.spend.publicKey === sekr.spend.publicKey);
+            assert(fromAlt.view.publicKey === sekr.view.publicKey);
+        });
+
+        it('both prefixes round-trip to their own form', async () => {
+            const alt = await sekr.alternateAddress();
+            const fromAlt = await Address.fromAddress(alt);
+            assert(await sekr.address() === testAddress);
+            assert(await fromAlt.address() === alt);
+        });
+
+        it('the alternate form is symmetric (Xkr -> SEKR)', async () => {
+            const fromAlt = await Address.fromAddress(await sekr.alternateAddress());
+            assert(await fromAlt.alternateAddress() === testAddress);
+        });
+    });
+
     describe('Message Signing', async () => {
         it('sign a string message', async () => {
             await cnUtil.signMessage(

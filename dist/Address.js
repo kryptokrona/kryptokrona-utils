@@ -46,6 +46,31 @@ class Address {
         });
     }
     /**
+     * The same address (same keys) encoded under the ALTERNATE prefix
+     * (default <-> alternate). Both forms decode to the same wallet; this lets a
+     * wallet present the form a third-party service expects during a prefix
+     * transition.
+     * @returns the Base58 encoded address using the other prefix
+     */
+    alternateAddress() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const otherDecimal = (this.m_prefix.decimal === Config_1.Config.addressPrefix)
+                ? Config_1.Config.addressPrefixAlt
+                : Config_1.Config.addressPrefix;
+            const writer = new bytestream_1.Writer();
+            writer.hex(new AddressPrefix_1.AddressPrefix(otherDecimal).hex);
+            if (this.m_paymentId) {
+                writer.hex(this.m_paymentId);
+            }
+            writer.hash(this.m_keys.spend.publicKey);
+            writer.hash(this.m_keys.view.publicKey);
+            const checksum = (yield Types_1.TurtleCoinCrypto.cn_fast_hash(writer.blob))
+                .slice(0, 8);
+            writer.hex(checksum);
+            return base58_1.Base58.encode(writer.blob);
+        });
+    }
+    /**
      * The address index number [0=primary]
      */
     get subwalletIndex() {
@@ -118,10 +143,16 @@ class Address {
             }
             const decodedAddress = base58_1.Base58.decode(address);
             const reader = new bytestream_1.Reader(decodedAddress);
-            const decodedPrefix = reader.bytes(prefix.size).toString('hex');
-            if (decodedPrefix !== prefix.hex) {
+            /* Accept either the expected prefix or the alternate prefix -- both
+             * encode the same keys, so an address in either form is valid. The two
+             * prefixes can be different byte-lengths, so read whichever prefix is
+             * actually embedded in the address rather than assuming a fixed size. */
+            const embeddedPrefix = AddressPrefix_1.AddressPrefix.from(address);
+            if (embeddedPrefix.decimal !== prefix.decimal &&
+                embeddedPrefix.decimal !== Config_1.Config.addressPrefixAlt) {
                 throw new Error('Invalid address prefix');
             }
+            const decodedPrefix = reader.bytes(embeddedPrefix.size).toString('hex');
             let paymentId = '';
             if (reader.unreadBytes > ((SIZES.KEY * 2) + SIZES.CHECKSUM)) {
                 paymentId = reader.hex(SIZES.KEY * 2);
@@ -134,6 +165,9 @@ class Address {
                 throw new Error('Could not parse address: checksum mismatch');
             }
             const result = new Address();
+            /* Preserve the prefix the address was actually encoded with, so it round
+             * trips (an address parsed from the alternate prefix re-encodes to it). */
+            result.m_prefix = embeddedPrefix;
             result.m_paymentId = paymentId;
             result.m_keys = yield Types_1.ED25519.Keys.from(yield Types_1.ED25519.KeyPair.from(publicSpend), yield Types_1.ED25519.KeyPair.from(publicView));
             return result;

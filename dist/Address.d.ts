@@ -14,6 +14,14 @@ export declare class Address {
      */
     address(): Promise<string>;
     /**
+     * The same address (same keys) encoded under the ALTERNATE prefix
+     * (default <-> alternate). Both forms decode to the same wallet; this lets a
+     * wallet present the form a third-party service expects during a prefix
+     * transition.
+     * @returns the Base58 encoded address using the other prefix
+     */
+    alternateAddress(): Promise<string>;
+    /**
      * The address index number [0=primary]
      */
     get subwalletIndex(): number;
