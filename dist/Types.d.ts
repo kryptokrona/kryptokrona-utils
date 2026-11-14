@@ -15,6 +15,7 @@ export * from './Types/IExtraNonce';
 export * from './Types/IExtraTag';
 export * from './Types/ITransactionInput';
 export * from './Types/ITransactionOutput';
+export * from './Types/ITransactionSignature';
 export * from './Types/ED25519';
 export * from './Types/ITransaction';
 export * from './Types/MultisigInterfaces';

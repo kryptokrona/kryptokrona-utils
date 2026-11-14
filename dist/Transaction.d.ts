@@ -1,6 +1,7 @@
 /// <reference types="node" />
 import { Address } from './Address';
-import { BigInteger, ED25519, ExtraTag, TransactionInputs, TransactionOutputs } from './Types';
+import { BigInteger, ED25519, ExtraTag, TransactionInputs, TransactionOutputs, TransactionSignatures } from './Types';
+import { Reader } from '@turtlecoin/bytestream';
 /** @ignore */
 interface Cache {
     prefix: string;
@@ -52,7 +53,10 @@ export declare class Transaction {
      */
     get fee(): number;
     /**
-     * Returns the transaction hash
+     * Returns the transaction hash (id): cn_fast_hash of the whole serialized transaction,
+     * for every transaction version (Kryptokrona transaction version 2 keeps the version 1 rule).
+     * The Monero-style version 2 coinbase id applies only to the miner transaction of a merge-mining
+     * parent block, see ParentBlock.minerTransactionHash()
      */
     hash(): Promise<string>;
     /**
@@ -85,7 +89,9 @@ export declare class Transaction {
      */
     get prefix(): string;
     /**
-     * Returns the transaction prefix hash
+     * Returns the transaction prefix hash: cn_fast_hash of the serialized prefix, for every
+     * transaction version. It is the message signed by the ring signatures (version 1) and by the
+     * CLSAG signatures (version 2)
      */
     prefixHash(): Promise<string>;
     /**
@@ -128,10 +134,29 @@ export declare class Transaction {
      * @returns the new transaction object
      */
     static from(data: Buffer | string): Promise<Transaction>;
+    /**
+     * Reads one output of a transaction of the given version from the reader:
+     * versions 0 and 1 accept only untagged key outputs (0x02), version 2 only tagged key outputs (0x03)
+     * @ignore
+     * @param reader the reader positioned at the output
+     * @param version the transaction version
+     * @param [unknownTypeMessage] the error message for an unknown output type
+     * @returns the output
+     */
+    static readOutput(reader: Reader, version: number, unknownTypeMessage?: string): TransactionOutputs.KeyOutput;
     version: number;
     inputs: TransactionInputs.ITransactionInput[];
     outputs: TransactionOutputs.ITransactionOutput[];
+    /**
+     * The ring signatures of a version 0/1 transaction: per input, one 64-byte `c || r` pair per ring member.
+     * Always empty for version 2
+     */
     signatures: string[][];
+    /**
+     * The CLSAG signatures of a version 2 transaction: one per input, in input order.
+     * Always empty for versions 0 and 1
+     */
+    clsagSignatures: TransactionSignatures.IClsagSignature[];
     ignoredField: number;
     transactionKeys: ED25519.KeyPair;
     protected m_unlockTime: BigInteger.BigInteger;

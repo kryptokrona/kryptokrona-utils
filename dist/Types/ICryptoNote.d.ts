@@ -37,9 +37,9 @@ export declare namespace CryptoNoteInterfaces {
         abstract generateTransactionOutputs(address: string, amount: number): Promise<Interfaces.GeneratedOutput[]>;
         abstract signMessage(message: any, privateKey: string): Promise<string>;
         abstract verifyMessageSignature(message: any, publicKey: string, signature: string): Promise<boolean>;
-        abstract createTransaction(outputs: Interfaces.GeneratedOutput[], inputs: Interfaces.Output[], randomOutputs: Interfaces.RandomOutput[][], mixin: number, feeAmount?: number, paymentId?: string, unlockTime?: number, extraData?: any): Promise<Transaction>;
-        abstract createTransactionStructure(outputs: Interfaces.GeneratedOutput[], inputs: Interfaces.Output[], randomOutputs: Interfaces.RandomOutput[][], mixin: number, feeAmount?: number, paymentId?: string, unlockTime?: number, extraData?: any): Promise<Interfaces.IPreparedTransaction>;
-        abstract prepareTransaction(outputs: Interfaces.GeneratedOutput[], inputs: Interfaces.Output[], randomOutputs: Interfaces.RandomOutput[][], mixin: number, feeAmount?: number, paymentId?: string, unlockTime?: number, extraData?: any, randomKey?: string): Promise<Interfaces.PreparedTransaction>;
+        abstract createTransaction(outputs: Interfaces.GeneratedOutput[], inputs: Interfaces.Output[], randomOutputs: Interfaces.RandomOutput[][], mixin: number | number[], feeAmount?: number, paymentId?: string, unlockTime?: number, extraData?: any, options?: Interfaces.TransactionOptions): Promise<Transaction>;
+        abstract createTransactionStructure(outputs: Interfaces.GeneratedOutput[], inputs: Interfaces.Output[], randomOutputs: Interfaces.RandomOutput[][], mixin: number | number[], feeAmount?: number, paymentId?: string, unlockTime?: number, extraData?: any, options?: Interfaces.TransactionOptions): Promise<Interfaces.IPreparedTransaction>;
+        abstract prepareTransaction(outputs: Interfaces.GeneratedOutput[], inputs: Interfaces.Output[], randomOutputs: Interfaces.RandomOutput[][], mixin: number | number[], feeAmount?: number, paymentId?: string, unlockTime?: number, extraData?: any, randomKey?: string, options?: Interfaces.TransactionOptions): Promise<Interfaces.PreparedTransaction>;
         abstract completeTransaction(preparedTransaction: Interfaces.PreparedTransaction, privateSpendKey: string): Promise<Transaction>;
     }
 }

@@ -3,7 +3,7 @@
 //
 // Please see the included LICENSE file for more information.
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.on = exports.TurtleCoindTypes = exports.LedgerErrorCode = exports.LedgerTransactionState = exports.LedgerError = exports.TransactionOutputs = exports.TransactionInputs = exports.Keys = exports.KeyPair = exports.KeyOutput = exports.KeyInput = exports.ICryptoNote = exports.WalletAPI = exports.TurtleCoind = exports.LegacyTurtleCoind = exports.Transaction = exports.ParentBlock = exports.MultisigMessage = exports.Multisig = exports.LevinPayloads = exports.LevinProtocol = exports.LevinPacket = exports.LedgerNote = exports.LedgerTransport = exports.LedgerDevice = exports.CryptoNote = exports.CryptoType = exports.Crypto = exports.BlockTemplate = exports.Block = exports.AddressPrefix = exports.Address = void 0;
+exports.on = exports.TurtleCoindTypes = exports.LedgerErrorCode = exports.LedgerTransactionState = exports.LedgerError = exports.ClsagSignature = exports.TransactionSignatures = exports.TransactionOutputs = exports.TransactionInputs = exports.Keys = exports.KeyPair = exports.KeyOutput = exports.KeyInput = exports.ICryptoNote = exports.hasClsagSupport = exports.WalletAPI = exports.TurtleCoind = exports.LegacyTurtleCoind = exports.Transaction = exports.ParentBlock = exports.MultisigMessage = exports.Multisig = exports.MixinLimits = exports.MixinLimit = exports.LevinPayloads = exports.LevinProtocol = exports.LevinPacket = exports.LedgerNote = exports.LedgerTransport = exports.LedgerDevice = exports.CryptoNote = exports.CryptoType = exports.Crypto = exports.BlockTemplate = exports.Block = exports.AddressPrefix = exports.Address = void 0;
 const kryptokrona_crypto_1 = require("kryptokrona-crypto");
 /** @ignore */
 const Types = require("./Types");
@@ -30,6 +30,9 @@ Object.defineProperty(exports, "LevinPacket", { enumerable: true, get: function 
 Object.defineProperty(exports, "LevinProtocol", { enumerable: true, get: function () { return LevinPacket_1.LevinProtocol; } });
 var LevinPayloads_1 = require("./Types/LevinPayloads");
 Object.defineProperty(exports, "LevinPayloads", { enumerable: true, get: function () { return LevinPayloads_1.LevinPayloads; } });
+var MixinLimits_1 = require("./MixinLimits");
+Object.defineProperty(exports, "MixinLimit", { enumerable: true, get: function () { return MixinLimits_1.MixinLimit; } });
+Object.defineProperty(exports, "MixinLimits", { enumerable: true, get: function () { return MixinLimits_1.MixinLimits; } });
 var Multisig_1 = require("./Multisig");
 Object.defineProperty(exports, "Multisig", { enumerable: true, get: function () { return Multisig_1.Multisig; } });
 var MultisigMessage_1 = require("./MultisigMessage");
@@ -44,12 +47,20 @@ var TurtleCoind_1 = require("./TurtleCoind");
 Object.defineProperty(exports, "TurtleCoind", { enumerable: true, get: function () { return TurtleCoind_1.TurtleCoind; } });
 var WalletAPI_1 = require("./WalletAPI");
 Object.defineProperty(exports, "WalletAPI", { enumerable: true, get: function () { return WalletAPI_1.WalletAPI; } });
+var CryptoExtensions_1 = require("./CryptoExtensions");
+Object.defineProperty(exports, "hasClsagSupport", { enumerable: true, get: function () { return CryptoExtensions_1.hasClsagSupport; } });
 /** @ignore */
 var TransactionOutputs = Types.TransactionOutputs;
 exports.TransactionOutputs = TransactionOutputs;
 /** @ignore */
 var TransactionInputs = Types.TransactionInputs;
 exports.TransactionInputs = TransactionInputs;
+/** @ignore */
+var TransactionSignatures = Types.TransactionSignatures;
+exports.TransactionSignatures = TransactionSignatures;
+/** @ignore */
+var ClsagSignature = TransactionSignatures.ClsagSignature;
+exports.ClsagSignature = ClsagSignature;
 /** @ignore */
 var KeyInput = TransactionInputs.KeyInput;
 exports.KeyInput = KeyInput;

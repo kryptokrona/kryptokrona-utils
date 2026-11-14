@@ -282,6 +282,10 @@ class Block {
                 }
             }
             block.m_minerTransaction.version = reader.varint().toJSNumber();
+            /* The Kryptokrona miner transaction: version 1, or version 2 (tagged outputs) from fork 14 */
+            if (block.m_minerTransaction.version > 2) {
+                throw new Error('Unsupported miner transaction version: ' + block.m_minerTransaction.version);
+            }
             block.m_minerTransaction.unlockTime = reader.varint();
             const inputs = reader.varint().toJSNumber();
             for (let i = 0; i < inputs; i++) {
@@ -294,16 +298,13 @@ class Block {
             }
             const outputs = reader.varint().toJSNumber();
             for (let i = 0; i < outputs; i++) {
-                const amount = reader.varint();
-                const type = reader.uint8_t().toJSNumber();
-                if (type === Types_1.TransactionOutputs.OutputType.KEY) {
-                    block.m_minerTransaction.outputs.push(new Types_1.TransactionOutputs.KeyOutput(amount, reader.hash()));
-                }
-                else {
-                    throw new Error('Unknown output type detected');
-                }
+                /* Version 0/1: untagged outputs (0x02) only; version 2: tagged outputs (0x03) only */
+                block.m_minerTransaction.outputs.push(Transaction_1.Transaction.readOutput(reader, block.m_minerTransaction.version, 'Unknown output type detected'));
             }
             const extraLength = reader.varint().toJSNumber();
+            if (extraLength > reader.unreadBytes) {
+                throw new RangeError('Unexpected end of data while reading the miner transaction extra');
+            }
             const extra = reader.bytes(extraLength);
             yield block.m_minerTransaction.parseExtra(extra);
             const txnCount = reader.varint().toJSNumber();
@@ -399,7 +400,7 @@ class Block {
                 writer.varint(this.m_timestamp.getTime() / 1000);
                 writer.hash(this.m_parentBlock.previousBlockHash);
                 writer.uint32_t(this.m_nonce, true);
-                const treeHash = yield Types_1.TurtleCoinCrypto.tree_hash_from_branch(this.m_parentBlock.baseTransactionBranch, yield this.m_parentBlock.minerTransaction.hash(), 0);
+                const treeHash = yield Types_1.TurtleCoinCrypto.tree_hash_from_branch(this.m_parentBlock.baseTransactionBranch, yield this.m_parentBlock.minerTransactionHash(), 0);
                 writer.hash(treeHash);
                 writer.varint(this.m_parentBlock.transactionCount);
                 if (headerOnly) {
@@ -453,11 +454,9 @@ function getBlockPoWHash(data, majorVersion) {
             case 4:
                 return Types_1.TurtleCoinCrypto.cn_lite_slow_hash_v1(blob);
             case 5:
+            case 6: /* Kryptokrona fork 13: same proof of work as version 5 */
+            case 7: /* Kryptokrona fork 14: same proof of work as version 5 */
                 return Types_1.TurtleCoinCrypto.cn_turtle_lite_slow_hash_v2(blob);
-            case 6:
-                return Types_1.TurtleCoinCrypto.chukwa_slow_hash_v1(blob);
-            case 7:
-                return Types_1.TurtleCoinCrypto.chukwa_slow_hash_v2(blob);
             default:
                 throw new Error('Unhandled major block version');
         }

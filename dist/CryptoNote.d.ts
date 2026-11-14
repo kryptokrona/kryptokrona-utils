@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { AddressPrefix } from './AddressPrefix';
 import { ICoinConfig, ICoinRunningConfig } from './Config';
-import { BigInteger, Interfaces, CryptoNoteInterfaces, ICryptoConfig } from './Types';
+import { BigInteger, TransactionSignatures, Interfaces, CryptoNoteInterfaces, ICryptoConfig } from './Types';
 import { Transaction } from './Transaction';
 import { EventEmitter } from 'events';
 import ICryptoNote = CryptoNoteInterfaces.ICryptoNote;
@@ -134,6 +134,41 @@ export declare class CryptoNote extends EventEmitter implements ICryptoNote {
      */
     isOurTransactionOutput(transactionPublicKey: string, output: Interfaces.Output, privateViewKey: string, publicSpendKey: string, privateSpendKey?: string, generatePartial?: boolean): Promise<Interfaces.Output>;
     /**
+     * Computes the view tag of an output (transaction version 2):
+     * the first byte of cn_fast_hash("view_tag" || derivation || varint(outputIndex))
+     * @param derivation the key derivation (generateKeyDerivation of the transaction public key and
+     * the private view key, or of the recipient public view key and the transaction private key)
+     * @param outputIndex the index of the output in the transaction
+     * @returns the view tag as two lowercase hexadecimal characters
+     */
+    deriveViewTag(derivation: string, outputIndex: number): Promise<string>;
+    /**
+     * Generates a single-key CLSAG signature (transaction version 2) and verifies it
+     * @param prefixHash the transaction prefix hash
+     * @param ring the ring public keys in transaction order (ascending global index)
+     * @param privateEphemeral the private ephemeral of the output being spent
+     * @param realOutputIndex the position of the output being spent in the ring
+     * @param keyImage the key image of the output being spent
+     * @param [randomness] explicit signing randomness (tests only); random if omitted
+     * @returns the signature
+     */
+    generateClsagSignature(prefixHash: string, ring: string[], privateEphemeral: string, realOutputIndex: number, keyImage: string, randomness?: Interfaces.ClsagRandomness): Promise<TransactionSignatures.ClsagSignature>;
+    /**
+     * Verifies a single-key CLSAG signature (transaction version 2)
+     * @param prefixHash the transaction prefix hash
+     * @param ring the ring public keys in transaction order (ascending global index)
+     * @param keyImage the key image of the input
+     * @param signature the signature
+     * @returns whether the signature is valid
+     */
+    checkClsagSignature(prefixHash: string, ring: string[], keyImage: string, signature: TransactionSignatures.IClsagSignature): Promise<boolean>;
+    /**
+     * Scans one output with an already computed key derivation. A tagged output (viewTag set)
+     * whose view tag does not match is skipped before the output key is derived
+     * @ignore
+     */
+    protected isOurTransactionOutputPrimitive(transactionPublicKey: string, derivedKey: string, output: Interfaces.Output, publicSpendKey: string, privateSpendKey?: string, generatePartial?: boolean): Promise<Interfaces.Output>;
+    /**
      * Calculates the minimum transaction fee given the transaction size (bytes)
      * @param txSize the transaction size in bytes
      * @returns the minimum transaction fee
@@ -185,14 +220,15 @@ export declare class CryptoNote extends EventEmitter implements ICryptoNote {
      * @param outputs the new outputs for the transaction (TO)
      * @param inputs outputs we will be spending (FROM)
      * @param randomOutputs the random outputs to use for mixing
-     * @param mixin the number of mixins to use
+     * @param mixin the number of mixins to use, or one number per input (rings of different sizes)
      * @param [feeAmount] the transaction fee amount to pay
      * @param [paymentId] the payment ID to use in the transaction,
      * @param [unlockTime] the unlock time or block height for the transaction
      * @param [extraData] arbitrary extra data to include in the transaction extra field
+     * @param [options] build options: the transaction version (1 by default, 2 for view tags and CLSAG), ...
      * @returns the newly created transaction object
      */
-    createTransaction(outputs: Interfaces.GeneratedOutput[], inputs: Interfaces.Output[], randomOutputs: Interfaces.RandomOutput[][], mixin: number, feeAmount?: number, paymentId?: string, unlockTime?: number, extraData?: any): Promise<Transaction>;
+    createTransaction(outputs: Interfaces.GeneratedOutput[], inputs: Interfaces.Output[], randomOutputs: Interfaces.RandomOutput[][], mixin: number | number[], feeAmount?: number, paymentId?: string, unlockTime?: number, extraData?: any, options?: Interfaces.TransactionOptions): Promise<Transaction>;
     /**
      * Constructs a new Transaction using the supplied values.
      * Note: Does not sign the transaction
@@ -200,14 +236,15 @@ export declare class CryptoNote extends EventEmitter implements ICryptoNote {
      * @param outputs the new outputs for the transaction (TO)
      * @param inputs outputs we will be spending (FROM)
      * @param randomOutputs the random outputs to use for mixing
-     * @param mixin the number of mixins to use
+     * @param mixin the number of mixins to use, or one number per input (rings of different sizes)
      * @param [feeAmount] the transaction fee amount to pay
      * @param [paymentId] the payment ID to use in the transaction,
      * @param [unlockTime] the unlock time or block height for the transaction
      * @param [extraData] arbitrary extra data to include in the transaction extra field
+     * @param [options] build options: the transaction version (1 by default, 2 for view tags and CLSAG), ...
      * @returns the newly created transaction object and it's input data
      */
-    createTransactionStructure(outputs: Interfaces.GeneratedOutput[], inputs: Interfaces.Output[], randomOutputs: Interfaces.RandomOutput[][], mixin: number, feeAmount?: number, paymentId?: string, unlockTime?: number, extraData?: any): Promise<Interfaces.IPreparedTransaction>;
+    createTransactionStructure(outputs: Interfaces.GeneratedOutput[], inputs: Interfaces.Output[], randomOutputs: Interfaces.RandomOutput[][], mixin: number | number[], feeAmount?: number, paymentId?: string, unlockTime?: number, extraData?: any, options?: Interfaces.TransactionOptions): Promise<Interfaces.IPreparedTransaction>;
     /**
      * Constructs a new Transaction using the supplied values.
      * The resulting transaction can be broadcasted to the TurtleCoin network
@@ -215,15 +252,19 @@ export declare class CryptoNote extends EventEmitter implements ICryptoNote {
      * @param outputs the new outputs for the transaction (TO)
      * @param inputs outputs we will be spending (FROM)
      * @param randomOutputs the random outputs to use for mixing
-     * @param mixin the number of mixins to use
+     * @param mixin the number of mixins to use, or one number per input (rings of different sizes)
      * @param [feeAmount] the transaction fee amount to pay
      * @param [paymentId] the payment ID to use in the transaction,
      * @param [unlockTime] the unlock time or block height for the transaction
      * @param [extraData] arbitrary extra data to include in the transaction extra field
-     * @param [randomKey] a random scalar (private key)
-     * @returns the newly created transaction object with prepared signatures
+     * @param [randomKey] a random scalar (private key); version 1 only
+     * @param [options] build options: the transaction version (1 by default, 2 for view tags and CLSAG), ...
+     * @returns the newly created transaction object with prepared signatures. For version 2 the
+     * transaction carries no signatures yet: signatureMeta holds, per input, the ring, the real index,
+     * the key image and the derivation data that completeTransaction (or an external signer) needs
+     * to produce the CLSAG signatures over the prefix hash
      */
-    prepareTransaction(outputs: Interfaces.GeneratedOutput[], inputs: Interfaces.Output[], randomOutputs: Interfaces.RandomOutput[][], mixin: number, feeAmount?: number, paymentId?: string, unlockTime?: number, extraData?: any, randomKey?: string): Promise<Interfaces.PreparedTransaction>;
+    prepareTransaction(outputs: Interfaces.GeneratedOutput[], inputs: Interfaces.Output[], randomOutputs: Interfaces.RandomOutput[][], mixin: number | number[], feeAmount?: number, paymentId?: string, unlockTime?: number, extraData?: any, randomKey?: string, options?: Interfaces.TransactionOptions): Promise<Interfaces.PreparedTransaction>;
     /**
      * Completes a prepared transaction using the supplied private ephemeral
      * The resulting transaction can be broadcast to the network. Please note that the PreparedTransaction

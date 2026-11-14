@@ -376,6 +376,10 @@ export class Multisig {
     public async generatePartialSigningKeys (
         tx: Interfaces.PreparedTransaction
     ): Promise<MultisigInterfaces.PartialSigningKey[]> {
+        if (tx.transaction.version >= 2) {
+            throw new Error('Multisig signing supports transaction version 1 only');
+        }
+
         const promises = [];
 
         for (let i = 0; i < tx.transaction.signatures.length; i++) {
@@ -413,6 +417,10 @@ export class Multisig {
         tx: Interfaces.PreparedTransaction,
         partialSigningKeys: MultisigInterfaces.PartialSigningKey[]
     ): Promise<Transaction> {
+        if (tx.transaction.version >= 2) {
+            throw new Error('Multisig signing supports transaction version 1 only');
+        }
+
         const promises = [];
 
         for (let i = 0; i < tx.transaction.signatures.length; i++) {

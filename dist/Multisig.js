@@ -321,6 +321,9 @@ class Multisig {
      */
     generatePartialSigningKeys(tx) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (tx.transaction.version >= 2) {
+                throw new Error('Multisig signing supports transaction version 1 only');
+            }
             const promises = [];
             for (let i = 0; i < tx.transaction.signatures.length; i++) {
                 const realOutputIndex = getRealOutputIndex(tx, i);
@@ -348,6 +351,9 @@ class Multisig {
      */
     completeTransaction(tx, partialSigningKeys) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (tx.transaction.version >= 2) {
+                throw new Error('Multisig signing supports transaction version 1 only');
+            }
             const promises = [];
             for (let i = 0; i < tx.transaction.signatures.length; i++) {
                 const preparedRingSignature = getPreparedRingSignature(tx.signatureMeta, i);

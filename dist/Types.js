@@ -32,6 +32,7 @@ __exportStar(require("./Types/IExtraNonce"), exports);
 __exportStar(require("./Types/IExtraTag"), exports);
 __exportStar(require("./Types/ITransactionInput"), exports);
 __exportStar(require("./Types/ITransactionOutput"), exports);
+__exportStar(require("./Types/ITransactionSignature"), exports);
 __exportStar(require("./Types/ED25519"), exports);
 __exportStar(require("./Types/ITransaction"), exports);
 __exportStar(require("./Types/MultisigInterfaces"), exports);

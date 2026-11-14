@@ -205,7 +205,7 @@ export declare class LedgerNote extends EventEmitter implements ICryptoNote {
      * @param [extraData] arbitrary extra data to include in the transaction extra field
      * @returns the newly created transaction object and it's input data
      */
-    createTransaction(outputs: Interfaces.GeneratedOutput[], inputs: Interfaces.Output[], randomOutputs: Interfaces.RandomOutput[][], mixin: number, feeAmount?: number, paymentId?: string, unlockTime?: number, extraData?: any): Promise<Transaction>;
+    createTransaction(outputs: Interfaces.GeneratedOutput[], inputs: Interfaces.Output[], randomOutputs: Interfaces.RandomOutput[][], mixin: number, feeAmount?: number, paymentId?: string, unlockTime?: number, extraData?: any, options?: Interfaces.TransactionOptions): Promise<Transaction>;
     /**
      * Constructs a new Transaction using the supplied values.
      * Note: Does not sign the transaction
@@ -220,7 +220,7 @@ export declare class LedgerNote extends EventEmitter implements ICryptoNote {
      * @param [extraData] arbitrary extra data to include in the transaction extra field
      * @returns the newly created transaction object and it's input data
      */
-    createTransactionStructure(outputs: Interfaces.GeneratedOutput[], inputs: Interfaces.Output[], randomOutputs: Interfaces.RandomOutput[][], mixin: number, feeAmount?: number, paymentId?: string, unlockTime?: number, extraData?: any): Promise<Interfaces.IPreparedTransaction>;
+    createTransactionStructure(outputs: Interfaces.GeneratedOutput[], inputs: Interfaces.Output[], randomOutputs: Interfaces.RandomOutput[][], mixin: number, feeAmount?: number, paymentId?: string, unlockTime?: number, extraData?: any, options?: Interfaces.TransactionOptions): Promise<Interfaces.IPreparedTransaction>;
     /**
      * Constructs a new Transaction using the supplied values.
      * The resulting transaction can be broadcasted to the TurtleCoin network
@@ -236,7 +236,7 @@ export declare class LedgerNote extends EventEmitter implements ICryptoNote {
      * @param [randomKey] a random scalar (private key)
      * @returns the newly created transaction object with prepared signatures
      */
-    prepareTransaction(outputs: Interfaces.GeneratedOutput[], inputs: Interfaces.Output[], randomOutputs: Interfaces.RandomOutput[][], mixin: number, feeAmount?: number, paymentId?: string, unlockTime?: number, extraData?: any, randomKey?: string): Promise<Interfaces.PreparedTransaction>;
+    prepareTransaction(outputs: Interfaces.GeneratedOutput[], inputs: Interfaces.Output[], randomOutputs: Interfaces.RandomOutput[][], mixin: number, feeAmount?: number, paymentId?: string, unlockTime?: number, extraData?: any, randomKey?: string, options?: Interfaces.TransactionOptions): Promise<Interfaces.PreparedTransaction>;
     /**
      * Completes a prepared transaction using the supplied private ephemeral
      * The resulting transaction can be broadcast to the network. Please note that the PreparedTransaction

@@ -572,8 +572,11 @@ export class LedgerNote extends EventEmitter implements ICryptoNote {
         feeAmount?: number,
         paymentId?: string,
         unlockTime?: number,
-        extraData?: any
+        extraData?: any,
+        options?: Interfaces.TransactionOptions
     ): Promise<Transaction> {
+        assertLedgerVersion(options);
+
         if (extraData) {
             throw new Error('Supplying extra transaction data is not supported');
         }
@@ -780,8 +783,11 @@ export class LedgerNote extends EventEmitter implements ICryptoNote {
         feeAmount?: number,
         paymentId?: string,
         unlockTime?: number,
-        extraData?: any
+        extraData?: any,
+        options?: Interfaces.TransactionOptions
     ): Promise<Interfaces.IPreparedTransaction> {
+        assertLedgerVersion(options);
+
         if (typeof feeAmount === 'undefined') {
             feeAmount = this.m_config.defaultNetworkFee || Config.defaultNetworkFee;
         }
@@ -952,8 +958,11 @@ export class LedgerNote extends EventEmitter implements ICryptoNote {
         paymentId?: string,
         unlockTime?: number,
         extraData?: any,
-        randomKey?: string
+        randomKey?: string,
+        options?: Interfaces.TransactionOptions
     ): Promise<Interfaces.PreparedTransaction> {
+        assertLedgerVersion(options);
+
         const feePerByte =
             this.m_config.activateFeePerByteTransactions || Config.activateFeePerByteTransactions || false;
 
@@ -1059,6 +1068,10 @@ export class LedgerNote extends EventEmitter implements ICryptoNote {
         const promises = [];
 
         const tx = preparedTransaction.transaction;
+
+        if (tx.version >= 2) {
+            throw new Error('Ledger signing supports transaction version 1 only');
+        }
 
         if (!preparedTransaction.signatureMeta) {
             throw new Error('No transaction signature meta data supplied');
@@ -1326,4 +1339,14 @@ async function completeRingSignatures (
         outputIndex, tx_output_key, key, signatures[realOutputIndex], confirm);
 
     return { signatures, index };
+}
+
+/**
+ * The Ledger application signs ring signatures (transaction version 1) only
+ * @ignore
+ */
+function assertLedgerVersion (options?: Interfaces.TransactionOptions): void {
+    if (options && typeof options.version !== 'undefined' && options.version !== null && options.version !== 1) {
+        throw new Error('Ledger signing supports transaction version 1 only');
+    }
 }

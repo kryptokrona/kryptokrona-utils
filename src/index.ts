@@ -17,6 +17,7 @@ export { LedgerDevice, LedgerTransport } from './LedgerDevice';
 export { LedgerNote } from './LedgerNote';
 export { LevinPacket, LevinProtocol } from './LevinPacket';
 export { LevinPayloads } from './Types/LevinPayloads';
+export { MixinLimit, MixinLimits } from './MixinLimits';
 export { Multisig } from './Multisig';
 export { MultisigMessage } from './MultisigMessage';
 export { ParentBlock } from './ParentBlock';
@@ -25,11 +26,16 @@ export { ICoinConfig } from './Config';
 export { LegacyTurtleCoind } from './LegacyTurtleCoind';
 export { TurtleCoind } from './TurtleCoind';
 export { WalletAPI } from './WalletAPI';
+export { hasClsagSupport } from './CryptoExtensions';
 
 /** @ignore */
 import TransactionOutputs = Types.TransactionOutputs;
 /** @ignore */
 import TransactionInputs = Types.TransactionInputs;
+/** @ignore */
+import TransactionSignatures = Types.TransactionSignatures;
+/** @ignore */
+import ClsagSignature = TransactionSignatures.ClsagSignature;
 /** @ignore */
 import KeyInput = TransactionInputs.KeyInput;
 /** @ignore */
@@ -60,6 +66,8 @@ export {
     Keys,
     TransactionInputs,
     TransactionOutputs,
+    TransactionSignatures,
+    ClsagSignature,
     LedgerError,
     LedgerTransactionState,
     LedgerErrorCode,

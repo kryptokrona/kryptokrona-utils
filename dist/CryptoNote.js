@@ -19,6 +19,7 @@ const Config_1 = require("./Config");
 const Common_1 = require("./Common");
 const Types_1 = require("./Types");
 const Transaction_1 = require("./Transaction");
+const CryptoExtensions_1 = require("./CryptoExtensions");
 const events_1 = require("events");
 const Numeral = require("numeral");
 /** @ignore */
@@ -184,9 +185,11 @@ class CryptoNote extends events_1.EventEmitter {
      */
     scanTransactionOutputs(transactionPublicKey, outputs, privateViewKey, publicSpendKey, privateSpendKey, generatePartial) {
         return __awaiter(this, void 0, void 0, function* () {
+            /* One key derivation per transaction, shared by every output */
+            const derivedKey = yield Types_1.TurtleCoinCrypto.generateKeyDerivation(transactionPublicKey, privateViewKey);
             const promises = [];
             for (const output of outputs) {
-                promises.push(this.isOurTransactionOutput(transactionPublicKey, output, privateViewKey, publicSpendKey, privateSpendKey, generatePartial).catch());
+                promises.push(this.isOurTransactionOutputPrimitive(transactionPublicKey, derivedKey, output, publicSpendKey, privateSpendKey, generatePartial).catch(() => undefined));
             }
             const results = yield Promise.all(promises);
             const ourOutputs = [];
@@ -213,6 +216,63 @@ class CryptoNote extends events_1.EventEmitter {
     isOurTransactionOutput(transactionPublicKey, output, privateViewKey, publicSpendKey, privateSpendKey, generatePartial) {
         return __awaiter(this, void 0, void 0, function* () {
             const derivedKey = yield Types_1.TurtleCoinCrypto.generateKeyDerivation(transactionPublicKey, privateViewKey);
+            return this.isOurTransactionOutputPrimitive(transactionPublicKey, derivedKey, output, publicSpendKey, privateSpendKey, generatePartial);
+        });
+    }
+    /**
+     * Computes the view tag of an output (transaction version 2):
+     * the first byte of cn_fast_hash("view_tag" || derivation || varint(outputIndex))
+     * @param derivation the key derivation (generateKeyDerivation of the transaction public key and
+     * the private view key, or of the recipient public view key and the transaction private key)
+     * @param outputIndex the index of the output in the transaction
+     * @returns the view tag as two lowercase hexadecimal characters
+     */
+    deriveViewTag(derivation, outputIndex) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return CryptoExtensions_1.deriveViewTag(derivation, outputIndex);
+        });
+    }
+    /**
+     * Generates a single-key CLSAG signature (transaction version 2) and verifies it
+     * @param prefixHash the transaction prefix hash
+     * @param ring the ring public keys in transaction order (ascending global index)
+     * @param privateEphemeral the private ephemeral of the output being spent
+     * @param realOutputIndex the position of the output being spent in the ring
+     * @param keyImage the key image of the output being spent
+     * @param [randomness] explicit signing randomness (tests only); random if omitted
+     * @returns the signature
+     */
+    generateClsagSignature(prefixHash, ring, privateEphemeral, realOutputIndex, keyImage, randomness) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return generateClsagSignature(prefixHash, keyImage, ring, privateEphemeral, realOutputIndex, randomness);
+        });
+    }
+    /**
+     * Verifies a single-key CLSAG signature (transaction version 2)
+     * @param prefixHash the transaction prefix hash
+     * @param ring the ring public keys in transaction order (ascending global index)
+     * @param keyImage the key image of the input
+     * @param signature the signature
+     * @returns whether the signature is valid
+     */
+    checkClsagSignature(prefixHash, ring, keyImage, signature) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return CryptoExtensions_1.clsagVerify(prefixHash, ring, keyImage, signature);
+        });
+    }
+    /**
+     * Scans one output with an already computed key derivation. A tagged output (viewTag set)
+     * whose view tag does not match is skipped before the output key is derived
+     * @ignore
+     */
+    isOurTransactionOutputPrimitive(transactionPublicKey, derivedKey, output, publicSpendKey, privateSpendKey, generatePartial) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (typeof output.viewTag !== 'undefined' && output.viewTag !== null) {
+                const expectedViewTag = yield CryptoExtensions_1.deriveViewTag(derivedKey, output.index);
+                if (expectedViewTag !== Types_1.TransactionOutputs.normalizeViewTag(output.viewTag)) {
+                    throw new Error('Not our output');
+                }
+            }
             const publicEphemeral = yield Types_1.TurtleCoinCrypto.derivePublicKey(derivedKey, output.index, publicSpendKey);
             if (publicEphemeral === output.key) {
                 output.input = {
@@ -376,18 +436,28 @@ class CryptoNote extends events_1.EventEmitter {
      * @param outputs the new outputs for the transaction (TO)
      * @param inputs outputs we will be spending (FROM)
      * @param randomOutputs the random outputs to use for mixing
-     * @param mixin the number of mixins to use
+     * @param mixin the number of mixins to use, or one number per input (rings of different sizes)
      * @param [feeAmount] the transaction fee amount to pay
      * @param [paymentId] the payment ID to use in the transaction,
      * @param [unlockTime] the unlock time or block height for the transaction
      * @param [extraData] arbitrary extra data to include in the transaction extra field
+     * @param [options] build options: the transaction version (1 by default, 2 for view tags and CLSAG), ...
      * @returns the newly created transaction object
      */
-    createTransaction(outputs, inputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extraData) {
+    createTransaction(outputs, inputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extraData, options) {
         return __awaiter(this, void 0, void 0, function* () {
             const feePerByte = this.m_config.activateFeePerByteTransactions || Config_1.Config.activateFeePerByteTransactions || false;
-            const prepared = yield this.createTransactionStructure(outputs, inputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extraData);
+            const prepared = yield this.createTransactionStructure(outputs, inputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extraData, options);
             const txPrefixHash = yield prepared.transaction.prefixHash();
+            if (prepared.transaction.version >= 2) {
+                prepared.transaction.clsagSignatures = yield generateClsagSignatures(txPrefixHash, prepared.inputs, (options) ? options.clsagRandomness : undefined);
+                const minimumV2Fee = this.calculateMinimumTransactionFee(prepared.transaction.size);
+                if (feeAmount && feeAmount !== 0 && feePerByte && feeAmount < minimumV2Fee) {
+                    throw new Error('Transaction fee [' + prepared.transaction.fee +
+                        '] is not enough for network transmission: ' + minimumV2Fee);
+                }
+                return prepared.transaction;
+            }
             const promises = [];
             for (let i = 0; i < prepared.inputs.length; i++) {
                 const input = prepared.inputs[i];
@@ -422,25 +492,30 @@ class CryptoNote extends events_1.EventEmitter {
      * @param outputs the new outputs for the transaction (TO)
      * @param inputs outputs we will be spending (FROM)
      * @param randomOutputs the random outputs to use for mixing
-     * @param mixin the number of mixins to use
+     * @param mixin the number of mixins to use, or one number per input (rings of different sizes)
      * @param [feeAmount] the transaction fee amount to pay
      * @param [paymentId] the payment ID to use in the transaction,
      * @param [unlockTime] the unlock time or block height for the transaction
      * @param [extraData] arbitrary extra data to include in the transaction extra field
+     * @param [options] build options: the transaction version (1 by default, 2 for view tags and CLSAG), ...
      * @returns the newly created transaction object and it's input data
      */
-    createTransactionStructure(outputs, inputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extraData) {
+    createTransactionStructure(outputs, inputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extraData, options) {
         return __awaiter(this, void 0, void 0, function* () {
+            const version = transactionVersion(options);
             if (typeof feeAmount === 'undefined') {
                 feeAmount = this.m_config.defaultNetworkFee || Config_1.Config.defaultNetworkFee;
             }
             unlockTime = unlockTime || 0;
             const feePerByte = this.m_config.activateFeePerByteTransactions || Config_1.Config.activateFeePerByteTransactions || false;
-            if (randomOutputs.length !== inputs.length && mixin !== 0) {
+            if (Array.isArray(mixin) && mixin.length !== inputs.length) {
+                throw new Error('The number of mixins supplied does not match the number of inputs supplied');
+            }
+            if (randomOutputs.length !== inputs.length && hasMixin(mixin)) {
                 throw new Error('The sets of random outputs supplied does not match the number of inputs supplied');
             }
-            for (const randomOutput of randomOutputs) {
-                if (randomOutput.length < mixin) {
+            for (let i = 0; i < randomOutputs.length; i++) {
+                if (randomOutputs[i].length < mixinOf(mixin, i)) {
                     throw new Error('There are not enough random outputs to mix with');
                 }
             }
@@ -492,7 +567,7 @@ class CryptoNote extends events_1.EventEmitter {
                 throw new Error('We have not spent all of what we sent in');
             }
             const transactionInputs = yield prepareTransactionInputs(inputs, randomOutputs, mixin);
-            const transactionOutputs = yield prepareTransactionOutputs(outputs);
+            const transactionOutputs = yield prepareTransactionOutputs(outputs, version, (options) ? options.transactionPrivateKey : undefined);
             if (transactionOutputs.outputs.length >
                 (this.m_config.maximumOutputsPerTransaction || Config_1.Config.maximumOutputsPerTransaction)) {
                 throw new RangeError('Tried to create a transaction with more outputs than permitted');
@@ -509,6 +584,7 @@ class CryptoNote extends events_1.EventEmitter {
                 }
             }
             const tx = new Transaction_1.Transaction();
+            tx.version = version;
             tx.unlockTime = Types_1.BigInteger(unlockTime);
             yield tx.addPublicKey(transactionOutputs.transactionKeys.publicKey);
             tx.transactionKeys = transactionOutputs.transactionKeys;
@@ -526,9 +602,16 @@ class CryptoNote extends events_1.EventEmitter {
                 }
                 tx.addData(extraData);
             }
-            transactionInputs.sort((a, b) => {
-                return (Types_1.BigInteger(a.keyImage, 16).compare(Types_1.BigInteger(b.keyImage, 16)) * -1);
-            });
+            /* Version 1 sorts the inputs by key image (descending) as this library always did; version 2
+               keeps the order given, as the Rust wallet core (xkr-wallet-core build_transaction) does */
+            const sortInputs = (options && typeof options.sortInputs === 'boolean')
+                ? options.sortInputs
+                : version < 2;
+            if (sortInputs) {
+                transactionInputs.sort((a, b) => {
+                    return (Types_1.BigInteger(a.keyImage, 16).compare(Types_1.BigInteger(b.keyImage, 16)) * -1);
+                });
+            }
             for (const input of transactionInputs) {
                 let offsets = [];
                 input.outputs.forEach((output) => offsets.push(Types_1.BigInteger(output.index)));
@@ -536,7 +619,8 @@ class CryptoNote extends events_1.EventEmitter {
                 tx.inputs.push(new Types_1.TransactionInputs.KeyInput(input.amount, offsets, input.keyImage));
             }
             for (const output of transactionOutputs.outputs) {
-                tx.outputs.push(new Types_1.TransactionOutputs.KeyOutput(output.amount, output.key));
+                /* The view tag is only set for version 2 (tagged output 0x03) */
+                tx.outputs.push(new Types_1.TransactionOutputs.KeyOutput(output.amount, output.key, output.viewTag));
             }
             if (tx.extra.length > (this.m_config.maximumExtraSize || Config_1.Config.maximumExtraSize)) {
                 throw new Error('Transaction extra exceeds the limit of [' +
@@ -555,24 +639,60 @@ class CryptoNote extends events_1.EventEmitter {
      * @param outputs the new outputs for the transaction (TO)
      * @param inputs outputs we will be spending (FROM)
      * @param randomOutputs the random outputs to use for mixing
-     * @param mixin the number of mixins to use
+     * @param mixin the number of mixins to use, or one number per input (rings of different sizes)
      * @param [feeAmount] the transaction fee amount to pay
      * @param [paymentId] the payment ID to use in the transaction,
      * @param [unlockTime] the unlock time or block height for the transaction
      * @param [extraData] arbitrary extra data to include in the transaction extra field
-     * @param [randomKey] a random scalar (private key)
-     * @returns the newly created transaction object with prepared signatures
+     * @param [randomKey] a random scalar (private key); version 1 only
+     * @param [options] build options: the transaction version (1 by default, 2 for view tags and CLSAG), ...
+     * @returns the newly created transaction object with prepared signatures. For version 2 the
+     * transaction carries no signatures yet: signatureMeta holds, per input, the ring, the real index,
+     * the key image and the derivation data that completeTransaction (or an external signer) needs
+     * to produce the CLSAG signatures over the prefix hash
      */
-    prepareTransaction(outputs, inputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extraData, randomKey) {
+    prepareTransaction(outputs, inputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extraData, randomKey, options) {
         return __awaiter(this, void 0, void 0, function* () {
             const feePerByte = this.m_config.activateFeePerByteTransactions || Config_1.Config.activateFeePerByteTransactions || false;
-            const prepared = yield this.createTransactionStructure(outputs, inputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extraData);
+            const prepared = yield this.createTransactionStructure(outputs, inputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extraData, options);
             const recipients = [];
             for (const output of outputs) {
                 recipients.push({
                     address: yield output.destination.address(),
                     amount: output.amount
                 });
+            }
+            if (prepared.transaction.version >= 2) {
+                const signatureMetaV2 = [];
+                let signatureBytes = 0;
+                for (let i = 0; i < prepared.inputs.length; i++) {
+                    const input = prepared.inputs[i];
+                    signatureMetaV2.push({
+                        index: i,
+                        realOutputIndex: input.realOutputIndex,
+                        key: '',
+                        inputKeys: input.outputs.map((out) => out.key),
+                        keyImage: input.keyImage,
+                        input: {
+                            derivation: input.input.transactionKeys.derivedKey,
+                            outputIndex: input.input.transactionKeys.outputIndex,
+                            tx_public_key: input.input.transactionKeys.publicKey
+                        }
+                    });
+                    signatureBytes += 32 * (input.outputs.length + 1);
+                }
+                /* The signed size: the prefix plus one CLSAG (32 * (ring size + 1) bytes) per input */
+                const minimumV2Fee = this.calculateMinimumTransactionFee(prepared.transaction.size + signatureBytes);
+                if (feeAmount && feeAmount !== 0 && feePerByte && feeAmount < minimumV2Fee) {
+                    throw new Error('Transaction fee [' + prepared.transaction.fee +
+                        '] is not enough for network transmission: ' + minimumV2Fee);
+                }
+                return {
+                    transaction: prepared.transaction,
+                    transactionRecipients: recipients,
+                    transactionPrivateKey: prepared.transaction.transactionKeys.privateKey,
+                    signatureMeta: signatureMetaV2
+                };
             }
             const txPrefixHash = yield prepared.transaction.prefixHash();
             const promises = [];
@@ -634,6 +754,9 @@ class CryptoNote extends events_1.EventEmitter {
             if (!preparedTransaction.signatureMeta) {
                 throw new Error('No transaction signature meta data supplied');
             }
+            if (tx.version >= 2) {
+                return completeClsagTransaction(preparedTransaction, privateSpendKey);
+            }
             for (const meta of preparedTransaction.signatureMeta) {
                 if (!meta.input || !meta.input.derivation || !meta.input.outputIndex) {
                     throw new Error('Meta data is missing critical information');
@@ -660,6 +783,97 @@ class CryptoNote extends events_1.EventEmitter {
     }
 }
 exports.CryptoNote = CryptoNote;
+/**
+ * Returns the transaction version requested by the options: 1 (default) or 2
+ * @ignore
+ */
+function transactionVersion(options) {
+    if (!options || typeof options.version === 'undefined' || options.version === null) {
+        return 1;
+    }
+    if (options.version !== 1 && options.version !== 2) {
+        throw new RangeError('Unsupported transaction version: ' + options.version + ' (supported: 1, 2)');
+    }
+    return options.version;
+}
+/**
+ * Generates a CLSAG signature and verifies it before returning it
+ * @ignore
+ */
+function generateClsagSignature(hash, keyImage, publicKeys, privateEphemeral, realOutputIndex, randomness) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const signature = yield CryptoExtensions_1.clsagSign(hash, publicKeys, privateEphemeral, realOutputIndex, randomness);
+        /* Verifying with the input's key image also catches a key image that does not belong to the secret */
+        const valid = yield CryptoExtensions_1.clsagVerify(hash, publicKeys, keyImage, signature);
+        if (!valid) {
+            throw new Error('Could not generate CLSAG signature');
+        }
+        return signature;
+    });
+}
+/**
+ * Signs every input of a version 2 transaction with CLSAG over the prefix hash, in input order
+ * @ignore
+ */
+function generateClsagSignatures(txPrefixHash, inputs, randomness) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (randomness && randomness.length !== inputs.length) {
+            throw new RangeError('CLSAG randomness must be given for every input');
+        }
+        const promises = [];
+        for (let i = 0; i < inputs.length; i++) {
+            const input = inputs[i];
+            if (!input.input.privateEphemeral) {
+                throw new Error('private ephemeral missing from input');
+            }
+            promises.push(generateClsagSignature(txPrefixHash, input.keyImage, input.outputs.map((out) => out.key), input.input.privateEphemeral, input.realOutputIndex, (randomness) ? randomness[i] : undefined));
+        }
+        return Promise.all(promises);
+    });
+}
+/**
+ * Completes a prepared version 2 transaction: derives each input's private ephemeral from the
+ * private spend key and signs the input with CLSAG
+ * @ignore
+ */
+function completeClsagTransaction(preparedTransaction, privateSpendKey) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const tx = preparedTransaction.transaction;
+        if (tx.signatures.length !== 0) {
+            throw new Error('Version 2 transactions carry CLSAG signatures, not ring signatures');
+        }
+        const prefixHash = yield tx.prefixHash();
+        const promises = [];
+        for (let i = 0; i < tx.inputs.length; i++) {
+            const meta = getSignatureMeta(preparedTransaction.signatureMeta, i);
+            if (!meta.input || !meta.input.derivation || typeof meta.input.outputIndex !== 'number' ||
+                !meta.inputKeys) {
+                throw new Error('Meta data is missing critical information');
+            }
+            const input = tx.inputs[i];
+            if (input.type !== Types_1.TransactionInputs.InputType.KEY) {
+                throw new Error('Only key inputs can be signed');
+            }
+            const keyImage = input.keyImage;
+            if (meta.keyImage && meta.keyImage !== keyImage) {
+                throw new Error('Meta data key image does not match the transaction input');
+            }
+            const privateEphemeral = yield Types_1.TurtleCoinCrypto.deriveSecretKey(meta.input.derivation, meta.input.outputIndex, privateSpendKey);
+            promises.push(generateClsagSignature(prefixHash, keyImage, meta.inputKeys, privateEphemeral, meta.realOutputIndex));
+        }
+        tx.clsagSignatures = yield Promise.all(promises);
+        return tx;
+    });
+}
+/** @ignore */
+function getSignatureMeta(preparedSignatures, index) {
+    for (const meta of preparedSignatures) {
+        if (meta.index === index) {
+            return meta;
+        }
+    }
+    throw new Error('Could not locate the signature meta data of input ' + index);
+}
 /** @ignore */
 function checkRingSignatures(hash, keyImage, publicKeys, signatures) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -703,13 +917,30 @@ function completeRingSignatures(privateSpendKey, derivation, outputIndex, realOu
         return { signatures, index };
     });
 }
+/**
+ * The mixin of input i: the single mixin, or the i-th entry of a per-input list
+ * @ignore
+ */
+function mixinOf(mixin, index) {
+    if (Array.isArray(mixin)) {
+        return (index < mixin.length) ? mixin[index] : 0;
+    }
+    return mixin;
+}
+/**
+ * Whether any input mixes with random outputs
+ * @ignore
+ */
+function hasMixin(mixin) {
+    return (Array.isArray(mixin)) ? mixin.some((m) => m !== 0) : mixin !== 0;
+}
 /** @ignore */
-function prepareTransactionInputs(inputs, randomOutputs, mixin) {
-    if (inputs.length !== randomOutputs.length && mixin !== 0) {
+function prepareTransactionInputs(inputs, randomOutputs, mixins) {
+    if (inputs.length !== randomOutputs.length && hasMixin(mixins)) {
         throw new Error('There are not enough random output sets to mix with the real outputs');
     }
-    for (const randomOutput of randomOutputs) {
-        if (randomOutput.length < mixin) {
+    for (let i = 0; i < randomOutputs.length; i++) {
+        if (randomOutputs[i].length < mixinOf(mixins, i)) {
             throw new Error('There are not enough random outputs to mix with');
         }
     }
@@ -717,6 +948,7 @@ function prepareTransactionInputs(inputs, randomOutputs, mixin) {
     for (let i = 0; i < inputs.length; i++) {
         const mixedOutputs = [];
         const realOutput = inputs[i];
+        const mixin = mixinOf(mixins, i);
         if (!realOutput.keyImage) {
             throw new Error('input is missing its key image');
         }
@@ -771,20 +1003,38 @@ function prepareTransactionInputs(inputs, randomOutputs, mixin) {
     return mixedInputs;
 }
 /** @ignore */
-function prepareTransactionOutputs(outputs) {
+function prepareTransactionOutputs(outputs, version = 1, transactionPrivateKey) {
     return __awaiter(this, void 0, void 0, function* () {
         function prepareOutput(destination, amount, index, privateKey) {
             return __awaiter(this, void 0, void 0, function* () {
                 const outDerivation = yield Types_1.TurtleCoinCrypto.generateKeyDerivation(destination.view.publicKey, privateKey);
                 const outPublicEphemeral = yield Types_1.TurtleCoinCrypto.derivePublicKey(outDerivation, index, destination.spend.publicKey);
+                if (version >= 2) {
+                    /* Version 2: view_tag(8*r*A, index) from the same derivation as the output key */
+                    return {
+                        amount,
+                        key: outPublicEphemeral,
+                        viewTag: yield CryptoExtensions_1.deriveViewTag(outDerivation, index)
+                    };
+                }
                 return {
                     amount,
                     key: outPublicEphemeral
                 };
             });
         }
-        const keys = yield Types_1.TurtleCoinCrypto.generateKeys();
-        const transactionKeys = yield Types_1.ED25519.KeyPair.from(keys.public_key, keys.private_key);
+        let transactionKeys;
+        if (transactionPrivateKey) {
+            if (!(yield Types_1.TurtleCoinCrypto.checkScalar(transactionPrivateKey))) {
+                throw new Error('Invalid transaction private key supplied');
+            }
+            const publicKey = yield Types_1.TurtleCoinCrypto.secretKeyToPublicKey(transactionPrivateKey);
+            transactionKeys = yield Types_1.ED25519.KeyPair.from(publicKey, transactionPrivateKey);
+        }
+        else {
+            const keys = yield Types_1.TurtleCoinCrypto.generateKeys();
+            transactionKeys = yield Types_1.ED25519.KeyPair.from(keys.public_key, keys.private_key);
+        }
         outputs.sort((a, b) => (a.amount > b.amount) ? 1 : ((b.amount > a.amount) ? -1 : 0));
         const promises = [];
         for (let i = 0; i < outputs.length; i++) {

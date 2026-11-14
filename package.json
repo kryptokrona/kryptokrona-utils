@@ -1,6 +1,6 @@
 {
   "name": "kryptokrona-utils",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "A Typescript/CommonJS collection of utilities useful for Kryptokrona developers",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,7 +13,7 @@
   },
   "scripts": {
     "build": "./node_modules/.bin/tsc",
-    "test": "./node_modules/.bin/mocha --require ts-node/register --timeout 120000 test/test.ts",
+    "test": "./node_modules/.bin/mocha --require ts-node/register --timeout 120000 test/test.ts test/txv2.test.ts",
     "docs": "./node_modules/.bin/typedoc && touch docs/.nojekyll && git restore docs/CNAME"
   },
   "keywords": [

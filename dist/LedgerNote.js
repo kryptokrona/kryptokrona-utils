@@ -418,8 +418,9 @@ class LedgerNote extends events_1.EventEmitter {
      * @param [extraData] arbitrary extra data to include in the transaction extra field
      * @returns the newly created transaction object and it's input data
      */
-    createTransaction(outputs, inputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extraData) {
+    createTransaction(outputs, inputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extraData, options) {
         return __awaiter(this, void 0, void 0, function* () {
+            assertLedgerVersion(options);
             if (extraData) {
                 throw new Error('Supplying extra transaction data is not supported');
             }
@@ -570,8 +571,9 @@ class LedgerNote extends events_1.EventEmitter {
      * @param [extraData] arbitrary extra data to include in the transaction extra field
      * @returns the newly created transaction object and it's input data
      */
-    createTransactionStructure(outputs, inputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extraData) {
+    createTransactionStructure(outputs, inputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extraData, options) {
         return __awaiter(this, void 0, void 0, function* () {
+            assertLedgerVersion(options);
             if (typeof feeAmount === 'undefined') {
                 feeAmount = this.m_config.defaultNetworkFee || Config_1.Config.defaultNetworkFee;
             }
@@ -706,8 +708,9 @@ class LedgerNote extends events_1.EventEmitter {
      * @param [randomKey] a random scalar (private key)
      * @returns the newly created transaction object with prepared signatures
      */
-    prepareTransaction(outputs, inputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extraData, randomKey) {
+    prepareTransaction(outputs, inputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extraData, randomKey, options) {
         return __awaiter(this, void 0, void 0, function* () {
+            assertLedgerVersion(options);
             const feePerByte = this.m_config.activateFeePerByteTransactions || Config_1.Config.activateFeePerByteTransactions || false;
             const prepared = yield this.createTransactionStructure(outputs, inputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extraData);
             const recipients = [];
@@ -776,6 +779,9 @@ class LedgerNote extends events_1.EventEmitter {
             UNUSED(privateSpendKey);
             const promises = [];
             const tx = preparedTransaction.transaction;
+            if (tx.version >= 2) {
+                throw new Error('Ledger signing supports transaction version 1 only');
+            }
             if (!preparedTransaction.signatureMeta) {
                 throw new Error('No transaction signature meta data supplied');
             }
@@ -950,4 +956,13 @@ function completeRingSignatures(ledger, tx_public_key, outputIndex, tx_output_ke
         signatures[realOutputIndex] = yield ledger.completeRingSignature(tx_public_key, outputIndex, tx_output_key, key, signatures[realOutputIndex], confirm);
         return { signatures, index };
     });
+}
+/**
+ * The Ledger application signs ring signatures (transaction version 1) only
+ * @ignore
+ */
+function assertLedgerVersion(options) {
+    if (options && typeof options.version !== 'undefined' && options.version !== null && options.version !== 1) {
+        throw new Error('Ledger signing supports transaction version 1 only');
+    }
 }

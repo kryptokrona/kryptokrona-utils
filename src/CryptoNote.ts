@@ -11,12 +11,14 @@ import {
     ED25519,
     TransactionInputs,
     TransactionOutputs,
+    TransactionSignatures,
     TurtleCoinCrypto,
     Interfaces,
     CryptoNoteInterfaces,
     ICryptoConfig
 } from './Types';
 import { Transaction } from './Transaction';
+import { clsagSign, clsagVerify, deriveViewTag } from './CryptoExtensions';
 import { EventEmitter } from 'events';
 import * as Numeral from 'numeral';
 import ICryptoNote = CryptoNoteInterfaces.ICryptoNote;
@@ -244,17 +246,20 @@ export class CryptoNote extends EventEmitter implements ICryptoNote {
         privateSpendKey?: string,
         generatePartial?: boolean
     ): Promise<Interfaces.Output[]> {
+        /* One key derivation per transaction, shared by every output */
+        const derivedKey = await TurtleCoinCrypto.generateKeyDerivation(transactionPublicKey, privateViewKey);
+
         const promises = [];
 
         for (const output of outputs) {
             promises.push(
-                this.isOurTransactionOutput(
+                this.isOurTransactionOutputPrimitive(
                     transactionPublicKey,
+                    derivedKey,
                     output,
-                    privateViewKey,
                     publicSpendKey,
                     privateSpendKey,
-                    generatePartial).catch()
+                    generatePartial).catch(() => undefined)
             );
         }
 
@@ -292,6 +297,81 @@ export class CryptoNote extends EventEmitter implements ICryptoNote {
         generatePartial?: boolean
     ): Promise<Interfaces.Output> {
         const derivedKey = await TurtleCoinCrypto.generateKeyDerivation(transactionPublicKey, privateViewKey);
+
+        return this.isOurTransactionOutputPrimitive(
+            transactionPublicKey, derivedKey, output, publicSpendKey, privateSpendKey, generatePartial);
+    }
+
+    /**
+     * Computes the view tag of an output (transaction version 2):
+     * the first byte of cn_fast_hash("view_tag" || derivation || varint(outputIndex))
+     * @param derivation the key derivation (generateKeyDerivation of the transaction public key and
+     * the private view key, or of the recipient public view key and the transaction private key)
+     * @param outputIndex the index of the output in the transaction
+     * @returns the view tag as two lowercase hexadecimal characters
+     */
+    public async deriveViewTag (derivation: string, outputIndex: number): Promise<string> {
+        return deriveViewTag(derivation, outputIndex);
+    }
+
+    /**
+     * Generates a single-key CLSAG signature (transaction version 2) and verifies it
+     * @param prefixHash the transaction prefix hash
+     * @param ring the ring public keys in transaction order (ascending global index)
+     * @param privateEphemeral the private ephemeral of the output being spent
+     * @param realOutputIndex the position of the output being spent in the ring
+     * @param keyImage the key image of the output being spent
+     * @param [randomness] explicit signing randomness (tests only); random if omitted
+     * @returns the signature
+     */
+    public async generateClsagSignature (
+        prefixHash: string,
+        ring: string[],
+        privateEphemeral: string,
+        realOutputIndex: number,
+        keyImage: string,
+        randomness?: Interfaces.ClsagRandomness
+    ): Promise<TransactionSignatures.ClsagSignature> {
+        return generateClsagSignature(prefixHash, keyImage, ring, privateEphemeral, realOutputIndex, randomness);
+    }
+
+    /**
+     * Verifies a single-key CLSAG signature (transaction version 2)
+     * @param prefixHash the transaction prefix hash
+     * @param ring the ring public keys in transaction order (ascending global index)
+     * @param keyImage the key image of the input
+     * @param signature the signature
+     * @returns whether the signature is valid
+     */
+    public async checkClsagSignature (
+        prefixHash: string,
+        ring: string[],
+        keyImage: string,
+        signature: TransactionSignatures.IClsagSignature
+    ): Promise<boolean> {
+        return clsagVerify(prefixHash, ring, keyImage, signature);
+    }
+
+    /**
+     * Scans one output with an already computed key derivation. A tagged output (viewTag set)
+     * whose view tag does not match is skipped before the output key is derived
+     * @ignore
+     */
+    protected async isOurTransactionOutputPrimitive (
+        transactionPublicKey: string,
+        derivedKey: string,
+        output: Interfaces.Output,
+        publicSpendKey: string,
+        privateSpendKey?: string,
+        generatePartial?: boolean
+    ): Promise<Interfaces.Output> {
+        if (typeof output.viewTag !== 'undefined' && output.viewTag !== null) {
+            const expectedViewTag = await deriveViewTag(derivedKey, output.index);
+
+            if (expectedViewTag !== TransactionOutputs.normalizeViewTag(output.viewTag)) {
+                throw new Error('Not our output');
+            }
+        }
 
         const publicEphemeral = await TurtleCoinCrypto.derivePublicKey(derivedKey, output.index, publicSpendKey);
 
@@ -499,31 +579,47 @@ export class CryptoNote extends EventEmitter implements ICryptoNote {
      * @param outputs the new outputs for the transaction (TO)
      * @param inputs outputs we will be spending (FROM)
      * @param randomOutputs the random outputs to use for mixing
-     * @param mixin the number of mixins to use
+     * @param mixin the number of mixins to use, or one number per input (rings of different sizes)
      * @param [feeAmount] the transaction fee amount to pay
      * @param [paymentId] the payment ID to use in the transaction,
      * @param [unlockTime] the unlock time or block height for the transaction
      * @param [extraData] arbitrary extra data to include in the transaction extra field
+     * @param [options] build options: the transaction version (1 by default, 2 for view tags and CLSAG), ...
      * @returns the newly created transaction object
      */
     public async createTransaction (
         outputs: Interfaces.GeneratedOutput[],
         inputs: Interfaces.Output[],
         randomOutputs: Interfaces.RandomOutput[][],
-        mixin: number,
+        mixin: number | number[],
         feeAmount?: number,
         paymentId?: string,
         unlockTime?: number,
-        extraData?: any
+        extraData?: any,
+        options?: Interfaces.TransactionOptions
     ): Promise<Transaction> {
         const feePerByte =
             this.m_config.activateFeePerByteTransactions || Config.activateFeePerByteTransactions || false;
 
         const prepared = await this.createTransactionStructure(
-            outputs, inputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extraData
+            outputs, inputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extraData, options
         );
 
         const txPrefixHash = await prepared.transaction.prefixHash();
+
+        if (prepared.transaction.version >= 2) {
+            prepared.transaction.clsagSignatures = await generateClsagSignatures(
+                txPrefixHash, prepared.inputs, (options) ? options.clsagRandomness : undefined);
+
+            const minimumV2Fee = this.calculateMinimumTransactionFee(prepared.transaction.size);
+
+            if (feeAmount && feeAmount !== 0 && feePerByte && feeAmount < minimumV2Fee) {
+                throw new Error('Transaction fee [' + prepared.transaction.fee +
+                    '] is not enough for network transmission: ' + minimumV2Fee);
+            }
+
+            return prepared.transaction;
+        }
 
         const promises = [];
 
@@ -578,23 +674,27 @@ export class CryptoNote extends EventEmitter implements ICryptoNote {
      * @param outputs the new outputs for the transaction (TO)
      * @param inputs outputs we will be spending (FROM)
      * @param randomOutputs the random outputs to use for mixing
-     * @param mixin the number of mixins to use
+     * @param mixin the number of mixins to use, or one number per input (rings of different sizes)
      * @param [feeAmount] the transaction fee amount to pay
      * @param [paymentId] the payment ID to use in the transaction,
      * @param [unlockTime] the unlock time or block height for the transaction
      * @param [extraData] arbitrary extra data to include in the transaction extra field
+     * @param [options] build options: the transaction version (1 by default, 2 for view tags and CLSAG), ...
      * @returns the newly created transaction object and it's input data
      */
     public async createTransactionStructure (
         outputs: Interfaces.GeneratedOutput[],
         inputs: Interfaces.Output[],
         randomOutputs: Interfaces.RandomOutput[][],
-        mixin: number,
+        mixin: number | number[],
         feeAmount?: number,
         paymentId?: string,
         unlockTime?: number,
-        extraData?: any
+        extraData?: any,
+        options?: Interfaces.TransactionOptions
     ): Promise<Interfaces.IPreparedTransaction> {
+        const version = transactionVersion(options);
+
         if (typeof feeAmount === 'undefined') {
             feeAmount = this.m_config.defaultNetworkFee || Config.defaultNetworkFee;
         }
@@ -603,12 +703,16 @@ export class CryptoNote extends EventEmitter implements ICryptoNote {
         const feePerByte =
             this.m_config.activateFeePerByteTransactions || Config.activateFeePerByteTransactions || false;
 
-        if (randomOutputs.length !== inputs.length && mixin !== 0) {
+        if (Array.isArray(mixin) && mixin.length !== inputs.length) {
+            throw new Error('The number of mixins supplied does not match the number of inputs supplied');
+        }
+
+        if (randomOutputs.length !== inputs.length && hasMixin(mixin)) {
             throw new Error('The sets of random outputs supplied does not match the number of inputs supplied');
         }
 
-        for (const randomOutput of randomOutputs) {
-            if (randomOutput.length < mixin) {
+        for (let i = 0; i < randomOutputs.length; i++) {
+            if (randomOutputs[i].length < mixinOf(mixin, i)) {
                 throw new Error('There are not enough random outputs to mix with');
             }
         }
@@ -669,7 +773,8 @@ export class CryptoNote extends EventEmitter implements ICryptoNote {
 
         const transactionInputs = await prepareTransactionInputs(inputs, randomOutputs, mixin);
 
-        const transactionOutputs = await prepareTransactionOutputs(outputs);
+        const transactionOutputs = await prepareTransactionOutputs(
+            outputs, version, (options) ? options.transactionPrivateKey : undefined);
 
         if (transactionOutputs.outputs.length >
             (this.m_config.maximumOutputsPerTransaction || Config.maximumOutputsPerTransaction)) {
@@ -689,6 +794,7 @@ export class CryptoNote extends EventEmitter implements ICryptoNote {
         }
 
         const tx = new Transaction();
+        tx.version = version;
         tx.unlockTime = BigInteger(unlockTime);
         await tx.addPublicKey(transactionOutputs.transactionKeys.publicKey);
         tx.transactionKeys = transactionOutputs.transactionKeys;
@@ -709,9 +815,17 @@ export class CryptoNote extends EventEmitter implements ICryptoNote {
             tx.addData(extraData);
         }
 
-        transactionInputs.sort((a, b) => {
-            return (BigInteger(a.keyImage, 16).compare(BigInteger(b.keyImage, 16)) * -1);
-        });
+        /* Version 1 sorts the inputs by key image (descending) as this library always did; version 2
+           keeps the order given, as the Rust wallet core (xkr-wallet-core build_transaction) does */
+        const sortInputs = (options && typeof options.sortInputs === 'boolean')
+            ? options.sortInputs
+            : version < 2;
+
+        if (sortInputs) {
+            transactionInputs.sort((a, b) => {
+                return (BigInteger(a.keyImage, 16).compare(BigInteger(b.keyImage, 16)) * -1);
+            });
+        }
 
         for (const input of transactionInputs) {
             let offsets: BigInteger.BigInteger[] = [];
@@ -724,7 +838,8 @@ export class CryptoNote extends EventEmitter implements ICryptoNote {
         }
 
         for (const output of transactionOutputs.outputs) {
-            tx.outputs.push(new TransactionOutputs.KeyOutput(output.amount, output.key));
+            /* The view tag is only set for version 2 (tagged output 0x03) */
+            tx.outputs.push(new TransactionOutputs.KeyOutput(output.amount, output.key, output.viewTag));
         }
 
         if (tx.extra.length > (this.m_config.maximumExtraSize || Config.maximumExtraSize)) {
@@ -745,30 +860,35 @@ export class CryptoNote extends EventEmitter implements ICryptoNote {
      * @param outputs the new outputs for the transaction (TO)
      * @param inputs outputs we will be spending (FROM)
      * @param randomOutputs the random outputs to use for mixing
-     * @param mixin the number of mixins to use
+     * @param mixin the number of mixins to use, or one number per input (rings of different sizes)
      * @param [feeAmount] the transaction fee amount to pay
      * @param [paymentId] the payment ID to use in the transaction,
      * @param [unlockTime] the unlock time or block height for the transaction
      * @param [extraData] arbitrary extra data to include in the transaction extra field
-     * @param [randomKey] a random scalar (private key)
-     * @returns the newly created transaction object with prepared signatures
+     * @param [randomKey] a random scalar (private key); version 1 only
+     * @param [options] build options: the transaction version (1 by default, 2 for view tags and CLSAG), ...
+     * @returns the newly created transaction object with prepared signatures. For version 2 the
+     * transaction carries no signatures yet: signatureMeta holds, per input, the ring, the real index,
+     * the key image and the derivation data that completeTransaction (or an external signer) needs
+     * to produce the CLSAG signatures over the prefix hash
      */
     public async prepareTransaction (
         outputs: Interfaces.GeneratedOutput[],
         inputs: Interfaces.Output[],
         randomOutputs: Interfaces.RandomOutput[][],
-        mixin: number,
+        mixin: number | number[],
         feeAmount?: number,
         paymentId?: string,
         unlockTime?: number,
         extraData?: any,
-        randomKey?: string
+        randomKey?: string,
+        options?: Interfaces.TransactionOptions
     ): Promise<Interfaces.PreparedTransaction> {
         const feePerByte =
             this.m_config.activateFeePerByteTransactions || Config.activateFeePerByteTransactions || false;
 
         const prepared = await this.createTransactionStructure(
-            outputs, inputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extraData
+            outputs, inputs, randomOutputs, mixin, feeAmount, paymentId, unlockTime, extraData, options
         );
 
         const recipients: Interfaces.TransactionRecipient[] = [];
@@ -778,6 +898,46 @@ export class CryptoNote extends EventEmitter implements ICryptoNote {
                 address: await output.destination.address(),
                 amount: output.amount
             });
+        }
+
+        if (prepared.transaction.version >= 2) {
+            const signatureMetaV2: Interfaces.PreparedRingSignature[] = [];
+
+            let signatureBytes = 0;
+
+            for (let i = 0; i < prepared.inputs.length; i++) {
+                const input = prepared.inputs[i];
+
+                signatureMetaV2.push({
+                    index: i,
+                    realOutputIndex: input.realOutputIndex,
+                    key: '',
+                    inputKeys: input.outputs.map((out) => out.key),
+                    keyImage: input.keyImage,
+                    input: {
+                        derivation: input.input.transactionKeys.derivedKey,
+                        outputIndex: input.input.transactionKeys.outputIndex,
+                        tx_public_key: input.input.transactionKeys.publicKey
+                    }
+                });
+
+                signatureBytes += 32 * (input.outputs.length + 1);
+            }
+
+            /* The signed size: the prefix plus one CLSAG (32 * (ring size + 1) bytes) per input */
+            const minimumV2Fee = this.calculateMinimumTransactionFee(prepared.transaction.size + signatureBytes);
+
+            if (feeAmount && feeAmount !== 0 && feePerByte && feeAmount < minimumV2Fee) {
+                throw new Error('Transaction fee [' + prepared.transaction.fee +
+                    '] is not enough for network transmission: ' + minimumV2Fee);
+            }
+
+            return {
+                transaction: prepared.transaction,
+                transactionRecipients: recipients,
+                transactionPrivateKey: prepared.transaction.transactionKeys.privateKey,
+                signatureMeta: signatureMetaV2
+            };
         }
 
         const txPrefixHash = await prepared.transaction.prefixHash();
@@ -871,6 +1031,10 @@ export class CryptoNote extends EventEmitter implements ICryptoNote {
             throw new Error('No transaction signature meta data supplied');
         }
 
+        if (tx.version >= 2) {
+            return completeClsagTransaction(preparedTransaction, privateSpendKey);
+        }
+
         for (const meta of preparedTransaction.signatureMeta) {
             if (!meta.input || !meta.input.derivation || !meta.input.outputIndex) {
                 throw new Error('Meta data is missing critical information');
@@ -916,6 +1080,145 @@ export class CryptoNote extends EventEmitter implements ICryptoNote {
 
         return preparedTransaction.transaction;
     }
+}
+
+/**
+ * Returns the transaction version requested by the options: 1 (default) or 2
+ * @ignore
+ */
+function transactionVersion (options?: Interfaces.TransactionOptions): number {
+    if (!options || typeof options.version === 'undefined' || options.version === null) {
+        return 1;
+    }
+
+    if (options.version !== 1 && options.version !== 2) {
+        throw new RangeError('Unsupported transaction version: ' + options.version + ' (supported: 1, 2)');
+    }
+
+    return options.version;
+}
+
+/**
+ * Generates a CLSAG signature and verifies it before returning it
+ * @ignore
+ */
+async function generateClsagSignature (
+    hash: string,
+    keyImage: string,
+    publicKeys: string[],
+    privateEphemeral: string,
+    realOutputIndex: number,
+    randomness?: Interfaces.ClsagRandomness
+): Promise<TransactionSignatures.ClsagSignature> {
+    const signature = await clsagSign(hash, publicKeys, privateEphemeral, realOutputIndex, randomness);
+
+    /* Verifying with the input's key image also catches a key image that does not belong to the secret */
+    const valid = await clsagVerify(hash, publicKeys, keyImage, signature);
+
+    if (!valid) {
+        throw new Error('Could not generate CLSAG signature');
+    }
+
+    return signature;
+}
+
+/**
+ * Signs every input of a version 2 transaction with CLSAG over the prefix hash, in input order
+ * @ignore
+ */
+async function generateClsagSignatures (
+    txPrefixHash: string,
+    inputs: Interfaces.PreparedInput[],
+    randomness?: Interfaces.ClsagRandomness[]
+): Promise<TransactionSignatures.ClsagSignature[]> {
+    if (randomness && randomness.length !== inputs.length) {
+        throw new RangeError('CLSAG randomness must be given for every input');
+    }
+
+    const promises = [];
+
+    for (let i = 0; i < inputs.length; i++) {
+        const input = inputs[i];
+
+        if (!input.input.privateEphemeral) {
+            throw new Error('private ephemeral missing from input');
+        }
+
+        promises.push(generateClsagSignature(
+            txPrefixHash,
+            input.keyImage,
+            input.outputs.map((out) => out.key),
+            input.input.privateEphemeral,
+            input.realOutputIndex,
+            (randomness) ? randomness[i] : undefined));
+    }
+
+    return Promise.all(promises);
+}
+
+/**
+ * Completes a prepared version 2 transaction: derives each input's private ephemeral from the
+ * private spend key and signs the input with CLSAG
+ * @ignore
+ */
+async function completeClsagTransaction (
+    preparedTransaction: Interfaces.PreparedTransaction,
+    privateSpendKey: string
+): Promise<Transaction> {
+    const tx = preparedTransaction.transaction;
+
+    if (tx.signatures.length !== 0) {
+        throw new Error('Version 2 transactions carry CLSAG signatures, not ring signatures');
+    }
+
+    const prefixHash = await tx.prefixHash();
+
+    const promises = [];
+
+    for (let i = 0; i < tx.inputs.length; i++) {
+        const meta = getSignatureMeta(preparedTransaction.signatureMeta, i);
+
+        if (!meta.input || !meta.input.derivation || typeof meta.input.outputIndex !== 'number' ||
+            !meta.inputKeys) {
+            throw new Error('Meta data is missing critical information');
+        }
+
+        const input = tx.inputs[i];
+
+        if (input.type !== TransactionInputs.InputType.KEY) {
+            throw new Error('Only key inputs can be signed');
+        }
+
+        const keyImage = (input as TransactionInputs.KeyInput).keyImage;
+
+        if (meta.keyImage && meta.keyImage !== keyImage) {
+            throw new Error('Meta data key image does not match the transaction input');
+        }
+
+        const privateEphemeral = await TurtleCoinCrypto.deriveSecretKey(
+            meta.input.derivation, meta.input.outputIndex, privateSpendKey);
+
+        promises.push(generateClsagSignature(
+            prefixHash, keyImage, meta.inputKeys, privateEphemeral, meta.realOutputIndex));
+    }
+
+    tx.clsagSignatures = await Promise.all(promises);
+
+    return tx;
+}
+
+/** @ignore */
+function getSignatureMeta (
+    preparedSignatures: Interfaces.PreparedRingSignature[],
+    index: number
+): Interfaces.PreparedRingSignature {
+    for (const meta of preparedSignatures) {
+        if (meta.index === index) {
+            return meta;
+        }
+    }
+
+    throw new Error('Could not locate the signature meta data of input ' + index);
 }
 
 /** @ignore */
@@ -999,17 +1302,37 @@ async function completeRingSignatures (
     return { signatures, index };
 }
 
+/**
+ * The mixin of input i: the single mixin, or the i-th entry of a per-input list
+ * @ignore
+ */
+function mixinOf (mixin: number | number[], index: number): number {
+    if (Array.isArray(mixin)) {
+        return (index < mixin.length) ? mixin[index] : 0;
+    }
+
+    return mixin;
+}
+
+/**
+ * Whether any input mixes with random outputs
+ * @ignore
+ */
+function hasMixin (mixin: number | number[]): boolean {
+    return (Array.isArray(mixin)) ? mixin.some((m) => m !== 0) : mixin !== 0;
+}
+
 /** @ignore */
 function prepareTransactionInputs (
     inputs: Interfaces.Output[],
     randomOutputs: Interfaces.RandomOutput[][],
-    mixin: number): Interfaces.PreparedInput[] {
-    if (inputs.length !== randomOutputs.length && mixin !== 0) {
+    mixins: number | number[]): Interfaces.PreparedInput[] {
+    if (inputs.length !== randomOutputs.length && hasMixin(mixins)) {
         throw new Error('There are not enough random output sets to mix with the real outputs');
     }
 
-    for (const randomOutput of randomOutputs) {
-        if (randomOutput.length < mixin) {
+    for (let i = 0; i < randomOutputs.length; i++) {
+        if (randomOutputs[i].length < mixinOf(mixins, i)) {
             throw new Error('There are not enough random outputs to mix with');
         }
     }
@@ -1019,6 +1342,7 @@ function prepareTransactionInputs (
     for (let i = 0; i < inputs.length; i++) {
         const mixedOutputs: Interfaces.PreparedInputOutputs[] = [];
         const realOutput = inputs[i];
+        const mixin = mixinOf(mixins, i);
 
         if (!realOutput.keyImage) {
             throw new Error('input is missing its key image');
@@ -1089,7 +1413,11 @@ function prepareTransactionInputs (
 }
 
 /** @ignore */
-async function prepareTransactionOutputs (outputs: Interfaces.GeneratedOutput[]): Promise<Interfaces.PreparedOutputs> {
+async function prepareTransactionOutputs (
+    outputs: Interfaces.GeneratedOutput[],
+    version = 1,
+    transactionPrivateKey?: string
+): Promise<Interfaces.PreparedOutputs> {
     async function prepareOutput (
         destination: Address,
         amount: number,
@@ -1102,15 +1430,36 @@ async function prepareTransactionOutputs (outputs: Interfaces.GeneratedOutput[])
             index,
             destination.spend.publicKey);
 
+        if (version >= 2) {
+            /* Version 2: view_tag(8*r*A, index) from the same derivation as the output key */
+            return {
+                amount,
+                key: outPublicEphemeral,
+                viewTag: await deriveViewTag(outDerivation, index)
+            };
+        }
+
         return {
             amount,
             key: outPublicEphemeral
         };
     }
 
-    const keys = await TurtleCoinCrypto.generateKeys();
+    let transactionKeys: ED25519.KeyPair;
 
-    const transactionKeys: ED25519.KeyPair = await ED25519.KeyPair.from(keys.public_key, keys.private_key);
+    if (transactionPrivateKey) {
+        if (!await TurtleCoinCrypto.checkScalar(transactionPrivateKey)) {
+            throw new Error('Invalid transaction private key supplied');
+        }
+
+        const publicKey = await TurtleCoinCrypto.secretKeyToPublicKey(transactionPrivateKey);
+
+        transactionKeys = await ED25519.KeyPair.from(publicKey, transactionPrivateKey);
+    } else {
+        const keys = await TurtleCoinCrypto.generateKeys();
+
+        transactionKeys = await ED25519.KeyPair.from(keys.public_key, keys.private_key);
+    }
 
     outputs.sort((a, b) => (a.amount > b.amount) ? 1 : ((b.amount > a.amount) ? -1 : 0));
 

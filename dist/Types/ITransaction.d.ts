@@ -34,6 +34,7 @@ export declare namespace Interfaces {
          * The randomly generated scalar value that was created in preparing the ring signatures
          * This value is required for when we restore the ring signatures will all of the required
          * partial signing keys.
+         * Empty for transaction version 2 (CLSAG is signed in one step by completeTransaction)
          */
         key: string;
         /**
@@ -41,9 +42,13 @@ export declare namespace Interfaces {
          */
         signatures?: string[];
         /**
-         * The public keys used in the signature preparation (random + real)
+         * The public keys used in the signature preparation (random + real), in ring order
          */
         inputKeys?: string[];
+        /**
+         * The key image of the input (transaction version 2)
+         */
+        keyImage?: string;
         /**
          * The output information used to create this input
          */
@@ -152,6 +157,11 @@ export declare namespace Interfaces {
          */
         type?: number;
         /**
+         * The view tag of the output (transaction version 2) as two hexadecimal characters.
+         * When present, output scanning compares it before deriving the output key
+         */
+        viewTag?: string;
+        /**
          * The output key image
          */
         keyImage?: string;
@@ -194,6 +204,7 @@ export declare namespace Interfaces {
     interface PreparedOutput {
         amount: number;
         key: string;
+        viewTag?: string;
     }
     /** @ignore */
     interface PreparedOutputs {
@@ -208,5 +219,44 @@ export declare namespace Interfaces {
     interface IPreparedTransaction {
         transaction: Transaction;
         inputs: PreparedInput[];
+    }
+    /**
+     * Explicit CLSAG signing randomness for one input (deterministic signing, test vectors)
+     */
+    interface ClsagRandomness {
+        /**
+         * The nonce alpha (scalar, 64 hex characters)
+         */
+        alpha: string;
+        /**
+         * The decoy responses in consumption order s_{l+1} .. s_{n-1}, s_0 .. s_{l-1} (ring size - 1 scalars)
+         */
+        decoyResponses: string[];
+    }
+    /**
+     * Options for building a transaction
+     */
+    interface TransactionOptions {
+        /**
+         * The transaction version: 1 (ring signatures, untagged outputs; the default) or
+         * 2 (fork 14: view tags and single-key CLSAG signatures). Build the highest version the
+         * daemon lists in /getinfo `tx_versions`
+         */
+        version?: number;
+        /**
+         * The transaction private key r (64 hex characters); random if omitted.
+         * Only for deterministic builds (tests); never reuse a transaction private key
+         */
+        transactionPrivateKey?: string;
+        /**
+         * Whether to sort the inputs by key image (descending). Default: true for version 1 (the
+         * historical behaviour of this library), false for version 2 (inputs stay in the order
+         * given, as the Rust wallet core builds them)
+         */
+        sortInputs?: boolean;
+        /**
+         * Explicit CLSAG randomness per input, in transaction input order (version 2, tests only)
+         */
+        clsagRandomness?: ClsagRandomness[];
     }
 }

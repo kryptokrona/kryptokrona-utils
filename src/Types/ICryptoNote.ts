@@ -108,34 +108,37 @@ export namespace CryptoNoteInterfaces {
             outputs: Interfaces.GeneratedOutput[],
             inputs: Interfaces.Output[],
             randomOutputs: Interfaces.RandomOutput[][],
-            mixin: number,
+            mixin: number | number[],
             feeAmount?: number,
             paymentId?: string,
             unlockTime?: number,
-            extraData?: any
+            extraData?: any,
+            options?: Interfaces.TransactionOptions
         ): Promise<Transaction>;
 
         public abstract createTransactionStructure (
             outputs: Interfaces.GeneratedOutput[],
             inputs: Interfaces.Output[],
             randomOutputs: Interfaces.RandomOutput[][],
-            mixin: number,
+            mixin: number | number[],
             feeAmount?: number,
             paymentId?: string,
             unlockTime?: number,
-            extraData?: any
+            extraData?: any,
+            options?: Interfaces.TransactionOptions
         ): Promise<Interfaces.IPreparedTransaction>;
 
         public abstract prepareTransaction (
             outputs: Interfaces.GeneratedOutput[],
             inputs: Interfaces.Output[],
             randomOutputs: Interfaces.RandomOutput[][],
-            mixin: number,
+            mixin: number | number[],
             feeAmount?: number,
             paymentId?: string,
             unlockTime?: number,
             extraData?: any,
-            randomKey?: string
+            randomKey?: string,
+            options?: Interfaces.TransactionOptions
         ): Promise<Interfaces.PreparedTransaction>;
 
         public abstract completeTransaction (

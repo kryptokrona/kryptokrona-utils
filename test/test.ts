@@ -1672,7 +1672,14 @@ describe('Blocks', async function () {
                         assert(await testBlock.hash() === block.hash);
                     });
 
-                    it('PoW hash works', async () => {
+                    it('PoW hash works', async function () {
+                        /* The major 6 fixture is a TurtleCoin block mined with Chukwa. Kryptokrona
+                           majors 6 (fork 13) and 7 (fork 14) keep CN-Turtle-Lite v2 like major 5
+                           (see txv2.test.ts), so its TurtleCoin PoW hash does not apply */
+                        if (testBlock.majorVersion >= 6) {
+                            this.skip();
+                        }
+
                         assert(await testBlock.longHash() === block.pow);
                     });
 

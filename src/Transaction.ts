@@ -11,13 +11,22 @@ import {
     ExtraTag,
     TransactionInputs,
     TransactionOutputs,
+    TransactionSignatures,
     TurtleCoinCrypto
 } from './Types';
 import { Reader, Writer } from '@turtlecoin/bytestream';
 
-/** @ignore */
-const TransactionVersion2Suffix = 'bc36789e7a1e281436464229828f817d6612f7b477d66591ff96a9e064bcc98a' +
-    '0000000000000000000000000000000000000000000000000000000000000000';
+/**
+ * Transaction version 2 (fork 14): tagged outputs (view tags) and single-key CLSAG signatures
+ * @ignore
+ */
+const TRANSACTION_VERSION_2 = 2;
+
+/**
+ * The highest transaction version the parser accepts
+ * @ignore
+ */
+const MAX_TRANSACTION_VERSION = TRANSACTION_VERSION_2;
 
 /** @ignore */
 interface Cache {
@@ -53,7 +62,7 @@ export class Transaction {
         let amount = BigInteger.zero;
 
         for (const output of this.outputs) {
-            if (output.type === TransactionOutputs.OutputType.KEY) {
+            if (TransactionOutputs.isKeyOutput(output)) {
                 amount = amount.add((output as TransactionOutputs.KeyOutput).amount);
             }
         }
@@ -163,7 +172,10 @@ export class Transaction {
     }
 
     /**
-     * Returns the transaction hash
+     * Returns the transaction hash (id): cn_fast_hash of the whole serialized transaction,
+     * for every transaction version (Kryptokrona transaction version 2 keeps the version 1 rule).
+     * The Monero-style version 2 coinbase id applies only to the miner transaction of a merge-mining
+     * parent block, see ParentBlock.minerTransactionHash()
      */
     public async hash (): Promise<string> {
         if (this.m_cached.blob && this.m_cached.blob === this.toString() && this.m_cached.hash) {
@@ -173,14 +185,6 @@ export class Transaction {
         this.m_cached.blob = this.toString();
 
         const hash = await TurtleCoinCrypto.cn_fast_hash(this.m_cached.blob);
-
-        if (this.version >= 2) {
-            const hash2 = await TurtleCoinCrypto.cn_fast_hash(hash + TransactionVersion2Suffix);
-
-            this.m_cached.hash = hash2;
-
-            return hash2;
-        }
 
         this.m_cached.hash = hash;
 
@@ -293,7 +297,9 @@ export class Transaction {
     }
 
     /**
-     * Returns the transaction prefix hash
+     * Returns the transaction prefix hash: cn_fast_hash of the serialized prefix, for every
+     * transaction version. It is the message signed by the ring signatures (version 1) and by the
+     * CLSAG signatures (version 2)
      */
     public async prefixHash (): Promise<string> {
         if (this.m_cached.prefix && this.m_cached.prefix === this.prefix && this.m_cached.prefixHash) {
@@ -303,14 +309,6 @@ export class Transaction {
         this.m_cached.prefix = this.prefix;
 
         const hash = await TurtleCoinCrypto.cn_fast_hash(this.m_cached.prefix);
-
-        if (this.version >= 2) {
-            const hash2 = await TurtleCoinCrypto.cn_fast_hash(hash + TransactionVersion2Suffix);
-
-            this.m_cached.prefixHash = hash2;
-
-            return hash2;
-        }
 
         this.m_cached.prefixHash = hash;
 
@@ -440,6 +438,12 @@ export class Transaction {
 
         result.version = reader.varint().toJSNumber();
 
+        if (result.version > MAX_TRANSACTION_VERSION) {
+            throw new Error('Unsupported transaction version: ' + result.version);
+        }
+
+        const isVersion2 = result.version >= TRANSACTION_VERSION_2;
+
         result.unlockTime = reader.varint();
 
         const inputsCount = reader.varint().toJSNumber();
@@ -449,6 +453,10 @@ export class Transaction {
 
             switch (type) {
                 case TransactionInputs.InputType.COINBASE: {
+                    /* A coinbase input is only valid as the single input of a miner transaction */
+                    if (isVersion2 && inputsCount > 1) {
+                        throw new Error('Coinbase input found in a transaction with more than one input');
+                    }
                     const blockIndex = reader.varint().toJSNumber();
                     result.inputs.push(new TransactionInputs.CoinbaseInput(blockIndex));
                 }
@@ -460,7 +468,7 @@ export class Transaction {
                     for (let j = 0; j < keyOffsetsLength; j++) {
                         keyOffsets.push(reader.varint());
                     }
-                    const keyImage = reader.hash();
+                    const keyImage = readHex(reader, 32, 'key image');
                     result.inputs.push(new TransactionInputs.KeyInput(amount, keyOffsets, keyImage));
                 }
                     break;
@@ -472,18 +480,14 @@ export class Transaction {
         const outputsCount = reader.varint().toJSNumber();
 
         for (let i = 0; i < outputsCount; i++) {
-            const amount = reader.varint();
-            const type = reader.uint8_t().toJSNumber();
-
-            if (type === TransactionOutputs.OutputType.KEY) {
-                const key = reader.hash();
-                result.outputs.push(new TransactionOutputs.KeyOutput(amount, key));
-            } else {
-                throw new Error('Unknown output type');
-            }
+            result.outputs.push(Transaction.readOutput(reader, result.version));
         }
 
         const extraLength = reader.varint().toJSNumber();
+
+        if (extraLength > reader.unreadBytes) {
+            throw new RangeError('Unexpected end of data while reading the transaction extra');
+        }
 
         result.m_rawExtra = reader.bytes(extraLength);
 
@@ -493,8 +497,34 @@ export class Transaction {
             await result.transactionKeys.setPublicKey(result.publicKey);
         }
 
-        /* If there are bytes remaining and mod 64 then they are signatures */
-        if (reader.unreadBytes > 0 && reader.unreadBytes % 64 === 0) {
+        if (isVersion2) {
+            /* Version 2: the signature section is defined by the inputs, no guessing. Nothing for
+               a transaction without inputs or with a single coinbase input; otherwise every input
+               is a key input followed by its CLSAG signature s_0 .. s_{n-1} || c1 */
+            const signaturesExpected = !(result.inputs.length === 0 ||
+                (result.inputs.length === 1 && result.inputs[0].type === TransactionInputs.InputType.COINBASE));
+
+            if (signaturesExpected) {
+                for (const input of result.inputs) {
+                    if (input.type !== TransactionInputs.InputType.KEY) {
+                        throw new Error('Coinbase input found in a signed transaction');
+                    }
+
+                    const ringSize = (input as TransactionInputs.KeyInput).keyOffsets.length;
+
+                    const s: string[] = [];
+
+                    for (let j = 0; j < ringSize; j++) {
+                        s.push(readHex(reader, 32, 'CLSAG response'));
+                    }
+
+                    const c1 = readHex(reader, 32, 'CLSAG challenge');
+
+                    result.clsagSignatures.push(new TransactionSignatures.ClsagSignature(s, c1));
+                }
+            }
+        } else if (reader.unreadBytes > 0 && reader.unreadBytes % 64 === 0) {
+            /* Version 0/1: if there are bytes remaining and mod 64 then they are signatures */
             for (const input of result.inputs) {
                 if (input.type === TransactionInputs.InputType.COINBASE) {
                     continue;
@@ -525,10 +555,52 @@ export class Transaction {
         return result;
     }
 
+    /**
+     * Reads one output of a transaction of the given version from the reader:
+     * versions 0 and 1 accept only untagged key outputs (0x02), version 2 only tagged key outputs (0x03)
+     * @ignore
+     * @param reader the reader positioned at the output
+     * @param version the transaction version
+     * @param [unknownTypeMessage] the error message for an unknown output type
+     * @returns the output
+     */
+    public static readOutput (
+        reader: Reader,
+        version: number,
+        unknownTypeMessage = 'Unknown output type'
+    ): TransactionOutputs.KeyOutput {
+        const amount = reader.varint();
+        const type = reader.uint8_t().toJSNumber();
+
+        if (version >= TRANSACTION_VERSION_2) {
+            if (type === TransactionOutputs.OutputType.TAGGED_KEY) {
+                const key = readHex(reader, 32, 'output key');
+                const viewTag = readHex(reader, 1, 'view tag');
+                return new TransactionOutputs.KeyOutput(amount, key, viewTag);
+            } else if (type === TransactionOutputs.OutputType.KEY) {
+                throw new Error('Untagged output found in a version 2 transaction');
+            }
+        } else if (type === TransactionOutputs.OutputType.KEY) {
+            const key = readHex(reader, 32, 'output key');
+            return new TransactionOutputs.KeyOutput(amount, key);
+        }
+
+        throw new Error(unknownTypeMessage);
+    }
+
     public version = 1;
     public inputs: TransactionInputs.ITransactionInput[] = [];
     public outputs: TransactionOutputs.ITransactionOutput[] = [];
+    /**
+     * The ring signatures of a version 0/1 transaction: per input, one 64-byte `c || r` pair per ring member.
+     * Always empty for version 2
+     */
     public signatures: string[][] = [];
+    /**
+     * The CLSAG signatures of a version 2 transaction: one per input, in input order.
+     * Always empty for versions 0 and 1
+     */
+    public clsagSignatures: TransactionSignatures.IClsagSignature[] = [];
     public ignoredField = 0;
     public transactionKeys: ED25519.KeyPair = new ED25519.KeyPair();
 
@@ -693,14 +765,44 @@ export class Transaction {
             writer.write(extra);
         }
 
-        if (!headerOnly && this.signatures.length !== 0) {
-            if (this.inputs.length !== this.signatures.length) {
-                throw new RangeError('Number of signatures does not match the number of inputs');
+        if (!headerOnly && this.version >= TRANSACTION_VERSION_2) {
+            if (this.signatures.length !== 0) {
+                throw new Error('Version 2 transactions carry CLSAG signatures, not ring signatures');
             }
 
-            for (let i = 0; i < this.inputs.length; i++) {
-                for (const sig of this.signatures[i]) {
-                    writer.hex(sig);
+            if (this.clsagSignatures.length !== 0) {
+                if (this.inputs.length !== this.clsagSignatures.length) {
+                    throw new RangeError('Number of CLSAG signatures does not match the number of inputs');
+                }
+
+                for (let i = 0; i < this.inputs.length; i++) {
+                    const input = this.inputs[i];
+
+                    if (input.type !== TransactionInputs.InputType.KEY) {
+                        throw new Error('Coinbase input found in a signed transaction');
+                    }
+
+                    if ((input as TransactionInputs.KeyInput).keyOffsets.length !== this.clsagSignatures[i].s.length) {
+                        throw new RangeError('CLSAG signature ' + i + ' does not match the ring size of its input');
+                    }
+
+                    writer.write(TransactionSignatures.clsagSignatureToBuffer(this.clsagSignatures[i]));
+                }
+            }
+        } else if (!headerOnly) {
+            if (this.clsagSignatures.length !== 0) {
+                throw new Error('CLSAG signatures require transaction version 2');
+            }
+
+            if (this.signatures.length !== 0) {
+                if (this.inputs.length !== this.signatures.length) {
+                    throw new RangeError('Number of signatures does not match the number of inputs');
+                }
+
+                for (let i = 0; i < this.inputs.length; i++) {
+                    for (const sig of this.signatures[i]) {
+                        writer.hex(sig);
+                    }
                 }
             }
         }
@@ -716,6 +818,18 @@ export class Transaction {
     public toString (headerOnly = false): string {
         return this.toBuffer(headerOnly).toString('hex');
     }
+}
+
+/**
+ * Reads the given number of bytes as hexadecimal, refusing to read past the end of the data
+ * @ignore
+ */
+function readHex (reader: Reader, length: number, what: string): string {
+    if (reader.unreadBytes < length) {
+        throw new RangeError('Unexpected end of data while reading ' + what);
+    }
+
+    return reader.hex(length);
 }
 
 /** @ignore */
