@@ -5,4 +5,4 @@ Transaction version 2 (fork 14) test vectors, copied byte for byte from the Kryp
 | `tx-v2-layout.json` | `be70058e33cd705f0c9a3fbfa44e29883e08d74bd92a1af957532ec0266dc5da` |
 | `tx-v2-transactions.json` | `9782a3332606668e9236ff2805a91f45ca1fece01a0f1dc89cf52b5d094bb0e8` |
 | `tx-v2-view-tags.json` | `109ffcfe78f4bda98e79d825548315dc7e436eb3e77bfd70c9ef976b6582ac4c` |
-| `tx-v2-clsag.json` | `f611fdf7debb68451bf0c0abfadcd0ac9a03b9871b589fc1fe479eac65633e1a` |
+| `tx-v2-clsag.json` | `2b008374872165af32cb76fe45d9ea5fade3b6412f23d4abf5792eb4ffda8123` |
