@@ -41,6 +41,10 @@ compatible and transaction building stays version 1 unless version 2 is requeste
   to TurtleCoin's Chukwa).
 - `scanTransactionOutputs` rejected as soon as one output was not ours (`.catch()` without a
   handler); it now returns the outputs that are ours.
+- Rings are built strictly increasing in global index with each index once: a decoy repeating an
+  index already in the ring, or at the real output's index, is skipped (the node resolves a ring as
+  the sorted set of its indexes). If fewer distinct decoys remain than the mixin, building fails with
+  "There are not enough distinct random outputs to mix with". Applies to `CryptoNote` and `LedgerNote`.
 - The parser refuses transaction versions above 2 and blobs that end inside a key, key image or
   extra field instead of reading short values.
 

@@ -910,6 +910,72 @@ describe('Transaction version 2', async function () {
         });
     });
 
+    describe('Ring members', async () => {
+        /* createTransactionStructure for v2_spend with the given random outputs */
+        async function structure (random: Interfaces.RandomOutput[][]): Promise<Interfaces.IPreparedTransaction> {
+            const vector = transactionVectors.v2_spend;
+
+            return cnUtil.createTransactionStructure(
+                await destinations(vector),
+                await ownedInputs(vector),
+                random,
+                vector.inputs.map((vin: any) => vin.decoys.length),
+                vector.fee,
+                undefined,
+                vector.unlock_time,
+                Buffer.from(vector.hugin_data, 'hex'),
+                buildOptions(vector, false));
+        }
+
+        it('skips repeated decoys and decoys at the real output, rings stay strictly increasing', async () => {
+            const vector = transactionVectors.v2_spend;
+            const random = randomOutputs(vector);
+            const first = vector.inputs[0];
+
+            /* The same decoy twice, the same index with another key, and the real output's index */
+            random[0].push({ globalIndex: first.decoys[0].global_index, key: first.decoys[0].key });
+            random[0].push({ globalIndex: first.decoys[0].global_index, key: first.key });
+            random[0].push({ globalIndex: first.global_index, key: first.decoys[0].key });
+
+            const prepared = await structure(random);
+
+            assert.strictEqual(prepared.transaction.prefix, vector.prefix);
+
+            for (let i = 0; i < vector.inputs.length; i++) {
+                const ring = prepared.inputs[i].outputs.map((member) => member.index);
+
+                assert.strictEqual(ring.length, vector.inputs[i].decoys.length + 1);
+
+                for (let j = 1; j < ring.length; j++) {
+                    assert(ring[j] > ring[j - 1], 'ring ' + i + ' is not strictly increasing');
+                }
+
+                const input = prepared.transaction.inputs[i] as TransactionInputs.KeyInput;
+
+                for (let j = 1; j < input.keyOffsets.length; j++) {
+                    assert(input.keyOffsets[j].greater(0), 'offset ' + j + ' of input ' + i + ' is not positive');
+                }
+            }
+        });
+
+        it('refuses a ring with too few distinct decoys', async () => {
+            const vector = transactionVectors.v2_spend;
+            const random = randomOutputs(vector);
+            const first = vector.inputs[0];
+
+            assert(first.decoys.length > 1, 'the first input needs a ring of at least three');
+
+            /* As many decoys as needed, but one index repeated and one at the real output */
+            random[0] = first.decoys.map(() => ({
+                globalIndex: first.decoys[0].global_index,
+                key: first.decoys[0].key
+            }));
+            random[0].push({ globalIndex: first.global_index, key: first.key });
+
+            await assert.rejects(structure(random), /not enough distinct random outputs/);
+        });
+    });
+
     describe('Mixin limits', async () => {
         const limits = MixinLimits.defaults();
 

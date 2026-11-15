@@ -1322,6 +1322,14 @@ function hasMixin (mixin: number | number[]): boolean {
     return (Array.isArray(mixin)) ? mixin.some((m) => m !== 0) : mixin !== 0;
 }
 
+/**
+ * Whether two global indexes are the same output index
+ * @ignore
+ */
+function sameGlobalIndex (a: number, b: number): boolean {
+    return BigInteger(a).compare(b) === 0;
+}
+
 /** @ignore */
 function prepareTransactionInputs (
     inputs: Interfaces.Output[],
@@ -1363,12 +1371,21 @@ function prepareTransactionInputs (
                 return BigInteger(a.globalIndex).compare(b.globalIndex);
             });
 
+            /* A ring holds each global index once and is strictly increasing: the node resolves a
+               ring as the sorted set of its indexes, so a repeated index or a decoy at the real
+               output's index would leave the ring shorter than its signature. The decoys are
+               sorted, so a repeat is always next to the decoy taken before it. */
             for (const fakeOutput of fakeOutputs) {
                 if (mixedOutputs.length === mixin) {
+                    break;
+                }
+
+                if (sameGlobalIndex(fakeOutput.globalIndex, realOutput.globalIndex)) {
                     continue;
                 }
 
-                if (fakeOutput.globalIndex === realOutput.globalIndex) {
+                if (mixedOutputs.length > 0 &&
+                    sameGlobalIndex(fakeOutput.globalIndex, mixedOutputs[mixedOutputs.length - 1].index)) {
                     continue;
                 }
 
@@ -1379,7 +1396,8 @@ function prepareTransactionInputs (
             }
 
             if (mixedOutputs.length < mixin) {
-                throw new Error('It is impossible to mix with yourself. Find some more random outputs and try again.');
+                throw new Error('There are not enough distinct random outputs to mix with. ' +
+                    'Find some more random outputs and try again.');
             }
         }
 
