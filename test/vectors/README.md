@@ -1,4 +1,4 @@
-Transaction version 2 (fork 14) test vectors, copied byte for byte from the Kryptokrona Rust node repository `xkr`, `docs/test-vectors/` at commit `fe10b3e` (2026-11-14); generated and checked there by `crates/xkr-wallet-core/tests/tx_v2_*` (see `docs/wallet-v2.md` §7.2 for the schema). Do not edit them here: regenerate them in `xkr` and copy them again.
+Transaction version 2 (fork 14) test vectors, copied byte for byte from the Kryptokrona Rust node repository `xkr`, `docs/test-vectors/` at commit `42835b1` (2026-11-14); generated and checked there by `crates/xkr-wallet-core/tests/tx_v2_*` (see `docs/wallet-v2.md` §7.2 for the schema). Do not edit them here: regenerate them in `xkr` and copy them again.
 
 | file | sha256 |
 |---|---|
