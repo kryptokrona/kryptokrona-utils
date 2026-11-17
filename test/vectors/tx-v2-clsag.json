@@ -1,6 +1,6 @@
 {
   "agg_domain": "584b525f434c5341475f6167675f300000000000000000000000000000000000",
-  "description": "Fork-14 single-key CLSAG (docs/tx-v2.md §4, docs/wallet-v2.md §7.2 C). Per vector: message m, ring P_0..P_{n-1} (transaction order), signer index l and secret x, key image I = x*H_p(P_l), mu, the randomness (alpha, then the decoy responses in consumption order s_{l+1}, .., s_{n-1}, s_0, .., s_{l-1}, each reduced mod l), the challenge chain c_0..c_{n-1} (c_0 = c1) and the expected c1 and s_0..s_{n-1}. Negative cases alter one input of the n = 11, l = 5 signature; expected is the verification result. Secrets are H_s(\"xkr tx-v2 vectors \" || label). Generated and checked by crates/xkr-wallet-core/tests/tx_v2_clsag.rs.",
+  "description": "Fork-14 single-key CLSAG (docs/tx-v2.md §4). Per vector: message m, ring P_0..P_{n-1} (transaction order), signer index l and secret x, key image I = x*H_p(P_l), mu, the randomness (alpha, then the decoy responses in consumption order s_{l+1}, .., s_{n-1}, s_0, .., s_{l-1}, each reduced mod l), the challenge chain c_0..c_{n-1} (c_0 = c1) and the expected c1 and s_0..s_{n-1}. Negative cases alter one input of the n = 11, l = 5 signature; expected is the verification result. Secrets are H_s(\"xkr tx-v2 vectors \" || label). Generated and checked by crates/xkr-wallet-core/tests/tx_v2_clsag.rs.",
   "negative": [
     {
       "c1": "ea0f265d36a57f8823df9e0c6cb55449598bafd757eed9adebcd4b8ada3b8a0b",

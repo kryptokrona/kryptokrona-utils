@@ -46,7 +46,7 @@ compatible and transaction building stays version 1 unless version 2 is requeste
   the sorted set of its indexes). If fewer distinct decoys remain than the mixin, building fails with
   "There are not enough distinct random outputs to mix with". Applies to `CryptoNote` and `LedgerNote`.
 - The parser refuses transaction versions above 2 and blobs that end inside a key, key image or
-  extra field instead of reading short values.
+  extra field.
 
 ### Unchanged / version 1 only
 

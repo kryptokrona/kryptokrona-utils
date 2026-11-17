@@ -1,5 +1,5 @@
 {
-  "description": "Fork-14 view tags (docs/tx-v2.md §3, docs/wallet-v2.md §7.2 A): view_tag(D, i) = cn_fast_hash(\"view_tag\" || D || varint(i))[0]. Secrets are H_s(\"xkr tx-v2 vectors \" || label). Generated and checked by crates/xkr-wallet-core/tests/tx_v2_view_tags.rs.",
+  "description": "Fork-14 view tags (docs/tx-v2.md §3): view_tag(D, i) = cn_fast_hash(\"view_tag\" || D || varint(i))[0]. Secrets are H_s(\"xkr tx-v2 vectors \" || label). Generated and checked by crates/xkr-wallet-core/tests/tx_v2_view_tags.rs.",
   "monero": [
     {
       "derivation": "0fc47054f355ced4d67de73bfa12e4c78ff19089548fffa7d07a674741860f97",
