@@ -6,26 +6,39 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: read
+
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        node: ['8', '10', '11', '12', '13']
-    name: ${{ matrix.os }} - Node ${{ matrix.node }} Test
+        node: ['20', '22', '24']
+    name: Node ${{ matrix.node }} Test
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-node@v1
-      name: Set up Node
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
         node-version: ${{ matrix.node }}
-        registry-url: 'https://registry.npmjs.org'
-    - name: Install Dependencies (skip c++ crypto module)
-      run: npm install --no-optional
-    - name: Execute Unit Tests (javascript crypto module)
-      run: npm test
-    - name: Install Dependencies (include c++ crypto module)
-      run: npm install
-    - name: Execute Unit Tests (c++ crypto module)
+    # kryptokrona-crypto 2.0 from its xkr-v2 branch until it is on npm; then `npm ci` alone.
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        repository: kryptokrona/kryptokrona-crypto
+        ref: xkr-v2
+        path: kryptokrona-crypto-src
+        persist-credentials: false
+    - name: Build kryptokrona-crypto
+      working-directory: kryptokrona-crypto-src
+      run: |
+        rustup toolchain install 1.100.0 --profile minimal
+        npm ci --ignore-scripts --no-audit --no-fund
+        npm run build
+        npm run build-napi
+    - name: Install Dependencies
+      run: npm install --no-save --install-links --ignore-scripts --no-audit --no-fund ./kryptokrona-crypto-src
+    - name: Execute Unit Tests
       run: npm test
